@@ -5,8 +5,9 @@ const root = path.join(__dirname, '..');
 const outDir = path.join(root, 'public');
 
 fs.mkdirSync(outDir, { recursive: true });
-fs.copyFileSync(path.join(root, 'index.html'), path.join(outDir, 'index.html'));
-fs.copyFileSync(path.join(root, 'app.js'), path.join(outDir, 'app.js'));
+for (const f of ['index.html', 'privacidad.html', 'app.js', 'robots.txt', 'sitemap.xml']) {
+  fs.copyFileSync(path.join(root, f), path.join(outDir, f));
+}
 
 const assetsOut = path.join(outDir, 'assets');
 fs.mkdirSync(assetsOut, { recursive: true });

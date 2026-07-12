@@ -28,7 +28,40 @@ const step=(ts)=>{if(!s)s=ts;const p=Math.min((ts-s)/d,1),ez=1-Math.pow(1-p,4);e
 requestAnimationFrame(step);cIO.unobserve(el);});},{threshold:0.5});
 document.querySelectorAll('.counter').forEach(el=>cIO.observe(el));
 
-document.getElementById('contact-form').addEventListener('submit',(e)=>{e.preventDefault();const f=e.target;if(!f.name.value||!f.email.value||!f.company.value){f.reportValidity();return;}document.getElementById('form-msg').classList.remove('hidden');f.reset();});
+document.getElementById('contact-form').addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  const f=e.target,msg=document.getElementById('form-msg');
+  if(f._gotcha&&f._gotcha.value){return;}
+  if(!f.name.value||!f.email.value||!f.company.value){f.reportValidity();return;}
+  const btn=f.querySelector('button[type="submit"]');
+  btn.disabled=true;
+  msg.classList.remove('hidden','text-alert');msg.classList.add('text-cyber');
+  msg.textContent='Enviando tu solicitud...';
+  try{
+    const r=await fetch('https://formsubmit.co/ajax/chapy9716@gmail.com',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({
+        nombre:f.name.value,
+        empresa:f.company.value,
+        email:f.email.value,
+        telefono:f.phone.value,
+        detalles:f.description.value,
+        inactividad:f.downtime.value,
+        _subject:'Nuevo lead — web MAG INDUSTRIES',
+        _template:'table'
+      })
+    });
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    msg.innerHTML='<i aria-hidden="true" class="fa-solid fa-circle-check mr-1"></i> Solicitud enviada. Te contactaremos en menos de 24 h.';
+    f.reset();
+  }catch(err){
+    msg.classList.remove('text-cyber');msg.classList.add('text-alert');
+    msg.innerHTML='No se pudo enviar el formulario. Escríbenos por <a class="underline font-bold" target="_blank" rel="noopener" href="https://wa.me/34635013953">WhatsApp</a> o llama al +34 635 013 953.';
+  }finally{
+    btn.disabled=false;
+  }
+});
 
 (function(){
   const questions=[

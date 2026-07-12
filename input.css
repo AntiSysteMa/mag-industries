@@ -144,3 +144,51 @@ details[open] .acc-icon{ transform:rotate(45deg); }
 input,textarea,select{ color-scheme:inherit; }
 ::-webkit-scrollbar{ width:10px; } ::-webkit-scrollbar-track{ background:rgb(var(--c-bg)); }
 ::-webkit-scrollbar-thumb{ background:rgb(var(--c-line)); border-radius:6px; }
+
+/* ===== Accesibilidad: foco visible (los clip-path recortan el outline exterior) ===== */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible{
+  outline:2px solid var(--safety); outline-offset:3px; border-radius:2px;
+}
+.clip-tab:focus-visible, .clip-corner:focus-visible{ outline-offset:-3px; }
+
+/* ===== Honeypot anti-spam: invisible para humanos, visible para bots ===== */
+.hp-field{ position:absolute !important; left:-9999px !important; width:1px; height:1px; opacity:0; pointer-events:none; }
+
+/* ===== Botón flotante de WhatsApp (colores de marca) ===== */
+#wa-btn{
+  position:fixed; right:22px; bottom:22px; z-index:75;
+  display:flex; align-items:center; gap:10px;
+  background:var(--safety); color:#041A25;
+  font-family:'Barlow',sans-serif; font-weight:700; font-size:14px;
+  padding:13px 18px;
+  clip-path:polygon(0 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  box-shadow:0 10px 30px -8px rgba(0,0,0,.5);
+  transition:filter .2s ease, transform .2s ease;
+}
+#wa-btn:hover{ filter:brightness(1.1); transform:translateY(-2px); }
+#wa-btn i{ font-size:20px; }
+@media (max-width:639px){ #wa-btn .wa-label{ display:none; } #wa-btn{ padding:13px 15px; } }
+
+/* ===== Accesibilidad: foco visible (los clip-path recortan el outline exterior) ===== */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible{
+  outline:2px solid var(--safety); outline-offset:3px; border-radius:2px;
+}
+.clip-tab:focus-visible, .clip-corner:focus-visible{ outline-offset:-3px; }
+
+/* ===== Honeypot anti-spam: invisible para humanos, visible para bots ===== */
+.hp-field{ position:absolute; left:-9999px; width:1px; height:1px; opacity:0; pointer-events:none; }
+
+/* ===== Botón flotante de WhatsApp (colores de marca) ===== */
+#wa-btn{
+  position:fixed; right:22px; bottom:22px; z-index:75;
+  display:flex; align-items:center; gap:10px;
+  background:var(--safety); color:#041A25;
+  font-family:'Barlow',sans-serif; font-weight:700; font-size:15px;
+  padding:13px 20px; text-decoration:none;
+  clip-path:polygon(0 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  box-shadow:0 10px 30px -8px rgba(0,0,0,.5);
+  transition:filter .2s ease, transform .2s ease;
+}
+#wa-btn:hover{ filter:brightness(1.1); transform:translateY(-2px); }
+#wa-btn i{ font-size:20px; }
+@media (max-width:639px){ #wa-btn .wa-label{ display:none; } #wa-btn{ padding:14px 16px; } }
