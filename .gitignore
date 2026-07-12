@@ -1,0 +1,7 @@
+node_modules/
+.vercel/
+source-assets/
+public/
+tailwind.css
+*.b64
+index.dist.html
