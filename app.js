@@ -1,8 +1,16 @@
 /* ===== Base (header, menú móvil, coordenadas, contadores, quiz, formulario) ===== */
-const supabase = window.supabase.createClient(
-  'https://bisioblvzoegaqokamel.supabase.co',
-  'sb_publishable_7__8eQRRx5RD09DRgnZQBw_Trn7Fqde'
-);
+/* Supabase es OPCIONAL: si su SDK (CDN externo) no carga, la web debe seguir
+   funcionando al 100% y el formulario envía igualmente por email. Nunca debe
+   abortar app.js. */
+let supabase = null;
+try {
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
+    supabase = window.supabase.createClient(
+      'https://bisioblvzoegaqokamel.supabase.co',
+      'sb_publishable_7__8eQRRx5RD09DRgnZQBw_Trn7Fqde'
+    );
+  }
+} catch (e) { console.warn('Supabase no disponible; el formulario usará solo el envío por email.', e); }
 
 const header=document.getElementById('site-header');
 const onScroll=()=>{ if(window.scrollY>20){header.classList.add('bg-night/90','backdrop-blur-md','border-night-line','shadow-lg');}else{header.classList.remove('bg-night/90','backdrop-blur-md','border-night-line','shadow-lg');} };
@@ -43,14 +51,16 @@ document.getElementById('contact-form').addEventListener('submit',async(e)=>{
   msg.classList.remove('hidden','text-alert');msg.classList.add('text-cyber');
   msg.textContent='Enviando tu solicitud...';
   try{
-    supabase.from('leads').insert({
-      nombre:f.name.value,
-      empresa:f.company.value,
-      email:f.email.value,
-      telefono:f.phone.value,
-      detalles:f.description.value,
-      inactividad:f.downtime.value
-    }).then(({error})=>{ if(error) console.error('Supabase insert error:', error); });
+    if(supabase){
+      supabase.from('leads').insert({
+        nombre:f.name.value,
+        empresa:f.company.value,
+        email:f.email.value,
+        telefono:f.phone.value,
+        detalles:f.description.value,
+        inactividad:f.downtime.value
+      }).then(({error})=>{ if(error) console.error('Supabase insert error:', error); }).catch(()=>{});
+    }
     const r=await fetch('https://formsubmit.co/ajax/chapy9716@gmail.com',{
       method:'POST',
       headers:{'Content-Type':'application/json','Accept':'application/json'},
