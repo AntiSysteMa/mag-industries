@@ -2,10 +2,14 @@
 /* Supabase es OPCIONAL: si su SDK (CDN externo) no carga, la web debe seguir
    funcionando al 100% y el formulario envía igualmente por email. Nunca debe
    abortar app.js. */
-let supabase = null;
+/* OJO: NO llamar a esta variable `supabase`. El SDK por CDN crea un global
+   `window.supabase`; declarar `let/const supabase` en el top-level de este
+   script clásico colisiona con ese global y lanza un SyntaxError que aborta
+   app.js ENTERO (toggle, quiz, formularios y raster dejan de funcionar). */
+let supabaseClient = null;
 try {
   if (window.supabase && typeof window.supabase.createClient === 'function') {
-    supabase = window.supabase.createClient(
+    supabaseClient = window.supabase.createClient(
       'https://bisioblvzoegaqokamel.supabase.co',
       'sb_publishable_7__8eQRRx5RD09DRgnZQBw_Trn7Fqde'
     );
@@ -51,8 +55,8 @@ document.getElementById('contact-form').addEventListener('submit',async(e)=>{
   msg.classList.remove('hidden','text-alert');msg.classList.add('text-cyber');
   msg.textContent='Enviando tu solicitud...';
   try{
-    if(supabase){
-      supabase.from('leads').insert({
+    if(supabaseClient){
+      supabaseClient.from('leads').insert({
         nombre:f.name.value,
         empresa:f.company.value,
         email:f.email.value,
