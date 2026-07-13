@@ -1,4 +1,9 @@
 /* ===== Base (header, menú móvil, coordenadas, contadores, quiz, formulario) ===== */
+const supabase = window.supabase.createClient(
+  'https://bisioblvzoegaqokamel.supabase.co',
+  'sb_publishable_7__8eQRRx5RD09DRgnZQBw_Trn7Fqde'
+);
+
 const header=document.getElementById('site-header');
 const onScroll=()=>{ if(window.scrollY>20){header.classList.add('bg-night/90','backdrop-blur-md','border-night-line','shadow-lg');}else{header.classList.remove('bg-night/90','backdrop-blur-md','border-night-line','shadow-lg');} };
 window.addEventListener('scroll',onScroll); onScroll();
@@ -38,6 +43,14 @@ document.getElementById('contact-form').addEventListener('submit',async(e)=>{
   msg.classList.remove('hidden','text-alert');msg.classList.add('text-cyber');
   msg.textContent='Enviando tu solicitud...';
   try{
+    supabase.from('leads').insert({
+      nombre:f.name.value,
+      empresa:f.company.value,
+      email:f.email.value,
+      telefono:f.phone.value,
+      detalles:f.description.value,
+      inactividad:f.downtime.value
+    }).then(({error})=>{ if(error) console.error('Supabase insert error:', error); });
     const r=await fetch('https://formsubmit.co/ajax/chapy9716@gmail.com',{
       method:'POST',
       headers:{'Content-Type':'application/json','Accept':'application/json'},
