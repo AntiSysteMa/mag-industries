@@ -153,8 +153,9 @@ document.getElementById('contact-form').addEventListener('submit',async(e)=>{
     sections[go].scrollIntoView({behavior:reduced?'auto':'smooth'});
   });
 
-  /* Sin GSAP (CDN bloqueado) o con movimiento reducido: fallback simple */
-  if(!window.gsap||reduced){
+  /* Sin GSAP/ScrollTrigger (CDN bloqueado o red inestable) o con movimiento reducido: fallback simple.
+     El contenido se revela con IntersectionObserver, sin depender de ningún CDN. */
+  if(!window.gsap||!window.ScrollTrigger||reduced){
     document.documentElement.classList.add('no-gsap');
     if(reduced){ document.querySelectorAll('.reveal').forEach(el=>el.classList.add('in')); return; }
     const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:0.12});
@@ -162,8 +163,10 @@ document.getElementById('contact-form').addEventListener('submit',async(e)=>{
     return;
   }
 
+  try{
   document.documentElement.classList.add('gsap-on');
-  gsap.registerPlugin(ScrollTrigger,MotionPathPlugin);
+  gsap.registerPlugin(ScrollTrigger);
+  if(window.MotionPathPlugin) gsap.registerPlugin(MotionPathPlugin);
 
   /* Revelado por lotes */
   ScrollTrigger.batch('.reveal',{
@@ -192,7 +195,7 @@ document.getElementById('contact-form').addEventListener('submit',async(e)=>{
 
   /* Mecanizado guiado por scroll: la fresa recorre las pasadas paralelas */
   const run=document.getElementById('raster-run'),tool=document.getElementById('raster-tool');
-  if(run&&tool){
+  if(run&&tool&&window.MotionPathPlugin){
     const len=run.getTotalLength();
     gsap.set(run,{strokeDasharray:len,strokeDashoffset:len});
     const st={trigger:'#raster-svg',start:'top 85%',end:'bottom 25%',scrub:0.6};
@@ -221,4 +224,8 @@ document.getElementById('contact-form').addEventListener('submit',async(e)=>{
 
   /* Recalcular posiciones cuando cargan las imágenes */
   window.addEventListener('load',()=>ScrollTrigger.refresh());
+  }catch(err){
+    console.warn('Fallo en animaciones GSAP; se muestra el contenido igualmente.', err);
+    document.querySelectorAll('.reveal').forEach(el=>{el.style.opacity='1';el.style.transform='none';});
+  }
 })();
