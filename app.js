@@ -37,8 +37,407 @@ document.querySelectorAll('.mobile-link').forEach(a=>a.addEventListener('click',
   });
 })();
 
-(function(){const rx=document.getElementById('rx'),ry=document.getElementById('ry'),rz=document.getElementById('rz');if(!rx)return;let t=0;
-setInterval(()=>{t+=0.18;rx.textContent=(180+Math.sin(t)*110).toFixed(3);ry.textContent=(-40+Math.cos(t*0.8)*90).toFixed(3);rz.textContent=(-12+Math.sin(t*1.3)*3).toFixed(3);},220);})();
+/* ===== Simulación de mecanizado CNC en Canvas 2D (panel del hero) =====
+   Canvas 2D puro, sin dependencias de CDN. Bucle infinito automático.
+   - Cajera isométrica con islas y planificación de velocidad tipo CNC:
+     pases backward/forward de look-ahead (desacelera en curvas, acelera en rectas)
+   - Rastro incandescente que se dibuja tras la punta y se desvanece al cerrar el ciclo
+   - Virutas: micro-partículas despedidas en dirección contraria al avance
+   - Micro-vibración de husillo y banda de brillo que simula el giro a altas RPM
+   - Rendimiento: escena estática pre-renderizada, RAF pausado si el panel no está
+     visible, DPR limitado a 2. Las coordenadas del HUD salen de la posición real. */
+(function(){
+  const cv=document.getElementById('sim-canvas');
+  const rxEl=document.getElementById('rx'),ryEl=document.getElementById('ry'),rzEl=document.getElementById('rz');
+  function fallbackCoords(){ if(!rxEl)return; let t=0;
+    setInterval(()=>{t+=0.18;rxEl.textContent=(180+Math.sin(t)*110).toFixed(3);ryEl.textContent=(-40+Math.cos(t*0.8)*90).toFixed(3);rzEl.textContent=(-12+Math.sin(t*1.3)*3).toFixed(3);},220); }
+  if(!cv||!cv.getContext){ fallbackCoords(); return; }
+  try{
+  const ctx=cv.getContext('2d');
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* --- Proyección isométrica: coords del bloque (0..190) -> pantalla lógica 600x420 --- */
+  const VW=600,VH=420,CA=1.02,SA=0.53,OX=300,OY=78,BS=190,WALL=62,P0=30,P1=160,ZF=-30,ZI=-12;
+  const isoX=(x,y)=>OX+(x-y)*CA;
+  const isoY=(x,y,z)=>OY+(x+y)*SA-z;
+
+  /* --- Trayectoria (coords locales de la cajera 0..130; +30 = coords del bloque).
+     Contorneado exterior (2 pases), acabado alrededor de la isla rectangular,
+     órbita de la isla cilíndrica y planeado del fondo. [x, y, radio de empalme] --- */
+  const RAW=[[50,8,0],[122,8,10],[122,122,12],[8,122,12],[8,8,10],[46,8,4],
+    [46,20,6],[110,20,8],[110,110,10],[20,110,10],[20,20,8],[40,20,4],
+    [30,34,6],[25,48,5],[25,89,8],[67,89,8],[67,43,8],[29,43,4],
+    [24,36,4],[48,30,6],[66,30,4]];
+  for(let a=160;a>=-165;a-=13){const t=a*Math.PI/180;RAW.push([88+18*Math.cos(t),44+18*Math.sin(t),2]);}
+  RAW.push([68.5,50,5],[70,74,6],[80,90,8],[100,94,6],[106,99,4],[102,104,5],[30,104,6],[26,110,4],[102,112,0]);
+
+  /* Empalme de esquinas con bezier cuadrática y densificado del recorrido */
+  function densify(raw){
+    const P=raw.map(p=>({x:p[0]+P0,y:p[1]+P0,r:p[2]})),pts=[{x:P[0].x,y:P[0].y}];
+    for(let i=1;i<P.length-1;i++){
+      const a=P[i-1],v=P[i],b=P[i+1];
+      const d1=Math.hypot(v.x-a.x,v.y-a.y),d2=Math.hypot(b.x-v.x,b.y-v.y);
+      const t=Math.min(v.r,d1*0.45,d2*0.45);
+      if(t<0.3){pts.push({x:v.x,y:v.y});continue;}
+      const p1={x:v.x+(a.x-v.x)/d1*t,y:v.y+(a.y-v.y)/d1*t};
+      const p2={x:v.x+(b.x-v.x)/d2*t,y:v.y+(b.y-v.y)/d2*t};
+      const n=Math.max(3,Math.ceil(t*1.4));
+      for(let k=0;k<=n;k++){const u=k/n,w=1-u;
+        pts.push({x:w*w*p1.x+2*w*u*v.x+u*u*p2.x,y:w*w*p1.y+2*w*u*v.y+u*u*p2.y});}
+    }
+    pts.push({x:P[P.length-1].x,y:P[P.length-1].y});
+    return pts;
+  }
+  const STEP=1.25;
+  function resample(pts){
+    const xs=[pts[0].x],ys=[pts[0].y];let need=STEP;
+    for(let i=1;i<pts.length;i++){
+      let ax=pts[i-1].x,ay=pts[i-1].y;
+      const bx=pts[i].x,by=pts[i].y;
+      let seg=Math.hypot(bx-ax,by-ay);
+      while(seg>=need){
+        const u=need/seg;
+        ax+=(bx-ax)*u;ay+=(by-ay)*u;
+        xs.push(ax);ys.push(ay);
+        seg=Math.hypot(bx-ax,by-ay);need=STEP;
+      }
+      need-=seg;
+    }
+    return{xs,ys};
+  }
+  const {xs,ys}=resample(densify(RAW));
+  const N=xs.length,TOTAL=(N-1)*STEP;
+
+  /* Planificación de velocidad (look-ahead): límite por curvatura + rampas de acel/decel */
+  const VMAX=64,VMIN=9,ALAT=110,AACC=150;
+  const vel=new Float32Array(N);
+  for(let i=0;i<N;i++){
+    if(i===0||i===N-1){vel[i]=VMIN;continue;}
+    const a1=Math.atan2(ys[i]-ys[i-1],xs[i]-xs[i-1]),a2=Math.atan2(ys[i+1]-ys[i],xs[i+1]-xs[i]);
+    let d=Math.abs(a2-a1);if(d>Math.PI)d=2*Math.PI-d;
+    const k=d/STEP;
+    vel[i]=Math.max(VMIN,Math.min(VMAX,k>1e-4?Math.sqrt(ALAT/k):VMAX));
+  }
+  for(let i=N-2;i>=0;i--)vel[i]=Math.min(vel[i],Math.sqrt(vel[i+1]*vel[i+1]+2*AACC*STEP));
+  for(let i=1;i<N;i++)vel[i]=Math.min(vel[i],Math.sqrt(vel[i-1]*vel[i-1]+2*AACC*STEP));
+  function pathPos(d){
+    const f=Math.min(d/STEP,N-1.001),i=f|0,u=f-i;
+    return[xs[i]+(xs[i+1]-xs[i])*u,ys[i]+(ys[i+1]-ys[i])*u,vel[i]];
+  }
+
+  /* Islas (coords del bloque) */
+  const IA={x0:64,y0:82,x1:88,y1:110};
+  const IB={cx:118,cy:74,r:9};
+
+  /* --- Lienzos auxiliares: escena estática y rastro persistente --- */
+  const trailC=document.createElement('canvas'),staticC=document.createElement('canvas');
+  const tctx=trailC.getContext('2d'),sctx=staticC.getContext('2d');
+  let dpr=1,scl=1,ofx=0,ofy=0;
+  function applyT(c){c.setTransform(dpr*scl,0,0,dpr*scl,dpr*ofx,dpr*ofy);}
+  function openingPath(c){
+    c.beginPath();
+    c.moveTo(isoX(P0,P0),isoY(P0,P0,0));c.lineTo(isoX(P1,P0),isoY(P1,P0,0));
+    c.lineTo(isoX(P1,P1),isoY(P1,P1,0));c.lineTo(isoX(P0,P1),isoY(P0,P1,0));
+    c.closePath();
+  }
+  function quad(c,p,fill,stroke){
+    c.beginPath();c.moveTo(p[0][0],p[0][1]);
+    for(let i=1;i<p.length;i++)c.lineTo(p[i][0],p[i][1]);
+    c.closePath();c.fillStyle=fill;c.fill();
+    if(stroke){c.strokeStyle=stroke;c.lineWidth=1;c.stroke();}
+  }
+
+  function buildStatic(){
+    staticC.width=cv.width;staticC.height=cv.height;
+    const c=sctx;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,staticC.width,staticC.height);
+    applyT(c);
+    /* caras laterales exteriores del bloque */
+    let g=c.createLinearGradient(0,isoY(0,BS,0),0,isoY(0,BS,-WALL));
+    g.addColorStop(0,'#233140');g.addColorStop(1,'#131C26');
+    quad(c,[[isoX(0,BS),isoY(0,BS,0)],[isoX(BS,BS),isoY(BS,BS,0)],[isoX(BS,BS),isoY(BS,BS,-WALL)],[isoX(0,BS),isoY(0,BS,-WALL)]],g,'#2C3B4C');
+    g=c.createLinearGradient(0,isoY(BS,0,0),0,isoY(BS,0,-WALL));
+    g.addColorStop(0,'#18222E');g.addColorStop(1,'#0C131B');
+    quad(c,[[isoX(BS,BS),isoY(BS,BS,0)],[isoX(BS,0),isoY(BS,0,0)],[isoX(BS,0),isoY(BS,0,-WALL)],[isoX(BS,BS),isoY(BS,BS,-WALL)]],g,'#2C3B4C');
+    /* suelo de la cajera */
+    g=c.createLinearGradient(0,isoY(P0,P0,ZF),0,isoY(P1,P1,ZF));
+    g.addColorStop(0,'#0B1017');g.addColorStop(1,'#0E1620');
+    quad(c,[[isoX(P0,P0),isoY(P0,P0,ZF)],[isoX(P1,P0),isoY(P1,P0,ZF)],[isoX(P1,P1),isoY(P1,P1,ZF)],[isoX(P0,P1),isoY(P0,P1,ZF)]],g,'#2C3B4C');
+    /* paredes interiores visibles (las lejanas) */
+    quad(c,[[isoX(P0,P0),isoY(P0,P0,0)],[isoX(P1,P0),isoY(P1,P0,0)],[isoX(P1,P0),isoY(P1,P0,ZF)],[isoX(P0,P0),isoY(P0,P0,ZF)]],'#111B26');
+    quad(c,[[isoX(P0,P0),isoY(P0,P0,0)],[isoX(P0,P1),isoY(P0,P1,0)],[isoX(P0,P1),isoY(P0,P1,ZF)],[isoX(P0,P0),isoY(P0,P0,ZF)]],'#0B141D');
+    /* cara superior con el hueco de la cajera (evenodd) */
+    g=c.createLinearGradient(0,isoY(0,0,0),0,isoY(BS,BS,0));
+    g.addColorStop(0,'#32414F');g.addColorStop(1,'#1C2734');
+    c.beginPath();
+    c.moveTo(isoX(0,0),isoY(0,0,0));c.lineTo(isoX(BS,0),isoY(BS,0,0));
+    c.lineTo(isoX(BS,BS),isoY(BS,BS,0));c.lineTo(isoX(0,BS),isoY(0,BS,0));c.closePath();
+    c.moveTo(isoX(P0,P0),isoY(P0,P0,0));c.lineTo(isoX(P1,P0),isoY(P1,P0,0));
+    c.lineTo(isoX(P1,P1),isoY(P1,P1,0));c.lineTo(isoX(P0,P1),isoY(P0,P1,0));c.closePath();
+    c.fillStyle=g;c.fill('evenodd');
+    c.beginPath();
+    c.moveTo(isoX(0,0),isoY(0,0,0));c.lineTo(isoX(BS,0),isoY(BS,0,0));
+    c.lineTo(isoX(BS,BS),isoY(BS,BS,0));c.lineTo(isoX(0,BS),isoY(0,BS,0));c.closePath();
+    c.strokeStyle='#3A4B5E';c.lineWidth=1;c.stroke();
+    openingPath(c);c.strokeStyle='#4A5B6E';c.lineWidth=1.2;c.stroke();
+    /* aristas wireframe verdes */
+    c.strokeStyle='rgba(18,247,160,0.35)';c.lineWidth=0.9;
+    c.beginPath();
+    c.moveTo(isoX(0,0),isoY(0,0,0));c.lineTo(isoX(0,BS),isoY(0,BS,0));c.lineTo(isoX(BS,BS),isoY(BS,BS,0));c.lineTo(isoX(BS,0),isoY(BS,0,0));c.lineTo(isoX(0,0),isoY(0,0,0));
+    c.moveTo(isoX(0,BS),isoY(0,BS,0));c.lineTo(isoX(0,BS),isoY(0,BS,-WALL));
+    c.moveTo(isoX(BS,BS),isoY(BS,BS,0));c.lineTo(isoX(BS,BS),isoY(BS,BS,-WALL));
+    c.moveTo(isoX(BS,0),isoY(BS,0,0));c.lineTo(isoX(BS,0),isoY(BS,0,-WALL));
+    c.stroke();
+    /* trayectoria programada (discontinua, bajo el rastro real) */
+    c.save();openingPath(c);c.clip();
+    c.setLineDash([3,5]);c.strokeStyle='#33465e';c.lineWidth=1;
+    c.beginPath();c.moveTo(isoX(xs[0],ys[0]),isoY(xs[0],ys[0],ZF));
+    for(let i=2;i<N;i+=2)c.lineTo(isoX(xs[i],ys[i]),isoY(xs[i],ys[i],ZF));
+    c.stroke();c.setLineDash([]);c.restore();
+    /* cota y triada de ejes */
+    c.setLineDash([2,3]);c.strokeStyle='#33465e';c.lineWidth=0.7;
+    c.beginPath();c.moveTo(300,82);c.lineTo(475,172);c.stroke();c.setLineDash([]);
+    c.fillStyle='#8592A3';c.font='600 9px Barlow,sans-serif';
+    c.fillText('Ø12 · z-30',392,118);
+    c.save();c.translate(66,360);c.lineWidth=1.4;c.font='600 10px Barlow,sans-serif';
+    c.strokeStyle='#FF5A3C';c.beginPath();c.moveTo(0,0);c.lineTo(34,17);c.stroke();
+    c.fillStyle='#FF5A3C';c.fillText('X',38,20);
+    c.strokeStyle='#12F7A0';c.beginPath();c.moveTo(0,0);c.lineTo(-30,16);c.stroke();
+    c.fillStyle='#12F7A0';c.fillText('Y',-42,19);
+    c.strokeStyle='#FFC400';c.beginPath();c.moveTo(0,0);c.lineTo(0,-34);c.stroke();
+    c.fillStyle='#FFC400';c.fillText('Z',-4,-38);
+    c.restore();
+  }
+
+  function drawIslandA(c){
+    quad(c,[[isoX(IA.x0,IA.y1),isoY(IA.x0,IA.y1,ZI)],[isoX(IA.x1,IA.y1),isoY(IA.x1,IA.y1,ZI)],[isoX(IA.x1,IA.y1),isoY(IA.x1,IA.y1,ZF)],[isoX(IA.x0,IA.y1),isoY(IA.x0,IA.y1,ZF)]],'#15222F');
+    quad(c,[[isoX(IA.x1,IA.y1),isoY(IA.x1,IA.y1,ZI)],[isoX(IA.x1,IA.y0),isoY(IA.x1,IA.y0,ZI)],[isoX(IA.x1,IA.y0),isoY(IA.x1,IA.y0,ZF)],[isoX(IA.x1,IA.y1),isoY(IA.x1,IA.y1,ZF)]],'#0E1721');
+    quad(c,[[isoX(IA.x0,IA.y0),isoY(IA.x0,IA.y0,ZI)],[isoX(IA.x1,IA.y0),isoY(IA.x1,IA.y0,ZI)],[isoX(IA.x1,IA.y1),isoY(IA.x1,IA.y1,ZI)],[isoX(IA.x0,IA.y1),isoY(IA.x0,IA.y1,ZI)]],'#24333F','#3A4B5E');
+  }
+  function drawIslandB(c){
+    const rx=IB.r*1.24,ry=IB.r*0.64;
+    const sx=isoX(IB.cx,IB.cy),yT=isoY(IB.cx,IB.cy,ZI),yB=isoY(IB.cx,IB.cy,ZF);
+    c.beginPath();
+    c.moveTo(sx-rx,yT);c.lineTo(sx-rx,yB);
+    c.ellipse(sx,yB,rx,ry,0,Math.PI,0,true);
+    c.lineTo(sx+rx,yT);
+    c.ellipse(sx,yT,rx,ry,0,0,Math.PI,false);
+    c.closePath();
+    const g=c.createLinearGradient(sx-rx,0,sx+rx,0);
+    g.addColorStop(0,'#101B27');g.addColorStop(0.55,'#1B2A38');g.addColorStop(1,'#0C141D');
+    c.fillStyle=g;c.fill();
+    c.beginPath();c.ellipse(sx,yT,rx,ry,0,0,Math.PI*2);
+    c.fillStyle='#24333F';c.fill();c.strokeStyle='#3A4B5E';c.lineWidth=1;c.stroke();
+  }
+
+  /* Herramienta: parte de corte (recortada dentro de la cajera) y cuerpo superior */
+  function drawCutterLower(c,sx,sy,time){
+    c.save();c.translate(sx,sy);
+    const g=c.createLinearGradient(-8,0,8,0);
+    g.addColorStop(0,'#3C4757');g.addColorStop(0.5,'#CDD8E4');g.addColorStop(1,'#3C4757');
+    c.fillStyle=g;c.fillRect(-8,-30,16,26);
+    c.strokeStyle='#26323F';c.lineWidth=0.6;c.strokeRect(-8,-30,16,26);
+    c.lineWidth=1;c.beginPath();c.moveTo(-4,-4);c.lineTo(2,-30);c.moveTo(3,-4);c.lineTo(7,-30);c.stroke();
+    /* banda de brillo que barre el cuerpo: giro a altas RPM */
+    const band=(time*7.5)%1;
+    c.globalAlpha=0.18+0.62*Math.abs(Math.sin(time*40));
+    c.fillStyle='#FFFFFF';c.fillRect(-8+band*13.4,-30,2.4,26);
+    c.globalAlpha=0.03+0.05*(0.5+0.5*Math.sin(time*93));
+    c.fillRect(-8,-30,16,26);
+    c.globalAlpha=1;
+    c.fillStyle='#E4ECF4';c.beginPath();c.moveTo(-8,-4);c.lineTo(8,-4);c.lineTo(0,9);c.closePath();c.fill();
+    c.restore();
+  }
+  function drawToolUpper(c,sx,sy,time){
+    c.save();c.translate(sx,sy);
+    const g=c.createLinearGradient(-10,0,10,0);
+    g.addColorStop(0,'#3C4757');g.addColorStop(0.5,'#CDD8E4');g.addColorStop(1,'#3C4757');
+    c.fillStyle=g;c.fillRect(-10,-96,20,66);
+    c.strokeStyle='#26323F';c.lineWidth=0.6;c.strokeRect(-10,-96,20,66);
+    const band=(time*7.5+0.4)%1;
+    c.globalAlpha=0.10+0.25*Math.abs(Math.sin(time*40+1.2));
+    c.fillStyle='#FFFFFF';c.fillRect(-10+band*17,-96,3,66);
+    c.globalAlpha=1;
+    c.fillStyle='#7C8A9B';c.beginPath();c.ellipse(0,-96,10,3.4,0,0,Math.PI*2);c.fill();
+    c.fillStyle='#556475';c.fillRect(-12,-34,24,5);
+    c.strokeStyle='rgba(18,247,160,0.6)';c.lineWidth=0.8;c.setLineDash([3,3]);
+    c.beginPath();c.moveTo(0,-96);c.lineTo(0,-118);c.stroke();c.setLineDash([]);
+    c.restore();
+  }
+
+  /* --- Virutas: pool de micro-partículas metálicas --- */
+  const POOL=90,parts=[];
+  const CHIP_COLS=['#5A6675','#7C8A9B','#B4C1D0','#CDD8E4'];
+  function spawnChip(sx,sy,tx,ty){
+    if(parts.length>=POOL)parts.shift();
+    const spark=Math.random()<0.16;
+    const back=40+Math.random()*70,up=30+Math.random()*70,side=(Math.random()-0.5)*60;
+    parts.push({x:sx,y:sy-2,vx:-tx*back-ty*side,vy:-ty*back+tx*side-up,
+      life:0.28+Math.random()*0.45,t:0,spark,
+      col:spark?(Math.random()<0.5?'#FFC400':'#EFFFF7'):CHIP_COLS[Math.random()*4|0]});
+  }
+  function drawParts(c,dt){
+    for(let i=parts.length-1;i>=0;i--){
+      const p=parts[i];p.t+=dt;
+      if(p.t>=p.life){parts.splice(i,1);continue;}
+      p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=230*dt;
+      const a=1-p.t/p.life;
+      c.globalAlpha=p.spark?a:a*0.9;
+      c.globalCompositeOperation=p.spark?'lighter':'source-over';
+      c.strokeStyle=p.col;c.lineWidth=p.spark?1.1:1.4;
+      c.beginPath();c.moveTo(p.x,p.y);c.lineTo(p.x-p.vx*0.018,p.y-p.vy*0.018);c.stroke();
+    }
+    c.globalAlpha=1;c.globalCompositeOperation='source-over';
+  }
+
+  /* --- Máquina de estados del ciclo: plunge -> cut -> retract -> rapid --- */
+  const SX0=xs[0],SY0=ys[0],EX0=xs[N-1],EY0=ys[N-1];
+  const easeIO=t=>t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+  let phase='plunge',ph=0,dist=0,time=0,lastTs=0,frame=0;
+  let running=false,inView=true;
+  let lastGX=null,lastGY=null,tanX=1,tanY=0,emitAcc=0,hudAcc=0;
+  const recent=[];
+
+  function tick(ts){
+    if(!running)return;
+    requestAnimationFrame(tick);
+    const dt=Math.min(0.05,(ts-lastTs)/1000||0.016);lastTs=ts;time+=dt;frame++;
+    let px,py,lift=0,spd=0,cutting=false;
+    if(phase==='plunge'){ph+=dt/0.7;const u=Math.min(ph,1);px=SX0;py=SY0;lift=26*(1-u*u);
+      if(ph>=1){phase='cut';ph=0;dist=0;}}
+    else if(phase==='cut'){
+      const p=pathPos(dist);px=p[0];py=p[1];spd=p[2];cutting=true;
+      dist+=spd*dt;
+      if(dist>=TOTAL){phase='retract';ph=0;}}
+    else if(phase==='retract'){ph+=dt/0.45;const u=Math.min(ph,1);px=EX0;py=EY0;lift=26*u*u;
+      if(ph>=1){phase='rapid';ph=0;}}
+    else{ph+=dt/0.9;const u=easeIO(Math.min(ph,1));
+      px=EX0+(SX0-EX0)*u;py=EY0+(SY0-EY0)*u;lift=26;
+      if(ph>=1){phase='plunge';ph=0;recent.length=0;}}
+    const tipZ=ZF+lift;
+    /* micro-vibración de alta frecuencia, proporcional al avance */
+    let vibx=0,viby=0;
+    if(cutting){const amp=0.7*(0.4+0.6*spd/VMAX);
+      vibx=(Math.random()-0.5)*amp;viby=(Math.random()-0.5)*amp;}
+    const sx=isoX(px,py)+vibx,sy=isoY(px,py,tipZ)+viby;
+    const gx=isoX(px,py),gy=isoY(px,py,ZF);
+    if(cutting&&lastGX!==null){
+      const dxs=gx-lastGX,dys=gy-lastGY,m=Math.hypot(dxs,dys);
+      if(m>0.15){tanX=dxs/m;tanY=dys/m;}
+      /* rastro persistente: núcleo caliente + halo, en su propio lienzo */
+      if(m>0.01){
+        applyT(tctx);tctx.lineCap='round';tctx.lineJoin='round';
+        tctx.beginPath();tctx.moveTo(lastGX,lastGY);tctx.lineTo(gx,gy);
+        tctx.strokeStyle='rgba(18,247,160,0.10)';tctx.lineWidth=7;tctx.stroke();
+        tctx.strokeStyle='rgba(18,247,160,0.32)';tctx.lineWidth=3.4;tctx.stroke();
+        tctx.strokeStyle='rgba(184,255,227,0.95)';tctx.lineWidth=1.5;tctx.stroke();
+        recent.push({x:gx,y:gy});if(recent.length>26)recent.shift();
+      }
+    }
+    /* desvanecimiento: lento durante el corte, rápido al cerrar el ciclo */
+    tctx.setTransform(1,0,0,1,0,0);
+    tctx.globalCompositeOperation='destination-out';
+    if(!cutting){tctx.fillStyle='rgba(0,0,0,0.055)';tctx.fillRect(0,0,trailC.width,trailC.height);}
+    else if(frame%10===0){tctx.fillStyle='rgba(0,0,0,0.022)';tctx.fillRect(0,0,trailC.width,trailC.height);}
+    tctx.globalCompositeOperation='source-over';
+    /* emisión de virutas contraria al avance */
+    if(cutting){emitAcc+=dt*(18+spd*0.85);
+      while(emitAcc>=1){emitAcc-=1;spawnChip(gx,gy,tanX,tanY);}}
+
+    /* ---- composición del fotograma ---- */
+    ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);
+    ctx.drawImage(staticC,0,0);
+    applyT(ctx);
+    ctx.save();openingPath(ctx);ctx.clip();
+    ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(trailC,0,0);applyT(ctx);
+    if(recent.length>1){
+      ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+      for(let i=1;i<recent.length;i++){
+        ctx.strokeStyle='rgba(150,255,215,'+((i/recent.length)*0.55).toFixed(3)+')';
+        ctx.lineWidth=2.4;
+        ctx.beginPath();ctx.moveTo(recent[i-1].x,recent[i-1].y);ctx.lineTo(recent[i].x,recent[i].y);ctx.stroke();
+      }
+      ctx.globalCompositeOperation='source-over';
+    }
+    if(cutting){
+      ctx.globalCompositeOperation='lighter';
+      const gg=ctx.createRadialGradient(gx,gy,0,gx,gy,11);
+      gg.addColorStop(0,'rgba(190,255,225,0.85)');
+      gg.addColorStop(0.35,'rgba(18,247,160,0.35)');
+      gg.addColorStop(1,'rgba(18,247,160,0)');
+      ctx.fillStyle=gg;ctx.beginPath();ctx.arc(gx,gy,11,0,Math.PI*2);ctx.fill();
+      ctx.globalCompositeOperation='source-over';
+    }
+    drawParts(ctx,dt);
+    /* orden pintor: islas y fresa según profundidad isométrica (x+y) */
+    const items=[
+      {d:(IA.x0+IA.y0+IA.x1+IA.y1)/2,f:drawIslandA},
+      {d:IB.cx+IB.cy,f:drawIslandB},
+      {d:px+py,f:function(c){drawCutterLower(c,sx,sy,time);}}
+    ];
+    items.sort(function(a,b){return a.d-b.d;});
+    for(let i=0;i<items.length;i++)items[i].f(ctx);
+    ctx.restore();
+    drawToolUpper(ctx,sx,sy,time);
+    /* HUD con la posición real */
+    hudAcc+=dt;
+    if(hudAcc>0.15&&rxEl){hudAcc=0;
+      rxEl.textContent=(px*1.35+18.4).toFixed(3);
+      ryEl.textContent=(py*1.1-148.6).toFixed(3);
+      rzEl.textContent=((tipZ+30)*0.86-12.744+(cutting?Math.sin(time*9)*0.02:0)).toFixed(3);
+    }
+    if(cutting){lastGX=gx;lastGY=gy;}else{lastGX=null;}
+  }
+
+  /* Escena fija para prefers-reduced-motion: pieza + trayectoria completa + fresa parada */
+  function renderStaticScene(){
+    tctx.setTransform(1,0,0,1,0,0);tctx.clearRect(0,0,trailC.width,trailC.height);
+    applyT(tctx);tctx.lineCap='round';tctx.lineJoin='round';
+    tctx.beginPath();tctx.moveTo(isoX(xs[0],ys[0]),isoY(xs[0],ys[0],ZF));
+    for(let i=1;i<N;i++)tctx.lineTo(isoX(xs[i],ys[i]),isoY(xs[i],ys[i],ZF));
+    tctx.strokeStyle='rgba(18,247,160,0.12)';tctx.lineWidth=6;tctx.stroke();
+    tctx.strokeStyle='rgba(18,247,160,0.55)';tctx.lineWidth=1.6;tctx.stroke();
+    ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);
+    ctx.drawImage(staticC,0,0);
+    applyT(ctx);ctx.save();openingPath(ctx);ctx.clip();
+    ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(trailC,0,0);applyT(ctx);
+    const mid=(N*0.55)|0,msx=isoX(xs[mid],ys[mid]),msy=isoY(xs[mid],ys[mid],ZF);
+    drawIslandA(ctx);drawIslandB(ctx);drawCutterLower(ctx,msx,msy,0.3);
+    ctx.restore();drawToolUpper(ctx,msx,msy,0.3);
+  }
+
+  function resize(){
+    const r=cv.parentElement.getBoundingClientRect();
+    if(r.width<10||r.height<10)return;
+    dpr=Math.min(window.devicePixelRatio||1,2);
+    cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);
+    scl=Math.min(r.width/VW,r.height/VH);
+    ofx=(r.width-VW*scl)/2;ofy=(r.height-VH*scl)/2;
+    trailC.width=cv.width;trailC.height=cv.height;
+    buildStatic();
+    if(reduced)renderStaticScene();
+  }
+  if('ResizeObserver'in window)new ResizeObserver(resize).observe(cv.parentElement);
+  else window.addEventListener('resize',resize);
+  resize();
+
+  if(reduced){renderStaticScene();return;}
+
+  /* RAF solo cuando el panel está en pantalla y la pestaña visible */
+  function updRun(){
+    const want=inView&&!document.hidden;
+    if(want&&!running){running=true;lastTs=performance.now();requestAnimationFrame(tick);}
+    else if(!want){running=false;}
+  }
+  if('IntersectionObserver'in window){
+    new IntersectionObserver(function(es){inView=es[0].isIntersecting;updRun();},{threshold:0.02}).observe(cv);
+  }
+  document.addEventListener('visibilitychange',updRun);
+  updRun();
+  }catch(err){
+    console.warn('Simulación de mecanizado no disponible; HUD en modo básico.',err);
+    fallbackCoords();
+  }
+})();
 
 const cIO=new IntersectionObserver((es)=>{es.forEach(e=>{if(!e.isIntersecting)return;const el=e.target,tgt=+el.dataset.target,sfx=el.dataset.suffix||'';let s=null;const d=1800;
 const step=(ts)=>{if(!s)s=ts;const p=Math.min((ts-s)/d,1),ez=1-Math.pow(1-p,4);el.textContent=Math.floor(ez*tgt)+sfx;if(p<1)requestAnimationFrame(step);else el.textContent=tgt+sfx;};

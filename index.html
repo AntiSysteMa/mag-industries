@@ -138,66 +138,7 @@
         <div class="screen relative h-[360px] sm:h-[420px] overflow-hidden">
           <div class="absolute inset-0 bg-grid opacity-60"></div>
           <div class="absolute inset-0 overflow-hidden pointer-events-none"><div class="scanline absolute left-0 right-0 h-32 bg-gradient-to-b from-cyber/0 via-cyber/6 to-cyber/0"></div></div>
-          <svg viewBox="0 0 600 420" class="absolute inset-0 w-full h-full" aria-label="Representación isométrica 3D del fresado de una cavidad en un postizo de acero D2, con la fresa girando y descendiendo sobre la trayectoria programada">
-            <defs>
-              <linearGradient id="gTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#32414F"/><stop offset="1" stop-color="#1C2734"/></linearGradient>
-              <linearGradient id="gLeft" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#233140"/><stop offset="1" stop-color="#131C26"/></linearGradient>
-              <linearGradient id="gRight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#18222E"/><stop offset="1" stop-color="#0C131B"/></linearGradient>
-              <linearGradient id="gTool" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3C4757"/><stop offset="0.5" stop-color="#CDD8E4"/><stop offset="1" stop-color="#3C4757"/></linearGradient>
-              <linearGradient id="gFloor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0B1017"/><stop offset="1" stop-color="#0E1620"/></linearGradient>
-            </defs>
-            <polygon points="125,185 300,275 300,339 125,249" fill="url(#gLeft)" stroke="#2C3B4C" stroke-width="1"/>
-            <polygon points="300,275 475,185 475,249 300,339" fill="url(#gRight)" stroke="#2C3B4C" stroke-width="1"/>
-            <polygon points="300,95 475,185 300,275 125,185" fill="url(#gTop)" stroke="#3A4B5E" stroke-width="1"/>
-            <polyline points="300,95 125,185 300,275 475,185 300,95" fill="none" stroke="#12F7A0" stroke-width="0.9" opacity="0.35"/>
-            <line x1="125" y1="185" x2="125" y2="249" stroke="#12F7A0" stroke-width="0.9" opacity="0.35"/>
-            <line x1="300" y1="275" x2="300" y2="339" stroke="#12F7A0" stroke-width="0.9" opacity="0.35"/>
-            <line x1="475" y1="185" x2="475" y2="249" stroke="#12F7A0" stroke-width="0.9" opacity="0.35"/>
-            <polygon points="300,168 391,215 300,262 209,215" fill="url(#gFloor)" stroke="#2C3B4C" stroke-width="1"/>
-            <polygon points="209,185 300,232 300,262 209,215" fill="#141F2C" stroke="#2C3B4C" stroke-width="0.8"/>
-            <polygon points="300,232 391,185 391,215 300,262" fill="#0F1823" stroke="#2C3B4C" stroke-width="0.8"/>
-            <polygon points="300,138 391,185 300,232 209,185" fill="none" stroke="#4A5B6E" stroke-width="1.2"/>
-            <path d="M300,173 L382,215 L300,257 L218,215 L300,181 L365,215 L300,249 L235,215 L300,190 L349,215 L300,240 L251,215 L300,199 L331,215 L300,231 L269,215 L300,208 L315,215 L300,215"
-                  fill="none" stroke="#33465e" stroke-width="1" stroke-dasharray="2 4"/>
-            <path id="tp3d" d="M300,173 L382,215 L300,257 L218,215 L300,181 L365,215 L300,249 L235,215 L300,190 L349,215 L300,240 L251,215 L300,199 L331,215 L300,231 L269,215 L300,208 L315,215 L300,215"
-                  fill="none" stroke="#12F7A0" stroke-width="1.8" class="path-trace"/>
-            <g>
-              <animateMotion dur="9s" repeatCount="indefinite" rotate="0" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
-                <mpath href="#tp3d"/>
-              </animateMotion>
-              <circle cx="-6" cy="-2" r="2.6" fill="#12F7A0" class="spark"/>
-              <circle cx="7" cy="-3" r="2.2" fill="#FFC400" class="spark" style="animation-delay:.35s"/>
-              <circle cx="0" cy="2" r="1.8" fill="#12F7A0" class="spark" style="animation-delay:.6s"/>
-              <path d="M-4,-3 q-6,-5 -4,-11" fill="none" stroke="#B4C1D0" stroke-width="1.1" class="chip"/>
-              <path d="M5,-4 q7,-4 5,-10" fill="none" stroke="#8592A3" stroke-width="1" class="chip d2"/>
-              <path d="M0,-6 q-3,-8 2,-12" fill="none" stroke="#B4C1D0" stroke-width="0.9" class="chip d3"/>
-              <polygon points="-8,-4 8,-4 0,9" fill="#E4ECF4"/>
-              <g>
-                <rect x="-8" y="-30" width="16" height="26" rx="2" fill="url(#gTool)"/>
-                <rect x="-8" y="-30" width="16" height="26" rx="2" fill="none" stroke="#26323F" stroke-width="0.6"/>
-                <line x1="-4" y1="-4" x2="2" y2="-30" stroke="#26323F" stroke-width="1"/>
-                <line x1="3" y1="-4" x2="7" y2="-30" stroke="#26323F" stroke-width="1"/>
-                <rect x="-2" y="-30" width="2.4" height="26" fill="#FFFFFF" opacity="0.85">
-                  <animate attributeName="x" values="-8;7;-8" dur="0.5s" repeatCount="indefinite"/>
-                  <animate attributeName="opacity" values="0.15;0.85;0.15" dur="0.5s" repeatCount="indefinite"/>
-                </rect>
-              </g>
-              <rect x="-10" y="-96" width="20" height="66" rx="3" fill="url(#gTool)"/>
-              <rect x="-10" y="-96" width="20" height="66" rx="3" fill="none" stroke="#26323F" stroke-width="0.6"/>
-              <ellipse cx="0" cy="-96" rx="10" ry="3.4" fill="#7C8A9B"/>
-              <rect x="-12" y="-34" width="24" height="5" rx="1.5" fill="#556475"/>
-              <line x1="0" y1="-96" x2="0" y2="-118" stroke="#12F7A0" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.6"/>
-            </g>
-            <g class="tag" fill="#8592A3" font-size="9">
-              <line x1="300" y1="82" x2="475" y2="172" stroke="#33465e" stroke-width="0.7" stroke-dasharray="2 3"/>
-              <text x="392" y="118">Ø12 · z-30</text>
-            </g>
-            <g transform="translate(66,360)" stroke-width="1.4" class="tag" font-size="10">
-              <line x1="0" y1="0" x2="34" y2="17" stroke="#FF5A3C"/><text x="38" y="20" fill="#FF5A3C">X</text>
-              <line x1="0" y1="0" x2="-30" y2="16" stroke="#12F7A0"/><text x="-42" y="19" fill="#12F7A0">Y</text>
-              <line x1="0" y1="0" x2="0" y2="-34" stroke="#FFC400"/><text x="-4" y="-38" fill="#FFC400">Z</text>
-            </g>
-          </svg>
+          <canvas id="sim-canvas" class="absolute inset-0 w-full h-full" role="img" aria-label="Simulación isométrica de fresado CNC: la fresa recorre una cavidad con islas interiores dejando un rastro de trayectoria incandescente y despidiendo virutas metálicas"></canvas>
           <div class="screen-bar absolute bottom-0 inset-x-0 backdrop-blur border-t px-5 py-3 flex items-center justify-between">
             <div class="flex gap-4 tag font-mono text-[11px] text-steel-300"><span>X <span id="rx" class="text-steel-100">124.382</span></span><span>Y <span id="ry" class="text-steel-100">-56.219</span></span><span>Z <span id="rz" class="text-steel-100">-12.005</span></span><span class="hidden sm:inline">F <span class="text-steel-100">3200</span></span></div>
             <span class="flex items-center gap-2 tag text-[11px] uppercase text-cyber"><span class="w-1.5 h-1.5 rounded-full bg-cyber status-dot"></span> 0 colisiones · validado</span>
@@ -844,6 +785,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="app.js?v=3" defer></script>
+<script src="app.js?v=4" defer></script>
 </body>
 </html>
