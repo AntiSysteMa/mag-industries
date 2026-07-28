@@ -42,7 +42,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="tailwind.css?v=3">
+<link rel="stylesheet" href="tailwind.css?v=5">
 <script>
   /* Tema: aplica antes de pintar para evitar parpadeo. Oscuro por defecto. */
   (function(){ try{ var t=localStorage.getItem('mag-theme')||'dark'; document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark'); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
@@ -70,12 +70,12 @@
         <span class="block tag text-[9px] text-steel-500 uppercase mt-1">Consultoría CAD · CAM · CNC</span>
       </span>
     </a>
-    <ul class="hidden lg:flex items-center gap-7 text-sm text-steel-300">
+    <ul class="hidden lg:flex items-center gap-6 text-sm text-steel-300">
       <li><a href="#servicios" class="hover:text-safety transition">Servicios</a></li>
+      <li><a href="servicios.html" class="text-safety/90 hover:text-safety transition font-semibold">Tarifas</a></li>
       <li><a href="#sectores" class="hover:text-safety transition">Sectores</a></li>
       <li><a href="#capacidades" class="hover:text-safety transition">Capacidades</a></li>
       <li><a href="#cases" class="hover:text-safety transition">Qué programamos</a></li>
-      <li><a href="#why-mag" class="hover:text-safety transition">Por qué MAG</a></li>
       <li><a href="#proceso" class="hover:text-safety transition">Proceso</a></li>
       <li><a href="#faq" class="hover:text-safety transition">FAQ</a></li>
     </ul>
@@ -83,20 +83,21 @@
       <button id="theme-btn" class="theme-btn clip-tab" aria-label="Cambiar entre modo claro y oscuro" title="Cambiar tema">
         <i aria-hidden="true" class="fa-solid fa-moon theme-icon-moon"></i><i aria-hidden="true" class="fa-solid fa-sun theme-icon-sun"></i>
       </button>
-      <a href="#contact" class="hidden sm:inline-flex items-center gap-2 bg-safety text-night font-bold text-sm px-5 py-2.5 clip-tab hover:brightness-110 transition"><i aria-hidden="true" class="fa-solid fa-gauge-high"></i> Auditoría gratuita</a>
+      <a href="auditoria-gratuita.html" class="hidden sm:inline-flex items-center gap-2 bg-safety text-night font-bold text-sm px-5 py-2.5 clip-tab hover:brightness-110 transition"><i aria-hidden="true" class="fa-solid fa-gauge-high"></i> Auditoría gratuita</a>
       <button id="menu-btn" class="lg:hidden w-10 h-10 flex items-center justify-center text-steel-200 border border-night-line rounded-sm" aria-label="Abrir menú"><i aria-hidden="true" class="fa-solid fa-bars"></i></button>
     </div>
   </nav>
   <div id="mobile-menu" class="lg:hidden hidden bg-night-soft border-b border-night-line">
     <div class="px-5 py-4 flex flex-col gap-1 text-steel-200">
       <a href="#servicios" class="mobile-link py-3 border-b border-night-line/60">Servicios</a>
+      <a href="servicios.html" class="mobile-link py-3 border-b border-night-line/60 text-safety font-semibold">Tarifas y planes</a>
       <a href="#sectores" class="mobile-link py-3 border-b border-night-line/60">Sectores</a>
       <a href="#capacidades" class="mobile-link py-3 border-b border-night-line/60">Capacidades</a>
       <a href="#cases" class="mobile-link py-3 border-b border-night-line/60">Qué programamos</a>
       <a href="#why-mag" class="mobile-link py-3 border-b border-night-line/60">Por qué MAG</a>
       <a href="#proceso" class="mobile-link py-3 border-b border-night-line/60">Proceso</a>
       <a href="#faq" class="mobile-link py-3 border-b border-night-line/60">FAQ</a>
-      <a href="#contact" class="mobile-link mt-3 bg-safety text-night font-bold text-center py-3 clip-tab">Auditoría gratuita</a>
+      <a href="auditoria-gratuita.html" class="mobile-link mt-3 bg-safety text-night font-bold text-center py-3 clip-tab">Auditoría gratuita</a>
     </div>
   </div>
 </header>
@@ -730,7 +731,7 @@
       </div>
     </div>
     <div class="lg:col-span-7 reveal">
-      <form id="contact-form" class="bg-night-card border border-night-line clip-corner p-7 sm:p-9">
+      <form id="contact-form" data-origen="Home · formulario de proyecto" class="bg-night-card border border-night-line clip-corner p-7 sm:p-9">
         <h3 class="text-xl font-bold mb-7">Formulario de proyecto</h3>
         <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" class="hp-field" aria-hidden="true">
         <div class="grid sm:grid-cols-2 gap-5">
@@ -780,6 +781,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="app.js?v=4" defer></script>
+<script src="app.js?v=5" defer></script>
 </body>
 </html>

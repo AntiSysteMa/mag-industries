@@ -456,33 +456,41 @@ if(contactForm) contactForm.addEventListener('submit',async(e)=>{
   e.preventDefault();
   const f=e.target,msg=document.getElementById('form-msg');
   if(f._gotcha&&f._gotcha.value){return;}
-  if(!f.name.value||!f.email.value||!f.company.value){f.reportValidity();return;}
+  /* Campo opcional: cada formulario (home, landing de auditoría) tiene los suyos. */
+  const v=(n)=>(f[n]&&typeof f[n].value==='string')?f[n].value:'';
+  if(!v('name')||!v('email')||!v('company')){f.reportValidity();return;}
   const btn=f.querySelector('button[type="submit"]');
   btn.disabled=true;
   msg.classList.remove('hidden','text-alert');msg.classList.add('text-cyber');
   msg.textContent='Enviando tu solicitud...';
+  /* Origen del lead: sin columna nueva en Supabase, va al principio de `detalles`
+     para poder medir qué página trae cada contacto. */
+  const origen=f.dataset.origen||document.title||location.pathname;
+  const detalles=('[Origen: '+origen+'] '+v('description')).trim();
   try{
     if(supabaseClient){
       supabaseClient.from('leads').insert({
-        nombre:f.name.value,
-        empresa:f.company.value,
-        email:f.email.value,
-        telefono:f.phone.value,
-        detalles:f.description.value,
-        inactividad:f.downtime.value
+        nombre:v('name'),
+        empresa:v('company'),
+        email:v('email'),
+        telefono:v('phone'),
+        detalles:detalles,
+        inactividad:v('downtime')
       }).then(({error})=>{ if(error) console.error('Supabase insert error:', error); }).catch(()=>{});
     }
     const r=await fetch('https://formsubmit.co/ajax/chapy9716@gmail.com',{
       method:'POST',
       headers:{'Content-Type':'application/json','Accept':'application/json'},
       body:JSON.stringify({
-        nombre:f.name.value,
-        empresa:f.company.value,
-        email:f.email.value,
-        telefono:f.phone.value,
-        detalles:f.description.value,
-        inactividad:f.downtime.value,
-        _subject:'Nuevo lead — web MAG INDUSTRIES',
+        nombre:v('name'),
+        empresa:v('company'),
+        email:v('email'),
+        telefono:v('phone'),
+        detalles:detalles,
+        inactividad:v('downtime'),
+        maquinas:v('machines'),
+        origen:origen,
+        _subject:'Nuevo lead — '+origen,
         _template:'table'
       })
     });
