@@ -1,8 +1,20 @@
 # PROJECT_STATE — MAG INDUSTRIES
 
-**Última sesión:** 15 julio 2026 (Sesión 2)  
-**Estado:** En producción, bugs críticos resueltos, simulación Canvas live  
-**Siguiente sesión esperada:** Tracción de leads + email corporativo
+**Última sesión:** 28 julio 2026 (Sesión 3)  
+**Estado:** En producción. Embudo de captación montado y web sin afirmaciones falsas.  
+**Siguiente sesión esperada:** Desbloquear FormSubmit, dominio + email, primeros testimonios reales
+
+---
+
+## ⚠️ BLOQUEADORES ACTIVOS (leer primero)
+
+| # | Bloqueador | Impacto | Acción del usuario |
+|---|-----------|---------|--------------------|
+| 1 | **FormSubmit sin activar** | La landing capta leads pero el email de aviso NO llega. El lead sí queda en Supabase, pero el visitante ve mensaje de error. | Enviar el formulario una vez y pulsar «Activate» en el correo de FormSubmit |
+| 2 | **Precios publicados sin confirmar** | Las tarifas (280/190/60 €) y las igualas (590/990/1.690 €) son la recomendación del plan, no cifras validadas por el usuario. Están **en vivo**. | Revisar `servicios.html` y ajustar o confirmar |
+| 3 | **Referencias ofrecidas sin permiso** | La web ofrece poner en contacto a prospectos con los 2 talleres actuales. | Pedir permiso a JPARENTE y Gil-bo antes de que alguien lo solicite |
+| 4 | Sin dominio ni email corporativo | Se retiró `proyectos@magindustries.com` (no existía y los leads rebotaban). Hoy solo hay teléfono, WhatsApp y formulario. | Comprar dominio y configurar Zoho Mail |
+| 5 | Analytics de Vercel sin activar | No hay medición de tráfico ni de conversión de la landing. | Activar en el dashboard de Vercel |
 
 ---
 
@@ -104,6 +116,45 @@ Colisiones con isla A: 0 | distancia mínima al muro A: 8.98 u (fresa r=6) ✅
 Colisiones con isla B: 0 | distancia mínima al muro B: 8.88 u ✅
 BBox en pantalla del rastro: x 190 .. 411  y 151 .. 266  (lienzo 600x420) ✅
 ```
+
+### Sesión 3 (28 julio 2026)
+**Objetivo:** Ejecutar la Semana 1 del plan — limpiar afirmaciones falsas y montar el embudo de captación.
+
+**Commits:** `82c10c9` · `2b5eaaa` · `04c477c`
+
+**1. Limpieza de contenido no verificable (`82c10c9`)**
+
+Lo que había en producción y se ha retirado:
+- Cifras infladas: «15+ años», «500+ proyectos certificados», «99,8 % garantía», «soporte 24/7», «100 % multi-plataforma»
+- 4 testimonios completamente inventados con nombres y empresas ficticias (Roberto F. / Mecanizados AeroSur, Carmen L. / TechParts Auto, David M. / Hidráulica Industrial CNC, Elena G. / Mecánica de Precisión G&S), incluidos «50.000 €/año ahorrados» y «45 % reducción de setup»
+- 3 casos de éxito inventados con métricas falsas (40 % reducción de ciclo, 25 % menos consumo de herramienta)
+- Oficina ficticia: «Polígono Industrial Tecnológico, Barcelona»
+- `proyectos@magindustries.com` — **dominio inexistente**: cualquier lead que escribiera ahí rebotaba sin que nadie se enterara. Retirado del contacto y del JSON-LD
+- FAQ: «experiencia certificada», «revisión por ingeniero senior» (es fundador único), «verificación dimensional certificada» (no ofrece metrología)
+
+Con qué se ha sustituido — compromisos verificables en lugar de historial:
+- 0 colisiones · 48 h de plazo · 7 años reales de ingeniería CAD/CAM · 5 plataformas CAM · 0 extras
+- Testimonios → sección «Prefiero que se lo preguntes a mis clientes»: ofrece contacto directo con los talleres actuales, garantía por escrito y primera pieza al 50 %
+- Casos de éxito → familias de pieza reales con precios de partida y plazos
+- Nuevo posicionamiento: «No vendemos antigüedad. Vendemos compromisos.»
+
+**2. Blindaje de `app.js` (`2b5eaaa`)**
+
+`app.js` accedía a `#site-header`, `#menu-btn`, `#contact-form`, el quiz y la navegación de capas sin comprobar que existieran. Cualquier página sin esas secciones habría provocado un TypeError que aborta el script entero — exactamente la misma clase de fallo que el bug de `supabase`. Todos los bloques van ahora guardados, lo que es requisito para tener varias páginas.
+
+**3. Embudo de captación (`04c477c`)**
+
+- **`auditoria-gratuita.html`** — landing de conversión con una sola acción. Cabecera sin navegación (sin rutas de escape), formulario sobre el pliegue, «qué pasa en los 45 minutos», qué se lleva el cliente aunque no contrate, cualificación explícita (para quién es / para quién no) y 5 objeciones reales incluida «sois nuevos, ¿por qué debería fiarme?». Sin GSAP: carga más rápido y el revelado va por IntersectionObserver.
+- **`servicios.html`** — tarifas publicadas (280 / 190 / 60 €) y planes de capacidad reservada (590 / 990 / 1.690 €) con condiciones explícitas, lo incluido en toda entrega y FAQ de precios.
+- El handler del formulario admite ahora formularios con campos distintos y etiqueta cada lead con su página de origen vía `data-origen`, para medir qué canal trae cada contacto **sin tocar el esquema de Supabase** (el MCP de Supabase devolvió «no tienes permiso», así que el origen va dentro del campo `detalles`).
+- `copy-static.js` copia cualquier `.html` de la raíz; sitemap actualizado; caché a `v=5`.
+
+**Verificado en producción:** las tres páginas responden 200, los precios se sirven correctamente y quedan 0 coincidencias de contenido inventado.
+
+**Decisiones:**
+- No se nombra públicamente a JPARENTE ni a Gil-bo: se indica «dos talleres en Cataluña» y se ofrece el contacto bajo petición, porque aún no han dado permiso
+- Landing sin GSAP a propósito: la velocidad importa más que la animación en una página de conversión
+- Origen del lead codificado en `detalles` en vez de crear columna nueva, para no tocar producción sin permisos
 
 ---
 
