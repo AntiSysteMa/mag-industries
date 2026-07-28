@@ -16,13 +16,20 @@ try {
   }
 } catch (e) { console.warn('Supabase no disponible; el formulario usará solo el envío por email.', e); }
 
+/* Todos los bloques comprueban que sus elementos existan: este mismo archivo se
+   carga en index.html y en las landings, que no tienen todas las secciones.
+   Un getElementById que devuelva null y no esté guardado aborta el script entero. */
 const header=document.getElementById('site-header');
-const onScroll=()=>{ if(window.scrollY>20){header.classList.add('bg-night/90','backdrop-blur-md','border-night-line','shadow-lg');}else{header.classList.remove('bg-night/90','backdrop-blur-md','border-night-line','shadow-lg');} };
-window.addEventListener('scroll',onScroll); onScroll();
+if(header){
+  const onScroll=()=>{ if(window.scrollY>20){header.classList.add('bg-night/90','backdrop-blur-md','border-night-line','shadow-lg');}else{header.classList.remove('bg-night/90','backdrop-blur-md','border-night-line','shadow-lg');} };
+  window.addEventListener('scroll',onScroll); onScroll();
+}
 
 const menuBtn=document.getElementById('menu-btn'),mobileMenu=document.getElementById('mobile-menu');
-menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
-document.querySelectorAll('.mobile-link').forEach(a=>a.addEventListener('click',()=>mobileMenu.classList.add('hidden')));
+if(menuBtn&&mobileMenu){
+  menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
+  document.querySelectorAll('.mobile-link').forEach(a=>a.addEventListener('click',()=>mobileMenu.classList.add('hidden')));
+}
 
 /* Toggle de tema claro / oscuro */
 (function(){
@@ -444,7 +451,8 @@ const step=(ts)=>{if(!s)s=ts;const p=Math.min((ts-s)/d,1),ez=1-Math.pow(1-p,4);e
 requestAnimationFrame(step);cIO.unobserve(el);});},{threshold:0.5});
 document.querySelectorAll('.counter').forEach(el=>cIO.observe(el));
 
-document.getElementById('contact-form').addEventListener('submit',async(e)=>{
+const contactForm=document.getElementById('contact-form');
+if(contactForm) contactForm.addEventListener('submit',async(e)=>{
   e.preventDefault();
   const f=e.target,msg=document.getElementById('form-msg');
   if(f._gotcha&&f._gotcha.value){return;}
@@ -497,6 +505,7 @@ document.getElementById('contact-form').addEventListener('submit',async(e)=>{
   ];
   const answers={};let step=0;
   const body=document.getElementById('quiz-body'),stage=document.getElementById('quiz-stage'),back=document.getElementById('quiz-back'),steps=document.querySelectorAll('.quiz-step');
+  if(!body||!stage||!back)return;
   function progress(){steps.forEach((el,i)=>{el.classList.toggle('bg-safety',i<=step);el.classList.toggle('bg-night-line',i>step);});}
   function render(){const q=questions[step];stage.textContent=`Etapa ${step+1} / ${questions.length}`;back.classList.toggle('hidden',step===0);progress();
     body.innerHTML=`<h3 class="text-xl sm:text-2xl font-bold mb-6">${q.text}</h3><div class="grid sm:grid-cols-3 gap-3" role="radiogroup">${q.options.map(o=>`<button type="button" data-v="${o}" class="quiz-opt text-left px-5 py-4 border border-night-line bg-night-soft text-steel-200 text-sm font-medium rounded-sm hover:border-safety/60">${o}</button>`).join('')}</div>`;
@@ -504,7 +513,7 @@ document.getElementById('contact-form').addEventListener('submit',async(e)=>{
   }
   function result(){back.classList.add('hidden');stage.textContent='Resultado';steps.forEach(el=>el.classList.add('bg-safety'));
     const vip=answers.machines==='Más de 10 máquinas'&&answers.hours==='Más de 20 horas';
-    if(vip){body.innerHTML=`<div class="text-center"><span class="inline-flex items-center gap-2 tag text-xs uppercase text-night bg-cyber px-3 py-1.5 mb-5 clip-tab"><i class="fa-solid fa-bolt"></i> Perfil de alta capacidad detectado</span><h3 class="text-2xl sm:text-3xl font-extrabold mb-4">Tu perfil califica para una Auditoría Prioritaria VIP</h3><p class="text-steel-400 max-w-md mx-auto mb-8">Con más de 10 máquinas y más de 20 h semanales de inactividad, el coste de oportunidad acumulado justifica una revisión técnica directa con un ingeniero senior, no un presupuesto genérico.</p><a href="#contact" class="inline-flex items-center gap-3 bg-cyber text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition"><i class="fa-solid fa-calendar-check"></i> Reservar Auditoría VIP ahora</a></div>`;}
+    if(vip){body.innerHTML=`<div class="text-center"><span class="inline-flex items-center gap-2 tag text-xs uppercase text-night bg-cyber px-3 py-1.5 mb-5 clip-tab"><i class="fa-solid fa-bolt"></i> Perfil de alta capacidad detectado</span><h3 class="text-2xl sm:text-3xl font-extrabold mb-4">Tu perfil califica para una Auditoría Prioritaria VIP</h3><p class="text-steel-400 max-w-md mx-auto mb-8">Con más de 10 máquinas y más de 20 h semanales de inactividad, el coste de oportunidad acumulado justifica una revisión técnica directa sobre una de tus piezas, no un presupuesto genérico.</p><a href="#contact" class="inline-flex items-center gap-3 bg-cyber text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition"><i class="fa-solid fa-calendar-check"></i> Reservar Auditoría VIP ahora</a></div>`;}
     else{body.innerHTML=`<div class="text-center"><span class="inline-flex items-center gap-2 tag text-xs uppercase text-night bg-safety px-3 py-1.5 mb-5 clip-tab"><i class="fa-solid fa-circle-check"></i> Diagnóstico completado</span><h3 class="text-2xl sm:text-3xl font-extrabold mb-4">Tienes capacidad oculta recuperable</h3><p class="text-steel-400 max-w-md mx-auto mb-8">Con "${(answers.reason||'').toLowerCase()}" como cuello de botella y un rango de ${(answers.hours||'').toLowerCase()} de inactividad, una intervención de programación CNC externa puede recuperar horas de producción esta misma semana.</p><a href="#contact" class="inline-flex items-center gap-3 bg-safety text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition"><i class="fa-solid fa-user-gear"></i> Hablar con un ingeniero</a></div>`;}
   }
   back.addEventListener('click',()=>{if(step>0){step--;render();}});
@@ -516,45 +525,49 @@ document.getElementById('contact-form').addEventListener('submit',async(e)=>{
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const sections=Array.from(document.querySelectorAll('section.layer'));
 
-  /* Navegación por puntos + contador (funciona incluso sin GSAP) */
+  /* Navegación por puntos + contador (funciona incluso sin GSAP).
+     Las landings no llevan navegación de capas: si falta, se salta este bloque
+     pero se conserva el revelado de contenido más abajo. */
   const nav=document.getElementById('layer-nav');
   const counter=document.getElementById('sec-counter');
-  const curEl=counter.querySelector('.cur'),totEl=counter.querySelector('.tot'),lblEl=counter.querySelector('.lbl'),barEl=counter.querySelector('.bar i');
-  totEl.textContent=String(sections.length).padStart(2,'0');
-  const dots=sections.map((sec,i)=>{
-    const b=document.createElement('button');
-    b.className='lnav'; b.setAttribute('aria-label','Ir a '+sec.dataset.label);
-    b.innerHTML=`<span class="lbl">${sec.dataset.label}</span><span class="dot"></span>`;
-    b.addEventListener('click',()=>sec.scrollIntoView({behavior:reduced?'auto':'smooth'}));
-    nav.appendChild(b); return b;
-  });
-  let activeIdx=0;
-  function setActive(i){
-    activeIdx=i;
-    dots.forEach((d,j)=>d.classList.toggle('active',j===i));
-    curEl.textContent=String(i+1).padStart(2,'0');
-    lblEl.textContent=sections[i].dataset.label;
-    barEl.style.transform=`scaleX(${(i+1)/sections.length})`;
-  }
-  const secIO=new IntersectionObserver(es=>{
-    es.forEach(e=>{ if(e.isIntersecting){ setActive(sections.indexOf(e.target)); } });
-  },{rootMargin:'-45% 0px -45% 0px'});
-  sections.forEach(s=>secIO.observe(s));
-  setActive(0);
+  if(nav&&counter&&sections.length){
+    const curEl=counter.querySelector('.cur'),totEl=counter.querySelector('.tot'),lblEl=counter.querySelector('.lbl'),barEl=counter.querySelector('.bar i');
+    totEl.textContent=String(sections.length).padStart(2,'0');
+    const dots=sections.map((sec,i)=>{
+      const b=document.createElement('button');
+      b.className='lnav'; b.setAttribute('aria-label','Ir a '+sec.dataset.label);
+      b.innerHTML=`<span class="lbl">${sec.dataset.label}</span><span class="dot"></span>`;
+      b.addEventListener('click',()=>sec.scrollIntoView({behavior:reduced?'auto':'smooth'}));
+      nav.appendChild(b); return b;
+    });
+    let activeIdx=0;
+    function setActive(i){
+      activeIdx=i;
+      dots.forEach((d,j)=>d.classList.toggle('active',j===i));
+      curEl.textContent=String(i+1).padStart(2,'0');
+      lblEl.textContent=sections[i].dataset.label;
+      barEl.style.transform=`scaleX(${(i+1)/sections.length})`;
+    }
+    const secIO=new IntersectionObserver(es=>{
+      es.forEach(e=>{ if(e.isIntersecting){ setActive(sections.indexOf(e.target)); } });
+    },{rootMargin:'-45% 0px -45% 0px'});
+    sections.forEach(s=>secIO.observe(s));
+    setActive(0);
 
-  /* Navegación con teclado entre capas */
-  window.addEventListener('keydown',(e)=>{
-    const t=e.target;
-    if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'))return;
-    let go=null;
-    if(e.key==='ArrowDown'||e.key==='PageDown') go=Math.min(activeIdx+1,sections.length-1);
-    else if(e.key==='ArrowUp'||e.key==='PageUp') go=Math.max(activeIdx-1,0);
-    else if(e.key==='Home') go=0;
-    else if(e.key==='End') go=sections.length-1;
-    if(go===null)return;
-    e.preventDefault();
-    sections[go].scrollIntoView({behavior:reduced?'auto':'smooth'});
-  });
+    /* Navegación con teclado entre capas */
+    window.addEventListener('keydown',(e)=>{
+      const t=e.target;
+      if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'))return;
+      let go=null;
+      if(e.key==='ArrowDown'||e.key==='PageDown') go=Math.min(activeIdx+1,sections.length-1);
+      else if(e.key==='ArrowUp'||e.key==='PageUp') go=Math.max(activeIdx-1,0);
+      else if(e.key==='Home') go=0;
+      else if(e.key==='End') go=sections.length-1;
+      if(go===null)return;
+      e.preventDefault();
+      sections[go].scrollIntoView({behavior:reduced?'auto':'smooth'});
+    });
+  }
 
   /* Sin GSAP/ScrollTrigger (CDN bloqueado o red inestable) o con movimiento reducido: fallback simple.
      El contenido se revela con IntersectionObserver, sin depender de ningún CDN. */
