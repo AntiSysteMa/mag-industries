@@ -59,11 +59,31 @@
 
 ## 📂 Arquitectura de ficheros
 
+**Arquitectura de páginas (multipágina desde jul-2026).** La home tenía 11 secciones
+y resultaba densa; el contenido se reparte ahora en páginas temáticas:
+
+| Página | Rol | Contenido |
+|---|---|---|
+| `index.html` | Conversión | 9 capas: hero → cómo empezamos (3 pasos) → evidencia técnica → servicios → quiz → compromisos → referencias → FAQ → contacto |
+| `auditoria-gratuita.html` | Landing de captación | Una sola acción. Cabecera sin navegación. Formulario `#contact-form` con `data-origen`. Sin GSAP (velocidad) |
+| `servicios.html` | Página de dinero | Tarifas por pieza e igualas mensuales |
+| `capacidades.html` | Autoridad técnica | Fresado, torneado, EDM, hilo, láser (con animaciones SVG) |
+| `sectores.html` | SEO / cualificación | 9 tarjetas de sector con imágenes |
+| `privacidad.html` | Legal | RGPD |
+
+Navegación unificada en las 5 páginas públicas: Cómo trabajamos · Capacidades ·
+Sectores · Tarifas · FAQ + CTA «Auditoría gratuita».
+
 ```
 mag-industries/
 ├── CLAUDE.md                      ← Este archivo (obligatorio)
 ├── PROJECT_STATE.md               ← Estado actual (sesión-a-sesión)
-├── index.html                     ← HTML único (11 capas)
+├── docs/clips-spec.md             ← Especificación de los micro-clips de evidencia
+├── index.html                     ← Home (9 capas)
+├── auditoria-gratuita.html        ← Landing de conversión
+├── servicios.html                 ← Tarifas e igualas
+├── capacidades.html               ← Escaparate técnico
+├── sectores.html                  ← Sectores industriales
 ├── input.css                      ← @tailwind + custom CSS
 ├── tailwind.config.js             ← tema extendido (colores RGB, fuentes)
 ├── app.js                         ← JS vanilla + simulación Canvas (v4)

@@ -1,7 +1,7 @@
 # PROJECT_STATE — MAG INDUSTRIES
 
-**Última sesión:** 28 julio 2026 (Sesión 3)  
-**Estado:** En producción. Embudo de captación montado y web sin afirmaciones falsas.  
+**Última sesión:** 29 julio 2026 (Sesión 4)
+**Estado:** En producción. Arquitectura multipágina, embudo montado, web sin afirmaciones falsas.
 **Siguiente sesión esperada:** Desbloquear FormSubmit, dominio + email, primeros testimonios reales
 
 ---
@@ -155,6 +155,33 @@ Con qué se ha sustituido — compromisos verificables en lugar de historial:
 - No se nombra públicamente a JPARENTE ni a Gil-bo: se indica «dos talleres en Cataluña» y se ofrece el contacto bajo petición, porque aún no han dado permiso
 - Landing sin GSAP a propósito: la velocidad importa más que la animación en una página de conversión
 - Origen del lead codificado en `detalles` en vez de crear columna nueva, para no tocar producción sin permisos
+
+### Sesión 4 (29 julio 2026)
+**Objetivo:** Romper la densidad de la home en arquitectura multipágina y reescribir los bloques de onboarding y autoridad con enfoque CRO.
+
+**Commits:** `61c9c77` · `f926cb5`
+
+**Reparto de contenido.** La home tenía 11 capas y el usuario la percibía densa. Las dos secciones más pesadas —las que cargaban casi todas las imágenes de Unsplash— pasan a página propia:
+- `sectores.html` ← antigua capa 04 (9 tarjetas de sector)
+- `capacidades.html` ← antigua capa 05 (escaparate técnico con 6 animaciones SVG)
+- Home: de 11 capas a 9, de 790 a 595 líneas
+
+**Contenido nuevo (los 4 pilares del brief):**
+1. **Hero:** «Cero horas de máquina parada esperando programa», con el ángulo de absorber picos de oficina técnica sin ampliar plantilla fija. Trust-bar reescrita a 0 colisiones / 48 h / multi-control.
+2. **Capa 02 «Cómo empezamos a trabajar»:** onboarding de 3 pasos contra el escepticismo ante proveedor externo. Paso 1 pide STEP/IGES/nativo + máquina, control (Heidenhain TNC, Fanuc 0i/30i, Siemens 840D) y amarre, más el truco de pedir un programa que ya funcione para derivar el postprocesador real. Paso 2 precio y plazo cerrados con el riesgo del lado del proveedor. Paso 3 el paquete listo para Cycle Start (código posprocesado, hoja de proceso, orígenes G54–G59, lista de herramientas con voladizos, F y S, vídeo de simulación).
+3. **Capa 03 «Evidencia»:** tres tarjetas de autoridad técnica con animación SVG propia cada una — HSM con ángulo de compromiso constante, trocoidal en D2/H13/Ti-6Al-4V, y 5 ejes continuos con control de vector. Cada texto explica el *por qué* técnico, no el adjetivo. Al pie, tres enlaces a capacidades / sectores / tarifas.
+4. **CTA de baja fricción:** «Manda tu plano y te digo la viabilidad» + WhatsApp, con la promesa explícita de que responde el ingeniero y no un comercial, y «sin registro ni llamada comercial».
+
+**`docs/clips-spec.md`** — especificación de producción de los tres micro-clips de 3 s que sustituirán a las animaciones SVG: formato (recomienda MP4 sobre GIF, con el argumento de peso: 300–500 KB frente a 3–8 MB), resolución, reglas de bucle (cámara fija o el bucle se ve), qué debe verse en cada clip, comandos de `ffmpeg` y el HTML exacto de sustitución. Cada tarjeta de la home lleva un comentario que marca el punto de swap.
+
+**Verificado en producción:** las 6 páginas y el sitemap responden 200, el copy nuevo se sirve correctamente, etiquetas balanceadas en las 5 páginas (`section`, `svg`, `div`), y validación cruzada de todos los anclajes internos y referencias entre páginas sin ningún enlace roto.
+
+**Decisiones:**
+- La landing mantiene cabecera sin navegación a propósito (sin rutas de escape); el resto comparte navegación unificada
+- Animaciones SVG como estado de partida en lugar de dejar huecos esperando vídeo: la sección funciona hoy y el upgrade es un swap de bloque
+- Alternancia de fondos recalculada tras el reordenado de capas
+
+**Corregido de paso:** enlace roto `index.html#capacidades` en `servicios.html`, que apuntaba a una sección que ya no existe en la home.
 
 ---
 
