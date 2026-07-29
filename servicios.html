@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="tailwind.css?v=5">
+<link rel="stylesheet" href="tailwind.css?v=6">
 <script>
   (function(){ try{ var t=localStorage.getItem('mag-theme')||'dark'; document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark'); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
   window.addEventListener('load',function(){ setTimeout(function(){ try{ document.querySelectorAll('.reveal').forEach(function(el){ if(parseFloat(getComputedStyle(el).opacity)<0.05){ el.style.opacity='1'; el.style.transform='none'; el.classList.add('in'); } }); }catch(e){} },1600); });
@@ -42,10 +42,11 @@
       </span>
     </a>
     <ul class="hidden lg:flex items-center gap-7 text-sm text-steel-300">
-      <li><a href="index.html#servicios" class="hover:text-safety transition">Qué hacemos</a></li>
-      <li><a href="index.html#capacidades" class="hover:text-safety transition">Capacidades</a></li>
-      <li><a href="index.html#proceso" class="hover:text-safety transition">Proceso</a></li>
-      <li><a href="index.html#testimonials" class="hover:text-safety transition">Referencias</a></li>
+      <li><a href="index.html#proceso" class="hover:text-safety transition">Cómo trabajamos</a></li>
+      <li><a href="capacidades.html" class="hover:text-safety transition">Capacidades</a></li>
+      <li><a href="sectores.html" class="hover:text-safety transition">Sectores</a></li>
+      <li><a href="servicios.html" class="text-safety font-semibold transition">Tarifas</a></li>
+      <li><a href="index.html#faq" class="hover:text-safety transition">FAQ</a></li>
     </ul>
     <div class="flex items-center gap-3">
       <button id="theme-btn" class="theme-btn clip-tab" aria-label="Cambiar entre modo claro y oscuro" title="Cambiar tema">
@@ -57,10 +58,11 @@
   </nav>
   <div id="mobile-menu" class="lg:hidden hidden bg-night-soft border-b border-night-line">
     <div class="px-5 py-4 flex flex-col gap-1 text-steel-200">
-      <a href="index.html#servicios" class="mobile-link py-3 border-b border-night-line/60">Qué hacemos</a>
-      <a href="index.html#capacidades" class="mobile-link py-3 border-b border-night-line/60">Capacidades</a>
-      <a href="index.html#proceso" class="mobile-link py-3 border-b border-night-line/60">Proceso</a>
-      <a href="index.html#testimonials" class="mobile-link py-3 border-b border-night-line/60">Referencias</a>
+      <a href="index.html#proceso" class="mobile-link py-3 border-b border-night-line/60">Cómo trabajamos</a>
+      <a href="capacidades.html" class="mobile-link py-3 border-b border-night-line/60">Capacidades</a>
+      <a href="sectores.html" class="mobile-link py-3 border-b border-night-line/60">Sectores</a>
+      <a href="servicios.html" class="mobile-link py-3 border-b border-night-line/60 text-safety font-semibold">Tarifas y planes</a>
+      <a href="index.html#faq" class="mobile-link py-3 border-b border-night-line/60">FAQ</a>
       <a href="auditoria-gratuita.html" class="mobile-link mt-3 bg-safety text-night font-bold text-center py-3 clip-tab">Auditoría gratuita</a>
     </div>
   </div>
@@ -268,6 +270,6 @@
 </a>
 
 <script defer src="/_vercel/insights/script.js"></script>
-<script src="app.js?v=5" defer></script>
+<script src="app.js?v=6" defer></script>
 </body>
 </html>

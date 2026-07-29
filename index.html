@@ -42,7 +42,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="tailwind.css?v=5">
+<link rel="stylesheet" href="tailwind.css?v=6">
 <script>
   /* Tema: aplica antes de pintar para evitar parpadeo. Oscuro por defecto. */
   (function(){ try{ var t=localStorage.getItem('mag-theme')||'dark'; document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark'); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
@@ -55,7 +55,7 @@
 
 <div id="progress"></div>
 <nav id="layer-nav" aria-label="Navegación entre capas"></nav>
-<div id="sec-counter" aria-hidden="true"><span class="cur">01</span><span class="bar"><i></i></span><span class="tot">10</span><span class="lbl">Inicio</span></div>
+<div id="sec-counter" aria-hidden="true"><span class="cur">01</span><span class="bar"><i></i></span><span class="tot">09</span><span class="lbl">Inicio</span></div>
 
 <!-- HEADER -->
 <header id="site-header" class="fixed top-0 inset-x-0 z-50 transition-all duration-300 border-b border-transparent">
@@ -70,13 +70,11 @@
         <span class="block tag text-[9px] text-steel-500 uppercase mt-1">Consultoría CAD · CAM · CNC</span>
       </span>
     </a>
-    <ul class="hidden lg:flex items-center gap-6 text-sm text-steel-300">
-      <li><a href="#servicios" class="hover:text-safety transition">Servicios</a></li>
+    <ul class="hidden lg:flex items-center gap-7 text-sm text-steel-300">
+      <li><a href="#proceso" class="hover:text-safety transition">Cómo trabajamos</a></li>
+      <li><a href="capacidades.html" class="hover:text-safety transition">Capacidades</a></li>
+      <li><a href="sectores.html" class="hover:text-safety transition">Sectores</a></li>
       <li><a href="servicios.html" class="text-safety/90 hover:text-safety transition font-semibold">Tarifas</a></li>
-      <li><a href="#sectores" class="hover:text-safety transition">Sectores</a></li>
-      <li><a href="#capacidades" class="hover:text-safety transition">Capacidades</a></li>
-      <li><a href="#cases" class="hover:text-safety transition">Qué programamos</a></li>
-      <li><a href="#proceso" class="hover:text-safety transition">Proceso</a></li>
       <li><a href="#faq" class="hover:text-safety transition">FAQ</a></li>
     </ul>
     <div class="flex items-center gap-3">
@@ -89,20 +87,17 @@
   </nav>
   <div id="mobile-menu" class="lg:hidden hidden bg-night-soft border-b border-night-line">
     <div class="px-5 py-4 flex flex-col gap-1 text-steel-200">
-      <a href="#servicios" class="mobile-link py-3 border-b border-night-line/60">Servicios</a>
+      <a href="#proceso" class="mobile-link py-3 border-b border-night-line/60">Cómo trabajamos</a>
+      <a href="capacidades.html" class="mobile-link py-3 border-b border-night-line/60">Capacidades</a>
+      <a href="sectores.html" class="mobile-link py-3 border-b border-night-line/60">Sectores</a>
       <a href="servicios.html" class="mobile-link py-3 border-b border-night-line/60 text-safety font-semibold">Tarifas y planes</a>
-      <a href="#sectores" class="mobile-link py-3 border-b border-night-line/60">Sectores</a>
-      <a href="#capacidades" class="mobile-link py-3 border-b border-night-line/60">Capacidades</a>
-      <a href="#cases" class="mobile-link py-3 border-b border-night-line/60">Qué programamos</a>
-      <a href="#why-mag" class="mobile-link py-3 border-b border-night-line/60">Por qué MAG</a>
-      <a href="#proceso" class="mobile-link py-3 border-b border-night-line/60">Proceso</a>
       <a href="#faq" class="mobile-link py-3 border-b border-night-line/60">FAQ</a>
       <a href="auditoria-gratuita.html" class="mobile-link mt-3 bg-safety text-night font-bold text-center py-3 clip-tab">Auditoría gratuita</a>
     </div>
   </div>
 </header>
 
-<!-- CAPA 01 · HERO -->
+<!-- CAPA 01 · INICIO -->
 <section id="home" data-label="Inicio" class="layer relative overflow-hidden bg-grid bg-glow-top border-b border-night-line pt-[72px]">
   <div class="absolute inset-0 bg-glow-cy pointer-events-none" data-speed="-8"></div>
   <span class="layer-num" data-speed="10">01</span>
@@ -110,22 +105,23 @@
     <div>
       <p class="tag inline-flex items-center gap-2 text-xs text-cyber uppercase mb-6 border border-cyber/30 bg-cyber/5 px-3 py-1.5 clip-tab reveal">
         <span class="w-1.5 h-1.5 rounded-full bg-cyber status-dot"></span>
-        Ingeniería de precisión · aeronáutica · automoción · defensa · matricería
+        Programación CNC externa · CAD/CAM · Oficina técnica de apoyo
       </p>
       <h1 class="split-h text-4xl sm:text-5xl xl:text-[3.35rem] font-extrabold leading-[1.08] tracking-tight">
-        ¿Cuánto te cuesta cada hora de tu centro de 5 ejes inactivo por falta de programación experta?
+        Cero horas de máquina parada esperando programa
       </h1>
       <p class="mt-6 text-lg text-steel-300 leading-relaxed max-w-xl reveal">
-        <strong class="text-steel-100">MAG INDUSTRIES</strong> reactiva tus activos parados con ingeniería CAD/CAM avanzada y validación en gemelo virtual. No vendemos máquinas: aportamos el <span class="text-cyber font-semibold">conocimiento</span> para exprimir las tuyas. Producción predecible, <span class="text-cyber font-semibold">cero colisiones</span>.
+        Absorbemos los picos de tu oficina técnica <strong class="text-steel-100">sin que amplíes plantilla fija</strong>. Recibes el código G posprocesado para tu control, validado contra colisiones y con la documentación de taller lista para pulsar <span class="text-cyber font-semibold">Cycle Start</span>.
       </p>
       <div class="mt-8 flex flex-col sm:flex-row gap-4 reveal">
-        <a href="#auditoria" class="inline-flex items-center justify-center gap-3 bg-safety text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition text-base"><i aria-hidden="true" class="fa-solid fa-stopwatch"></i> Diagnosticar mi capacidad oculta (Quiz 3 min)</a>
-        <a href="#cases" class="inline-flex items-center justify-center gap-3 border border-night-line text-steel-200 font-semibold px-7 py-4 clip-tab hover:border-safety/60 hover:text-safety transition text-base">Ver casos de éxito <i aria-hidden="true" class="fa-solid fa-arrow-right text-sm"></i></a>
+        <a href="auditoria-gratuita.html" class="inline-flex items-center justify-center gap-3 bg-safety text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition text-base"><i aria-hidden="true" class="fa-solid fa-paper-plane"></i> Manda tu plano y te digo la viabilidad</a>
+        <a href="#proceso" class="inline-flex items-center justify-center gap-3 border border-night-line text-steel-200 font-semibold px-7 py-4 clip-tab hover:border-safety/60 hover:text-safety transition text-base">Cómo empezamos <i aria-hidden="true" class="fa-solid fa-arrow-down text-sm"></i></a>
       </div>
-      <div class="mt-10 grid grid-cols-3 gap-4 border-t border-night-line/70 pt-7 reveal">
-        <div class="flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-crosshairs text-safety text-xl"></i><div><div class="font-bold text-sm">Optimización</div><div class="text-xs text-steel-500">Trayectorias HSM</div></div></div>
-        <div class="flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-shield-halved text-safety text-xl"></i><div><div class="font-bold text-sm">Cero riesgo</div><div class="text-xs text-steel-500">Gemelo digital</div></div></div>
-        <div class="flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-microchip text-cyber text-xl"></i><div><div class="font-bold text-sm">Multi-marca</div><div class="text-xs text-steel-500">Heidenhain·Fanuc·Siemens</div></div></div>
+      <p class="mt-4 text-xs text-steel-500 reveal">Respuesta en minutos, en horario laboral. Sin registro y sin llamada comercial.</p>
+      <div class="mt-9 grid grid-cols-3 gap-4 border-t border-night-line/70 pt-7 reveal">
+        <div class="flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-shield-halved text-cyber text-xl"></i><div><div class="font-bold text-sm">0 colisiones</div><div class="text-xs text-steel-500">Simulación en toda entrega</div></div></div>
+        <div class="flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-clock text-safety text-xl"></i><div><div class="font-bold text-sm">48 h</div><div class="text-xs text-steel-500">Plazo comprometido</div></div></div>
+        <div class="flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-microchip text-safety text-xl"></i><div><div class="font-bold text-sm">Multi-control</div><div class="text-xs text-steel-500">Heidenhain·Fanuc·Siemens</div></div></div>
       </div>
     </div>
 
@@ -162,33 +158,207 @@
   <div class="scroll-hint"><span class="tag text-[9px] uppercase tracking-widest">Scroll</span><span class="line"></span></div>
 </section>
 
-<!-- CAPA 02 · QUIZ -->
-<section id="auditoria" data-label="Auditoría" class="layer border-b border-night-line bg-night-soft overflow-hidden">
+<!-- CAPA 02 · CÓMO EMPEZAMOS -->
+<section id="proceso" data-label="Cómo empezamos" class="layer border-b border-night-line bg-night-soft relative overflow-hidden">
+  <div class="absolute inset-0 bg-grid opacity-30 pointer-events-none"></div>
   <span class="layer-num" data-speed="12">02</span>
-  <div class="relative max-w-4xl mx-auto px-5 lg:px-10 py-20 w-full">
-    <div class="text-center mb-10">
-      <p class="tag text-xs text-safety uppercase mb-3 reveal">Análisis de rendimiento operativo</p>
-      <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight">¿Cuántas horas de mecanizado pierdes cada semana?</h2>
-      <p class="mt-3 text-steel-400 max-w-xl mx-auto reveal">Tres preguntas. Tres minutos. Un diagnóstico real de las fugas de rentabilidad en tu planta.</p>
+  <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20 w-full">
+    <div class="max-w-2xl mb-14">
+      <p class="tag text-xs text-cyber uppercase mb-3 reveal">Sin fricción</p>
+      <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight">Cómo empezamos a trabajar</h2>
+      <p class="mt-4 text-steel-400 reveal">Tres pasos desde que nos mandas el fichero hasta que tu operario pulsa Cycle Start. Sin reuniones de tanteo, sin proceso de alta y sin compromiso hasta que apruebas el presupuesto.</p>
     </div>
-    <div class="bg-night-card border border-night-line clip-corner p-6 sm:p-10 reveal">
-      <div class="flex items-center gap-2 mb-8" id="quiz-progress">
-        <span class="quiz-step h-1.5 flex-1 rounded-full bg-night-line"></span>
-        <span class="quiz-step h-1.5 flex-1 rounded-full bg-night-line"></span>
-        <span class="quiz-step h-1.5 flex-1 rounded-full bg-night-line"></span>
-      </div>
-      <div id="quiz-body" aria-live="polite"></div>
-      <div class="flex items-center justify-between mt-8">
-        <button id="quiz-back" class="text-sm text-steel-500 hover:text-steel-200 transition hidden"><i aria-hidden="true" class="fa-solid fa-arrow-left mr-2"></i>Volver</button>
-        <span id="quiz-stage" class="tag text-xs text-steel-500 uppercase ml-auto">Etapa 1 / 3</span>
-      </div>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+      <article class="card-hover bg-night-card border border-night-line clip-corner p-8 reveal">
+        <div class="flex items-baseline gap-4 mb-5">
+          <span class="font-titulo text-5xl text-safety leading-none">01</span>
+          <span class="tag text-[10px] text-steel-500 uppercase">Tú envías</span>
+        </div>
+        <h3 class="font-bold text-lg mb-4">El fichero y los datos de tu máquina</h3>
+        <p class="text-steel-400 text-sm leading-relaxed mb-6">Un STEP, un IGES, un nativo de SolidWorks o Fusion, o un plano en PDF si todavía no hay 3D. Con él necesitamos tres datos: máquina y número de ejes, control y el amarre del que dispones.</p>
+        <div class="border-t border-night-line pt-5 space-y-2.5">
+          <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-microchip text-cyber text-xs mt-1"></i><span class="text-steel-300">Heidenhain TNC · Fanuc 0i / 30i · Siemens 840D</span></div>
+          <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-file-code text-cyber text-xs mt-1"></i><span class="text-steel-300">Si tienes un programa que ya funcione bien en esa máquina, mándalo: de ahí sacamos tu postprocesador real en vez de uno genérico.</span></div>
+          <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-file-shield text-cyber text-xs mt-1"></i><span class="text-steel-300">El NDA se firma antes de que salga el primer archivo de tu servidor.</span></div>
+        </div>
+      </article>
+
+      <article class="card-hover bg-night-card border border-night-line clip-corner p-8 reveal">
+        <div class="flex items-baseline gap-4 mb-5">
+          <span class="font-titulo text-5xl text-safety leading-none">02</span>
+          <span class="tag text-[10px] text-steel-500 uppercase">Nosotros cerramos</span>
+        </div>
+        <h3 class="font-bold text-lg mb-4">Presupuesto y plazo, antes de tocar nada</h3>
+        <p class="text-steel-400 text-sm leading-relaxed mb-6">En cuestión de horas tienes precio fijo y fecha de entrega comprometida por escrito. No trabajamos con horas abiertas: si la pieza se complica más de lo previsto, el sobrecoste es nuestro, no tuyo.</p>
+        <div class="border-t border-night-line pt-5 space-y-2.5">
+          <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-lock text-cyber text-xs mt-1"></i><span class="text-steel-300">Lo que apruebas es exactamente lo que se factura.</span></div>
+          <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-ban text-cyber text-xs mt-1"></i><span class="text-steel-300">Sin extras a mitad de proyecto ni revisiones cobradas aparte.</span></div>
+          <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-percent text-cyber text-xs mt-1"></i><span class="text-steel-300">Primera pieza al 50 % para clientes nuevos: probar apenas cuesta.</span></div>
+        </div>
+      </article>
+
+      <article class="card-hover bg-night-card border border-safety/40 clip-corner p-8 reveal">
+        <div class="flex items-baseline gap-4 mb-5">
+          <span class="font-titulo text-5xl text-safety leading-none">03</span>
+          <span class="tag text-[10px] text-safety uppercase">Recibes</span>
+        </div>
+        <h3 class="font-bold text-lg mb-4">El paquete listo para Cycle Start</h3>
+        <p class="text-steel-400 text-sm leading-relaxed mb-6">No recibes «un CAM» que alguien tenga que interpretar en el taller. Recibes todo lo necesario para que la máquina arranque sin que nadie tenga que adivinar nada.</p>
+        <div class="border-t border-night-line pt-5 space-y-2.5">
+          <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-check text-safety text-xs mt-1"></i><span class="text-steel-300">Código G posprocesado para tu control concreto</span></div>
+          <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-check text-safety text-xs mt-1"></i><span class="text-steel-300">Hoja de proceso con orden de operaciones y orígenes G54–G59</span></div>
+          <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-check text-safety text-xs mt-1"></i><span class="text-steel-300">Lista de herramientas con referencias y voladizos</span></div>
+          <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-check text-safety text-xs mt-1"></i><span class="text-steel-300">Parámetros F y S por operación</span></div>
+          <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-check text-safety text-xs mt-1"></i><span class="text-steel-300">Vídeo de la simulación de colisiones, para que tu operario vea lo que va a pasar antes de que pase</span></div>
+        </div>
+      </article>
+    </div>
+
+    <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 reveal">
+      <a href="auditoria-gratuita.html" class="inline-flex items-center justify-center gap-3 bg-safety text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition text-base"><i aria-hidden="true" class="fa-solid fa-paper-plane"></i> Manda tu plano y te digo la viabilidad en minutos</a>
+      <a href="https://wa.me/34635013953?text=Hola%2C%20te%20mando%20un%20plano%20para%20consultar%20viabilidad." target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-3 border border-night-line text-steel-200 font-semibold px-7 py-4 clip-tab hover:border-safety/60 hover:text-safety transition text-base"><i aria-hidden="true" class="fa-brands fa-whatsapp"></i> Mándamelo por WhatsApp</a>
+    </div>
+    <p class="text-center text-xs text-steel-500 mt-4 reveal">Sin registro y sin llamada comercial. Responde el ingeniero que va a programar la pieza.</p>
+  </div>
+</section>
+
+<!-- CAPA 03 · EVIDENCIA -->
+<section id="cases" data-label="Evidencia" class="layer border-b border-night-line overflow-hidden">
+  <span class="layer-num" data-speed="12">03</span>
+  <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20 w-full">
+    <div class="max-w-2xl mb-14">
+      <p class="tag text-xs text-safety uppercase mb-3 reveal">Evidencia, no adjetivos</p>
+      <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight">Mira la estrategia antes de confiar en el proveedor</h2>
+      <p class="mt-4 text-steel-400 reveal">Todo el mundo en este sector dice que «optimiza trayectorias». Esto es lo que significa en la práctica: la estrategia concreta, por qué se elige y qué te ahorra en máquina.</p>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+
+      <!-- EVIDENCIA 01 · HSM -->
+      <article class="card-hover bg-night-card border border-night-line clip-corner overflow-hidden reveal">
+        <!-- Sustituir este <div class="screen"> por el clip real cuando esté grabado.
+             Especificación en docs/clips-spec.md (clip 01 · HSM). -->
+        <div class="screen relative h-48 overflow-hidden border-b border-night-line">
+          <div class="absolute inset-0 bg-grid opacity-40"></div>
+          <svg viewBox="0 0 320 190" class="absolute inset-0 w-full h-full" aria-hidden="true">
+            <rect x="34" y="26" width="252" height="138" fill="none" stroke="#2C3B4C" stroke-width="1"/>
+            <g fill="none" stroke="#12F7A0" stroke-linejoin="round" stroke-linecap="round">
+              <rect x="46" y="38" width="228" height="114" rx="26" stroke-width="1.6" opacity="0.95" stroke-dasharray="10 7">
+                <animate attributeName="stroke-dashoffset" values="0;-170" dur="3.2s" repeatCount="indefinite"/>
+              </rect>
+              <rect x="64" y="56" width="192" height="78" rx="22" stroke-width="1.4" opacity="0.7" stroke-dasharray="10 7">
+                <animate attributeName="stroke-dashoffset" values="0;-170" dur="3.2s" begin="0.25s" repeatCount="indefinite"/>
+              </rect>
+              <rect x="82" y="74" width="156" height="42" rx="18" stroke-width="1.2" opacity="0.5" stroke-dasharray="10 7">
+                <animate attributeName="stroke-dashoffset" values="0;-170" dur="3.2s" begin="0.5s" repeatCount="indefinite"/>
+              </rect>
+              <rect x="100" y="88" width="120" height="14" rx="7" stroke-width="1" opacity="0.32" stroke-dasharray="10 7">
+                <animate attributeName="stroke-dashoffset" values="0;-170" dur="3.2s" begin="0.75s" repeatCount="indefinite"/>
+              </rect>
+            </g>
+            <circle r="5" fill="#EFFFF7">
+              <animateMotion dur="3.2s" repeatCount="indefinite" path="M46,64 A26,26 0 0 1 72,38 L248,38 A26,26 0 0 1 274,64 L274,126 A26,26 0 0 1 248,152 L72,152 A26,26 0 0 1 46,126 Z"/>
+            </circle>
+            <text x="16" y="182" fill="#8592A3" font-size="9" class="tag">ángulo de compromiso constante</text>
+          </svg>
+        </div>
+        <div class="p-7">
+          <span class="tag text-[10px] text-cyber uppercase block mb-3">01 · Desbaste HSM</span>
+          <h3 class="font-bold text-lg mb-3">Carga de viruta constante</h3>
+          <p class="text-steel-400 text-sm leading-relaxed mb-5">El desbaste convencional entra y sale del material con ángulos de compromiso variables: la herramienta sufre picos de carga, vibra y rompe antes de tiempo. Con HSM el ángulo se mantiene controlado durante toda la pasada, lo que permite subir avance y profundidad axial sin castigar el filo.</p>
+          <p class="text-xs text-steel-500 border-t border-night-line pt-4">Se nota en vida de herramienta y en acabado, sobre todo en acero de herramienta templado.</p>
+        </div>
+      </article>
+
+      <!-- EVIDENCIA 02 · TROCOIDAL -->
+      <article class="card-hover bg-night-card border border-night-line clip-corner overflow-hidden reveal">
+        <!-- Sustituir por el clip real: docs/clips-spec.md (clip 02 · trocoidal). -->
+        <div class="screen relative h-48 overflow-hidden border-b border-night-line">
+          <div class="absolute inset-0 bg-grid opacity-40"></div>
+          <svg viewBox="0 0 320 190" class="absolute inset-0 w-full h-full" aria-hidden="true">
+            <rect x="30" y="62" width="260" height="66" fill="#0F1823" stroke="#2C3B4C" stroke-width="1"/>
+            <g stroke="#12F7A0" fill="none" stroke-width="1.4">
+              <circle cx="0" cy="95" r="26" opacity="0.9">
+                <animate attributeName="cx" values="58;262" dur="4s" repeatCount="indefinite"/>
+              </circle>
+              <circle cx="0" cy="95" r="26" opacity="0.45">
+                <animate attributeName="cx" values="58;262" dur="4s" begin="0.45s" repeatCount="indefinite"/>
+              </circle>
+              <circle cx="0" cy="95" r="26" opacity="0.22">
+                <animate attributeName="cx" values="58;262" dur="4s" begin="0.9s" repeatCount="indefinite"/>
+              </circle>
+            </g>
+            <circle cy="95" r="6" fill="#EFFFF7">
+              <animateMotion dur="0.85s" repeatCount="indefinite" path="M0,-26 A26,26 0 1 1 0,26 A26,26 0 1 1 0,-26"/>
+              <animate attributeName="cx" values="58;262" dur="4s" repeatCount="indefinite"/>
+            </circle>
+            <line x1="30" y1="62" x2="290" y2="62" stroke="#4A5B6E" stroke-width="1.4"/>
+            <line x1="30" y1="128" x2="290" y2="128" stroke="#4A5B6E" stroke-width="1.4"/>
+            <text x="16" y="182" fill="#8592A3" font-size="9" class="tag">poca inmersión radial · mucha profundidad axial</text>
+          </svg>
+        </div>
+        <div class="p-7">
+          <span class="tag text-[10px] text-cyber uppercase block mb-3">02 · Trocoidal</span>
+          <h3 class="font-bold text-lg mb-3">Ranurado agresivo sin romper filos</h3>
+          <p class="text-steel-400 text-sm leading-relaxed mb-5">En ranuras y cajeras profundas, fresar a pleno ancho es donde mueren las herramientas. El trocoidal ataca con poca inmersión radial y mucha profundidad axial, describiendo bucles que reparten el desgaste por toda la longitud de corte.</p>
+          <p class="text-xs text-steel-500 border-t border-night-line pt-4">Permite desbastar D2, H13 o Ti-6Al-4V con fresas más pequeñas y máquinas menos potentes de lo que parecería necesario.</p>
+        </div>
+      </article>
+
+      <!-- EVIDENCIA 03 · 5 EJES -->
+      <article class="card-hover bg-night-card border border-night-line clip-corner overflow-hidden reveal">
+        <!-- Sustituir por el clip real: docs/clips-spec.md (clip 03 · 5 ejes). -->
+        <div class="screen relative h-48 overflow-hidden border-b border-night-line">
+          <div class="absolute inset-0 bg-grid opacity-40"></div>
+          <svg viewBox="0 0 320 190" class="absolute inset-0 w-full h-full" aria-hidden="true">
+            <path id="surf5x" d="M40,132 C90,72 150,148 200,92 C232,58 262,74 284,60" fill="none" stroke="#4A5B6E" stroke-width="2.4"/>
+            <path d="M40,132 C90,72 150,148 200,92 C232,58 262,74 284,60" fill="none" stroke="#12F7A0" stroke-width="1.4" stroke-dasharray="7 6">
+              <animate attributeName="stroke-dashoffset" values="0;-130" dur="3.4s" repeatCount="indefinite"/>
+            </path>
+            <g>
+              <animateMotion dur="3.4s" repeatCount="indefinite" rotate="auto">
+                <mpath href="#surf5x"/>
+              </animateMotion>
+              <g transform="rotate(-90)">
+                <rect x="-4.5" y="4" width="9" height="46" rx="2" fill="#CDD8E4"/>
+                <rect x="-7" y="50" width="14" height="16" rx="2" fill="#7C8A9B"/>
+                <polygon points="-4.5,4 4.5,4 0,-5" fill="#EFFFF7"/>
+                <line x1="0" y1="-5" x2="0" y2="-22" stroke="#FFC400" stroke-width="1.2" stroke-dasharray="3 3"/>
+              </g>
+            </g>
+            <text x="16" y="182" fill="#8592A3" font-size="9" class="tag">vector de herramienta normal a la superficie</text>
+          </svg>
+        </div>
+        <div class="p-7">
+          <span class="tag text-[10px] text-cyber uppercase block mb-3">03 · 5 ejes continuos</span>
+          <h3 class="font-bold text-lg mb-3">Control de vector y colisiones</h3>
+          <p class="text-steel-400 text-sm leading-relaxed mb-5">En 5 ejes el riesgo no está en la punta de la herramienta: está en el portaherramientas, en el cabezal y en las bridas. Verificamos límites de recorrido y singularidades, y ajustamos el vector para evitar cambios bruscos de orientación que dejan marca en la superficie.</p>
+          <p class="text-xs text-steel-500 border-t border-night-line pt-4">Cuando disponemos del modelo cinemático de tu máquina, la simulación se hace contra ella y no contra una genérica.</p>
+        </div>
+      </article>
+    </div>
+
+    <div class="mt-10 grid sm:grid-cols-3 gap-4 reveal">
+      <a href="capacidades.html" class="group flex items-center justify-between gap-4 bg-night-soft border border-night-line px-6 py-5 clip-tab hover:border-safety/50 transition">
+        <span><span class="block font-bold text-sm">Todas las capacidades</span><span class="block text-xs text-steel-500 mt-1">Fresado, torneado, EDM, hilo y láser</span></span>
+        <i aria-hidden="true" class="fa-solid fa-arrow-right text-safety text-sm group-hover:translate-x-1 transition-transform"></i>
+      </a>
+      <a href="sectores.html" class="group flex items-center justify-between gap-4 bg-night-soft border border-night-line px-6 py-5 clip-tab hover:border-safety/50 transition">
+        <span><span class="block font-bold text-sm">Sectores que atendemos</span><span class="block text-xs text-steel-500 mt-1">Aeronáutica, automoción, defensa, matricería</span></span>
+        <i aria-hidden="true" class="fa-solid fa-arrow-right text-safety text-sm group-hover:translate-x-1 transition-transform"></i>
+      </a>
+      <a href="servicios.html" class="group flex items-center justify-between gap-4 bg-night-soft border border-night-line px-6 py-5 clip-tab hover:border-safety/50 transition">
+        <span><span class="block font-bold text-sm">Tarifas y planes</span><span class="block text-xs text-steel-500 mt-1">Precio cerrado por pieza y por mes</span></span>
+        <i aria-hidden="true" class="fa-solid fa-arrow-right text-safety text-sm group-hover:translate-x-1 transition-transform"></i>
+      </a>
     </div>
   </div>
 </section>
 
-<!-- CAPA 03 · SERVICIOS -->
-<section id="servicios" data-label="Servicios" class="layer border-b border-night-line overflow-hidden">
-  <span class="layer-num" data-speed="12">03</span>
+<!-- CAPA 04 · SERVICIOS -->
+<section id="servicios" data-label="Servicios" class="layer border-b border-night-line overflow-hidden bg-night-soft">
+  <span class="layer-num" data-speed="12">04</span>
   <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20 w-full">
     <div class="max-w-2xl mb-14">
       <p class="tag text-xs text-safety uppercase mb-3 reveal">Nuestras soluciones</p>
@@ -220,361 +390,33 @@
   </div>
 </section>
 
-<!-- CAPA 04 · SECTORES INDUSTRIALES -->
-<section id="sectores" data-label="Sectores" class="layer border-b border-night-line bg-night-soft relative overflow-hidden">
-  <div class="absolute inset-0 bg-grid opacity-30 pointer-events-none"></div>
-  <span class="layer-num" data-speed="12">04</span>
-  <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20 w-full">
-    <div class="text-center max-w-2xl mx-auto mb-14">
-      <p class="tag text-xs text-cyber uppercase mb-3 reveal">Dónde aportamos valor</p>
-      <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight">Sectores industriales</h2>
-      <p class="mt-3 text-steel-400 reveal">Cada sector exige tolerancias, materiales y normativas distintas. Estos son los entornos en los que trabajamos y los que conocemos por dentro.</p>
-    </div>
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-      <article class="sector-card card-hover group relative bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="relative h-52 overflow-hidden">
-          <img src="https://images.unsplash.com/photo-1540962351504-03099e0a754b?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1540962351504-03099e0a754b?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1540962351504-03099e0a754b?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1540962351504-03099e0a754b?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Turbina de motor a reacción, componente aeronáutico de precisión" class="w-full h-full object-cover" loading="lazy">
-          <div class="veil absolute inset-0 bg-night/45"></div>
-          <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">01 · Ti-6Al-4V · Inconel</span>
-        </div>
-        <div class="p-6">
-          <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-jet-fighter-up text-safety"></i> Aeronáutica</h3>
-          <p class="text-steel-400 text-sm leading-relaxed">Componentes estructurales, herrajes y álabes en titanio y aluminio aeronáutico. Estrategias de 5 ejes con control de vector y trazabilidad completa del proceso.</p>
-        </div>
-      </article>
-
-      <article class="sector-card card-hover group relative bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="relative h-52 overflow-hidden">
-          <img src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Vehículo deportivo, sector de automoción de alto rendimiento" class="w-full h-full object-cover" loading="lazy">
-          <div class="veil absolute inset-0 bg-night/45"></div>
-          <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">02 · Series · Prototipos</span>
-        </div>
-        <div class="p-6">
-          <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-car-side text-safety"></i> Automoción</h3>
-          <p class="text-steel-400 text-sm leading-relaxed">Prototipos funcionales, utillajes de línea y piezas de serie con tiempos de ciclo optimizados. Reducción de coste por pieza mediante trayectorias trocoidales.</p>
-        </div>
-      </article>
-
-      <article class="sector-card card-hover group relative bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="relative h-52 overflow-hidden">
-          <img src="https://images.unsplash.com/photo-1508444845599-5c89863b1c44?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1508444845599-5c89863b1c44?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1508444845599-5c89863b1c44?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1508444845599-5c89863b1c44?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Dron de vigilancia sobrevolando montañas, tecnología del sector defensa" class="w-full h-full object-cover" loading="lazy">
-          <div class="veil absolute inset-0 bg-night/45"></div>
-          <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">03 · Confidencialidad · NDA</span>
-        </div>
-        <div class="p-6">
-          <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-shield-halved text-safety"></i> Defensa</h3>
-          <p class="text-steel-400 text-sm leading-relaxed">Piezas críticas bajo acuerdo de confidencialidad firmado, con documentación de proceso completa y trazabilidad de cada revisión del programa.</p>
-        </div>
-      </article>
-
-      <article class="sector-card card-hover group relative bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="relative h-52 overflow-hidden">
-          <img src="https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Equipamiento médico de precisión en quirófano" class="w-full h-full object-cover" loading="lazy">
-          <div class="veil absolute inset-0 bg-night/45"></div>
-          <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">04 · Inox 316L · PEEK</span>
-        </div>
-        <div class="p-6">
-          <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-heart-pulse text-safety"></i> Médico</h3>
-          <p class="text-steel-400 text-sm leading-relaxed">Instrumental quirúrgico e implantes en aceros inoxidables, titanio y polímeros técnicos. Acabados espejo y tolerancias micrométricas para uso sanitario.</p>
-        </div>
-      </article>
-
-      <article class="sector-card card-hover group relative bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="relative h-52 overflow-hidden">
-          <img src="https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Aerogeneradores, sector de bioenergía y energías renovables" class="w-full h-full object-cover" loading="lazy">
-          <div class="veil absolute inset-0 bg-night/45"></div>
-          <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">05 · Energía · Turbinas</span>
-        </div>
-        <div class="p-6">
-          <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-bolt-lightning text-safety"></i> Bioenergía</h3>
-          <p class="text-steel-400 text-sm leading-relaxed">Componentes para plantas de biomasa, biogás y generación renovable: ejes, bridas, carcasas y piezas de desgaste con materiales resistentes a la corrosión.</p>
-        </div>
-      </article>
-
-      <article class="sector-card card-hover group relative bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="relative h-52 overflow-hidden">
-          <img src="https://images.unsplash.com/photo-1717386255773-1e3037c81788?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1717386255773-1e3037c81788?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1717386255773-1e3037c81788?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1717386255773-1e3037c81788?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Línea de producción automatizada para envasado industrial" class="w-full h-full object-cover" loading="lazy">
-          <div class="veil absolute inset-0 bg-night/45"></div>
-          <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">06 · Líneas de envasado</span>
-        </div>
-        <div class="p-6">
-          <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-box-open text-safety"></i> Packaging</h3>
-          <p class="text-steel-400 text-sm leading-relaxed">Levas, estrellas de transporte, formatos y recambios para líneas de envasado de alta cadencia. Piezas intercambiables con repetibilidad garantizada.</p>
-        </div>
-      </article>
-
-      <article class="sector-card card-hover group relative bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="relative h-52 overflow-hidden">
-          <img src="https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Componentes mecánicos de precisión para moldes de inyección" class="w-full h-full object-cover" loading="lazy">
-          <div class="veil absolute inset-0 bg-night/45"></div>
-          <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">07 · Cavidad · Corredera</span>
-        </div>
-        <div class="p-6">
-          <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-cube text-safety"></i> Moldes de Inyección</h3>
-          <p class="text-steel-400 text-sm leading-relaxed">Cavidades, postizos, correderas y electrodos para moldes de inyección de plástico. Fresado HSM en acero templado y acabado con electroerosión.</p>
-        </div>
-      </article>
-
-      <article class="sector-card card-hover group relative bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="relative h-52 overflow-hidden">
-          <img src="https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Soldadura y conformado de metal con chispas, matricería industrial" class="w-full h-full object-cover" loading="lazy">
-          <div class="veil absolute inset-0 bg-night/45"></div>
-          <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">08 · Corte · Embutición</span>
-        </div>
-        <div class="p-6">
-          <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-cubes-stacked text-safety"></i> Matricería</h3>
-          <p class="text-steel-400 text-sm leading-relaxed">Matrices progresivas de corte, doblado y embutición. Punzones y placas en D2/1.2379 con corte por hilo y ajustes de juego a la micra.</p>
-        </div>
-      </article>
-
-      <article class="sector-card card-hover group relative bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="relative h-52 overflow-hidden">
-          <img src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Obra de infraestructura y construcción industrial" class="w-full h-full object-cover" loading="lazy">
-          <div class="veil absolute inset-0 bg-night/45"></div>
-          <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">09 · Obra civil · Ferroviario</span>
-        </div>
-        <div class="p-6">
-          <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-city text-safety"></i> Infraestructura y otros sectores</h3>
-          <p class="text-steel-400 text-sm leading-relaxed">Maquinaria pesada, ferroviario, obra civil y bienes de equipo: piezas de gran formato, recambios a plano y reingeniería de componentes obsoletos.</p>
-        </div>
-      </article>
-
-    </div>
-  </div>
-</section>
-
-<!-- CAPA 05 · CAPACIDADES (animaciones) -->
-<section id="capacidades" data-label="Capacidades" class="layer border-b border-night-line relative overflow-hidden">
-  <div class="absolute inset-0 bg-grid opacity-40 pointer-events-none"></div>
+<!-- CAPA 05 · AUDITORÍA -->
+<section id="auditoria" data-label="Auditoría" class="layer border-b border-night-line overflow-hidden">
   <span class="layer-num" data-speed="12">05</span>
-  <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20 w-full">
-    <div class="text-center max-w-2xl mx-auto mb-12">
-      <p class="tag text-xs text-cyber uppercase mb-3 reveal">Dominio de proceso completo</p>
-      <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight">Del modelo 3D al programa validado</h2>
-      <p class="mt-3 text-steel-400 reveal">Cubrimos toda la cadena de fabricación con conocimiento profundo de cada proceso. Estas son las tecnologías que dominamos y para las que preparamos tu documentación.</p>
+  <div class="relative max-w-4xl mx-auto px-5 lg:px-10 py-20 w-full">
+    <div class="text-center mb-10">
+      <p class="tag text-xs text-safety uppercase mb-3 reveal">Análisis de rendimiento operativo</p>
+      <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight">¿Cuántas horas de mecanizado pierdes cada semana?</h2>
+      <p class="mt-3 text-steel-400 max-w-xl mx-auto reveal">Tres preguntas. Tres minutos. Un diagnóstico real de las fugas de rentabilidad en tu planta.</p>
     </div>
-
-    <!-- Panel de mecanizado guiado por scroll -->
-    <div class="bg-night-card border border-night-line clip-corner overflow-hidden mb-10 reveal">
-      <div class="flex items-center justify-between px-5 py-3 border-b border-night-line bg-night-soft">
-        <span class="tag text-[11px] text-steel-500 uppercase">CAM // planeado_pasadas_paralelas.nc — la herramienta avanza con tu scroll</span>
-        <span class="flex items-center gap-2 tag text-[10px] uppercase text-cyber"><span class="w-1.5 h-1.5 rounded-full bg-cyber status-dot"></span> scrub</span>
+    <div class="bg-night-card border border-night-line clip-corner p-6 sm:p-10 reveal">
+      <div class="flex items-center gap-2 mb-8" id="quiz-progress">
+        <span class="quiz-step h-1.5 flex-1 rounded-full bg-night-line"></span>
+        <span class="quiz-step h-1.5 flex-1 rounded-full bg-night-line"></span>
+        <span class="quiz-step h-1.5 flex-1 rounded-full bg-night-line"></span>
       </div>
-      <div class="screen relative">
-        <div class="absolute inset-0 bg-grid opacity-50"></div>
-        <svg id="raster-svg" viewBox="0 0 800 230" class="relative w-full h-auto block" aria-label="Simulación de planeado con pasadas paralelas: una fresa recorre la trayectoria en serpentina a medida que se hace scroll">
-          <rect x="52" y="26" width="696" height="178" fill="rgba(133,146,163,0.05)" stroke="#233145" stroke-width="1"/>
-          <rect x="52" y="26" width="696" height="178" fill="none" stroke="#12F7A0" stroke-width="0.7" opacity="0.25" stroke-dasharray="4 6"/>
-          <path id="raster-ghost" d="M90,60 H710 a17.5,17.5 0 0 1 0,35 H90 a17.5,17.5 0 0 0 0,35 H710 a17.5,17.5 0 0 1 0,35 H90" fill="none" stroke="#33465e" stroke-width="1.2" stroke-dasharray="3 5"/>
-          <path id="raster-run" d="M90,60 H710 a17.5,17.5 0 0 1 0,35 H90 a17.5,17.5 0 0 0 0,35 H710 a17.5,17.5 0 0 1 0,35 H90" fill="none" stroke="#12F7A0" stroke-width="2.4" stroke-linecap="round"/>
-          <g id="raster-tool">
-            <circle r="13" fill="rgba(18,247,160,0.10)" stroke="#12F7A0" stroke-width="1.2"/>
-            <circle r="5" fill="#E4ECF4"/>
-            <line x1="-13" y1="0" x2="13" y2="0" stroke="#12F7A0" stroke-width="0.7" opacity="0.7"/>
-            <line x1="0" y1="-13" x2="0" y2="13" stroke="#12F7A0" stroke-width="0.7" opacity="0.7"/>
-            <circle cx="-9" cy="-7" r="2" fill="#FFC400" class="spark"/>
-            <circle cx="9" cy="-6" r="1.6" fill="#12F7A0" class="spark" style="animation-delay:.4s"/>
-          </g>
-          <g class="tag" font-size="10" fill="#8592A3">
-            <text x="60" y="222">planeado · Ø12 · ae 8.4 · ap 0.4</text>
-            <text x="620" y="222" fill="#12F7A0">F 4800 · S 12000</text>
-          </g>
-        </svg>
+      <div id="quiz-body" aria-live="polite"></div>
+      <div class="flex items-center justify-between mt-8">
+        <button id="quiz-back" class="text-sm text-steel-500 hover:text-steel-200 transition hidden"><i aria-hidden="true" class="fa-solid fa-arrow-left mr-2"></i>Volver</button>
+        <span id="quiz-stage" class="tag text-xs text-steel-500 uppercase ml-auto">Etapa 1 / 3</span>
       </div>
-    </div>
-
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-      <article class="card-hover bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="screen relative h-44 overflow-hidden flex items-center justify-center scene3d">
-          <div class="absolute inset-0 bg-grid opacity-50"></div>
-          <div class="cube float-y"><div class="face f-front"></div><div class="face f-back"></div><div class="face f-right"></div><div class="face f-left"></div><div class="face f-top"></div><div class="face f-bottom"></div></div>
-          <span class="absolute bottom-3 left-4 tag text-[10px] text-steel-500 uppercase">render · wireframe</span>
-        </div>
-        <div class="p-6"><h3 class="font-bold text-lg mb-2 flex items-center gap-2"><i aria-hidden="true" class="fa-solid fa-vector-square text-cyber"></i> Diseño &amp; modelado 3D</h3><p class="text-steel-400 text-sm leading-relaxed">Superficies complejas, sólidos paramétricos y análisis de remanentes en CATIA, SolidWorks y NX antes de generar una sola trayectoria.</p></div>
-      </article>
-
-      <article class="card-hover bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="screen relative h-44 overflow-hidden">
-          <div class="absolute inset-0 bg-grid opacity-50"></div>
-          <svg viewBox="0 0 400 176" class="absolute inset-0 w-full h-full">
-            <path id="cnc-path" d="M40 140 Q 100 40 160 90 T 280 70 Q 340 60 360 120" fill="none" stroke="#556475" stroke-width="1" stroke-dasharray="2 4"/>
-            <path d="M40 140 Q 100 40 160 90 T 280 70 Q 340 60 360 120" fill="none" stroke="#12F7A0" stroke-width="2" class="path-trace"/>
-            <circle r="4" fill="#FFC400"><animateMotion dur="4s" repeatCount="indefinite"><mpath href="#cnc-path"/></animateMotion></circle>
-          </svg>
-          <span class="absolute bottom-3 left-4 tag text-[10px] text-steel-500 uppercase">G-code · HSM</span>
-        </div>
-        <div class="p-6"><h3 class="font-bold text-lg mb-2 flex items-center gap-2"><i aria-hidden="true" class="fa-solid fa-code text-cyber"></i> Programación CNC</h3><p class="text-steel-400 text-sm leading-relaxed">Fresado y torneado multieje, mecanizado de alta velocidad D2 y estrategias trocoidales que cuidan herramienta y cinemática.</p></div>
-      </article>
-
-      <article class="card-hover bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="screen relative h-44 overflow-hidden flex items-center justify-center">
-          <div class="absolute inset-0 bg-grid opacity-50"></div>
-          <svg viewBox="0 0 400 176" class="absolute inset-0 w-full h-full" aria-label="Torneado CNC: plato de garras girando, barra en rotación y herramienta de corte generando viruta">
-            <defs>
-              <linearGradient id="gBar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A3644"/><stop offset="0.5" stop-color="#93A3B5"/><stop offset="1" stop-color="#1E2937"/></linearGradient>
-              <linearGradient id="gBarCut" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A4A5C"/><stop offset="0.5" stop-color="#CDD8E4"/><stop offset="1" stop-color="#28354A"/></linearGradient>
-            </defs>
-            <!-- plato de garras -->
-            <g class="chuck-spin">
-              <circle cx="74" cy="88" r="36" fill="#1B2634" stroke="#33465e" stroke-width="2"/>
-              <circle cx="74" cy="88" r="10" fill="#0C121B" stroke="#33465e"/>
-              <rect x="70" y="52" width="8" height="16" fill="#556475"/>
-              <rect x="70" y="108" width="8" height="16" fill="#556475"/>
-              <rect x="38" y="84" width="16" height="8" fill="#556475"/>
-              <rect x="94" y="84" width="16" height="8" fill="#556475"/>
-            </g>
-            <!-- barra en bruto -->
-            <rect x="104" y="72" width="150" height="32" fill="url(#gBar)" stroke="#33465e" stroke-width="0.8"/>
-            <!-- sección ya torneada (diámetro reducido) -->
-            <rect x="254" y="78" width="92" height="20" fill="url(#gBarCut)" stroke="#4A5B6E" stroke-width="0.8"/>
-            <!-- textura de giro -->
-            <g clip-path="url(#none)">
-              <line x1="112" y1="88" x2="248" y2="88" stroke="#EAF0F6" stroke-width="1" opacity="0.35" class="bar-tex"/>
-              <line x1="260" y1="88" x2="340" y2="88" stroke="#FFFFFF" stroke-width="0.8" opacity="0.4" class="bar-tex" style="animation-delay:.25s"/>
-            </g>
-            <!-- herramienta de torneado -->
-            <g>
-              <polygon points="254,98 262,112 246,112" fill="#E4ECF4"/>
-              <rect x="248" y="112" width="12" height="34" fill="#556475" stroke="#33465e" stroke-width="0.6"/>
-              <animateTransform attributeName="transform" type="translate" values="66,0;0,0;66,0" dur="8s" repeatCount="indefinite"/>
-            </g>
-            <!-- viruta -->
-            <g transform="translate(254,96)">
-              <path d="M0,0 q-8,-6 -6,-14" fill="none" stroke="#B4C1D0" stroke-width="1.2" class="chip"/>
-              <path d="M2,0 q6,-8 3,-15" fill="none" stroke="#8592A3" stroke-width="1" class="chip d2"/>
-              <circle cx="-2" cy="-3" r="2" fill="#FFC400" class="spark"/>
-            </g>
-            <!-- contrapunto -->
-            <polygon points="346,80 362,88 346,96" fill="#33465e"/>
-            <rect x="362" y="76" width="14" height="24" fill="#1B2634" stroke="#33465e"/>
-            <g class="tag" font-size="9" fill="#8592A3">
-              <text x="112" y="150">G71 · 2200 rpm · ap 1.5</text>
-            </g>
-          </svg>
-          <span class="absolute bottom-3 left-4 tag text-[10px] text-steel-500 uppercase">torneado · cilindrado</span>
-        </div>
-        <div class="p-6"><h3 class="font-bold text-lg mb-2 flex items-center gap-2"><i aria-hidden="true" class="fa-solid fa-circle-notch text-cyber"></i> Torneado CNC</h3><p class="text-steel-400 text-sm leading-relaxed">Cilindrado, refrentado, roscado y ranurado en torno CNC con ciclos fijos optimizados y control de viruta para series y piezas unitarias.</p></div>
-      </article>
-
-      <article class="card-hover bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="screen relative h-44 overflow-hidden flex items-center justify-center">
-          <div class="absolute inset-0 bg-grid opacity-50"></div>
-          <svg viewBox="0 0 400 176" class="absolute inset-0 w-full h-full">
-            <rect x="120" y="30" width="160" height="116" fill="rgba(133,146,163,0.08)" stroke="#233145"/>
-            <path d="M170 40 L 170 90 Q 170 110 200 110 Q 230 110 230 88 L 230 40" fill="none" stroke="#12F7A0" stroke-width="1.5" stroke-dasharray="3 3"/>
-            <g class="wire"><line x1="200" y1="10" x2="200" y2="166" stroke="#FFC400" stroke-width="1.5"/></g>
-            <circle cx="200" cy="10" r="4" fill="#8592A3"/><circle cx="200" cy="166" r="4" fill="#8592A3"/>
-            <circle cx="200" cy="70" r="3" fill="#12F7A0" class="spark"/><circle cx="200" cy="100" r="2.4" fill="#FFC400" class="spark" style="animation-delay:.4s"/>
-          </svg>
-          <span class="absolute bottom-3 left-4 tag text-[10px] text-steel-500 uppercase">wire EDM · ±0.005</span>
-        </div>
-        <div class="p-6"><h3 class="font-bold text-lg mb-2 flex items-center gap-2"><i aria-hidden="true" class="fa-solid fa-grip-lines-vertical text-cyber"></i> Corte por hilo</h3><p class="text-steel-400 text-sm leading-relaxed">Programación de electroerosión por hilo para punzones, matrices y perfiles finos donde la fresa no llega, con esquinas vivas y tolerancias cerradas.</p></div>
-      </article>
-
-      <article class="card-hover bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="screen relative h-44 overflow-hidden flex items-center justify-center">
-          <div class="absolute inset-0 bg-grid opacity-50"></div>
-          <svg viewBox="0 0 400 176" class="absolute inset-0 w-full h-full">
-            <rect x="175" y="20" width="50" height="55" fill="rgba(255,196,0,0.12)" stroke="#FFC400"/>
-            <rect x="110" y="95" width="180" height="60" fill="rgba(133,146,163,0.08)" stroke="#233145"/>
-            <rect x="175" y="95" width="50" height="35" fill="rgba(18,247,160,0.06)" stroke="#12F7A0" stroke-dasharray="3 3"/>
-            <circle cx="185" cy="88" r="2.6" fill="#12F7A0" class="spark"/><circle cx="200" cy="88" r="3" fill="#FFC400" class="spark" style="animation-delay:.3s"/><circle cx="215" cy="88" r="2.2" fill="#12F7A0" class="spark" style="animation-delay:.6s"/>
-          </svg>
-          <span class="absolute bottom-3 left-4 tag text-[10px] text-steel-500 uppercase">EDM · penetración</span>
-        </div>
-        <div class="p-6"><h3 class="font-bold text-lg mb-2 flex items-center gap-2"><i aria-hidden="true" class="fa-solid fa-bolt text-cyber"></i> Electroerosión</h3><p class="text-steel-400 text-sm leading-relaxed">Diseño de electrodos y estrategias de EDM por penetración para cavidades profundas, nervios y detalles en aceros templados imposibles de fresar.</p></div>
-      </article>
-
-      <article class="card-hover bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="screen relative h-44 overflow-hidden flex items-center justify-center">
-          <div class="absolute inset-0 bg-grid opacity-50"></div>
-          <svg viewBox="0 0 400 176" class="absolute inset-0 w-full h-full">
-            <rect x="90" y="70" width="220" height="70" rx="4" fill="rgba(133,146,163,0.08)" stroke="#233145"/>
-            <text x="200" y="115" text-anchor="middle" class="tag" font-size="20" fill="#12F7A0" opacity="0.85">MAG · SN-0427</text>
-          </svg>
-          <div class="laser-beam absolute top-0 bottom-0 w-[2px] bg-alert shadow-[0_0_14px_3px_rgba(255,90,60,0.7)]"></div>
-          <span class="absolute bottom-3 left-4 tag text-[10px] text-steel-500 uppercase">láser · marcado</span>
-        </div>
-        <div class="p-6"><h3 class="font-bold text-lg mb-2 flex items-center gap-2"><i aria-hidden="true" class="fa-solid fa-barcode text-cyber"></i> Grabado láser</h3><p class="text-steel-400 text-sm leading-relaxed">Preparación de archivos y planos para marcado y grabado láser: trazabilidad, números de serie, Data Matrix y logotipos sobre pieza acabada.</p></div>
-      </article>
-
-      <article class="card-hover bg-night-card border border-night-line clip-corner overflow-hidden reveal md:col-span-2 lg:col-span-3">
-        <div class="grid lg:grid-cols-2">
-          <div class="relative h-44 lg:h-auto overflow-hidden">
-            <img src="https://images.unsplash.com/photo-1563448448467-7fc866d214bb?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1563448448467-7fc866d214bb?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1563448448467-7fc866d214bb?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1563448448467-7fc866d214bb?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 50vw, 100vw" decoding="async" alt="Control dimensional y verificación de tolerancias geométricas con calibre de precisión" class="w-full h-full object-cover opacity-80 hover:scale-105 transition duration-700" loading="lazy">
-            <div class="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-night-card via-night-card/30 to-transparent"></div>
-            <span class="absolute bottom-3 left-4 tag text-[10px] text-steel-300 uppercase">metrología · GD&amp;T</span>
-          </div>
-          <div class="p-6 lg:p-8 flex flex-col justify-center"><h3 class="font-bold text-lg mb-2 flex items-center gap-2"><i aria-hidden="true" class="fa-solid fa-ruler-combined text-cyber"></i> Control dimensional</h3><p class="text-steel-400 text-sm leading-relaxed">Definición de planos de inspección, tolerancias geométricas GD&amp;T y criterios de acabado superficial para que la primera pieza ya salga conforme.</p></div>
-        </div>
-      </article>
-
     </div>
   </div>
 </section>
 
-<!-- CAPA 06 · CASOS -->
-<section id="cases" data-label="Casos" class="layer border-b border-night-line bg-night-soft overflow-hidden">
+<!-- CAPA 06 · COMPROMISOS -->
+<section id="why-mag" data-label="Compromisos" class="layer border-b border-night-line overflow-hidden bg-night-soft">
   <span class="layer-num" data-speed="12">06</span>
-  <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20 w-full">
-    <div class="max-w-2xl mb-14">
-      <p class="tag text-xs text-safety uppercase mb-3 reveal">Qué programamos</p>
-      <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight">El tipo de trabajo que entra en el taller</h2>
-      <p class="mt-4 text-steel-400 reveal">Estas son las familias de pieza que programo cada semana y lo que incluye la entrega en cada caso. Precio cerrado antes de empezar y validación en simulación en todas ellas.</p>
-    </div>
-    <div class="grid lg:grid-cols-3 gap-6">
-      <article class="lg:col-span-2 card-hover group bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="relative h-64 overflow-hidden img-zoom">
-          <img src="https://images.unsplash.com/photo-1740209475472-aa7d280f7452?auto=format&fit=crop&w=1200&q=72" srcset="https://images.unsplash.com/photo-1740209475472-aa7d280f7452?auto=format&fit=crop&w=400&q=72 400w, https://images.unsplash.com/photo-1740209475472-aa7d280f7452?auto=format&fit=crop&w=800&q=72 800w, https://images.unsplash.com/photo-1740209475472-aa7d280f7452?auto=format&fit=crop&w=1200&q=72 1200w" sizes="(min-width:1024px) 66vw, 100vw" decoding="async" alt="Mecanizado de un postizo de acero de herramienta en un centro de mecanizado" class="w-full h-full object-cover opacity-85 group-hover:scale-105 transition duration-700" loading="lazy">
-          <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-3 py-1.5 text-steel-200">Matricería y moldes</span>
-        </div>
-        <div class="p-8">
-          <h3 class="text-2xl font-bold mb-5 group-hover:text-safety transition">Postizos, tacos y cavidades</h3>
-          <p class="text-steel-400 mb-6">Es el trabajo que más hago hoy y donde tengo el proceso más rodado. Cavidades profundas, contrasalidas y geometrías 3D en acero de herramienta, con control de altura de cresta y cargas de viruta constantes para no castigar la herramienta.</p>
-          <div class="grid sm:grid-cols-2 gap-6 mb-6">
-            <div><span class="tag text-[10px] text-steel-500 uppercase block mb-1">Entregas</span><p class="text-steel-300 text-sm">Código G posprocesado para tu control, simulación de colisiones y hoja de proceso completa.</p></div>
-            <div><span class="tag text-[10px] text-steel-500 uppercase block mb-1">Plazo habitual</span><p class="text-steel-300 text-sm">48 h desde la recepción del modelo. Urgencias en 24 h con recargo del 50 %.</p></div>
-          </div>
-          <div class="flex items-center gap-3 text-safety border-t border-night-line pt-5"><i aria-hidden="true" class="fa-solid fa-file-invoice"></i><span class="font-bold text-lg">Desde 280 € por pieza, precio cerrado</span></div>
-        </div>
-      </article>
-      <div class="flex flex-col gap-6">
-        <article class="card-hover group bg-night-card border border-night-line clip-corner overflow-hidden reveal flex-1">
-          <div class="relative h-36 overflow-hidden">
-            <img src="https://images.unsplash.com/photo-1713371398484-cc4e4f6a262a?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1713371398484-cc4e4f6a262a?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1713371398484-cc4e4f6a262a?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1713371398484-cc4e4f6a262a?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, 100vw" decoding="async" alt="Pieza tridimensional de superficies complejas mecanizada en 5 ejes" class="w-full h-full object-cover opacity-85 group-hover:scale-105 transition duration-700" loading="lazy">
-            <div class="absolute inset-0 bg-gradient-to-t from-night-card to-transparent"></div>
-            <span class="absolute top-3 left-3 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">Pieza 3D</span>
-          </div>
-          <div class="p-6"><h3 class="text-lg font-bold mb-3 group-hover:text-safety transition">Piezas 3D y utillajes</h3><p class="text-steel-400 text-sm mb-4">Superficies complejas, amarres y utillajes de producción. Control del vector de herramienta y verificación de colisiones en geometrías profundas.</p><div class="flex items-center gap-2 text-safety border-t border-night-line pt-4"><i aria-hidden="true" class="fa-solid fa-file-invoice"></i><span class="font-bold text-sm">Desde 190 € por pieza</span></div></div>
-        </article>
-        <article class="card-hover group bg-night-card border border-night-line clip-corner overflow-hidden reveal flex-1">
-          <div class="relative h-36 overflow-hidden">
-            <img src="https://images.unsplash.com/photo-1591639713936-6fafe6748de0?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1591639713936-6fafe6748de0?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1591639713936-6fafe6748de0?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1591639713936-6fafe6748de0?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, 100vw" decoding="async" alt="Operación de taladrado y contorneado sobre una placa metálica" class="w-full h-full object-cover opacity-85 group-hover:scale-105 transition duration-700" loading="lazy">
-            <div class="absolute inset-0 bg-gradient-to-t from-night-card to-transparent"></div>
-            <span class="absolute top-3 left-3 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">Trabajo 2D</span>
-          </div>
-          <div class="p-6"><h3 class="text-lg font-bold mb-3 group-hover:text-safety transition">Taladrados, perfiles y contornos</h3><p class="text-steel-400 text-sm mb-4">El trabajo rápido que satura tu oficina técnica sin aportar valor. Lo sacamos en el día para que tu programador se dedique a lo complejo.</p><div class="flex items-center gap-2 text-safety border-t border-night-line pt-4"><i aria-hidden="true" class="fa-solid fa-bolt"></i><span class="font-bold text-sm">Desde 60 € · entrega en 24 h</span></div></div>
-        </article>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CAPA 07 · POR QUÉ MAG -->
-<section id="why-mag" data-label="Por qué MAG" class="layer border-b border-night-line overflow-hidden">
-  <span class="layer-num" data-speed="12">07</span>
   <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20 w-full">
     <div class="text-center max-w-2xl mx-auto mb-14">
       <p class="tag text-xs text-safety uppercase mb-3 reveal">Compromisos verificables</p>
@@ -611,47 +453,9 @@
   </div>
 </section>
 
-<!-- CAPA 08 · TESTIMONIOS -->
-<!-- CAPA 08 · PROCESO -->
-<section id="proceso" data-label="Proceso" class="layer border-b border-night-line bg-night-soft relative overflow-hidden">
-  <div class="absolute inset-0 bg-grid opacity-30 pointer-events-none"></div>
-  <span class="layer-num" data-speed="12">08</span>
-  <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20 w-full">
-    <div class="text-center max-w-2xl mx-auto mb-14">
-      <p class="tag text-xs text-cyber uppercase mb-3 reveal">Cómo trabajamos</p>
-      <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight">De tu plano a la primera pieza conforme</h2>
-      <p class="mt-3 text-steel-400 reveal">Un proceso cerrado en cuatro pasos, con confidencialidad desde el primer contacto y sin sorpresas en el precio.</p>
-    </div>
-    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <article class="card-hover bg-night-card border border-night-line clip-corner p-7 reveal">
-        <div class="font-titulo text-5xl text-safety mb-4">01</div>
-        <h3 class="font-bold text-lg mb-3">Envías tu pieza</h3>
-        <p class="text-steel-400 text-sm leading-relaxed">Plano, modelo 3D o una muestra física. Firmamos acuerdo de confidencialidad antes de abrir un solo archivo.</p>
-      </article>
-      <article class="card-hover bg-night-card border border-night-line clip-corner p-7 reveal">
-        <div class="font-titulo text-5xl text-safety mb-4">02</div>
-        <h3 class="font-bold text-lg mb-3">Análisis y precio cerrado</h3>
-        <p class="text-steel-400 text-sm leading-relaxed">Estudiamos material, tolerancias y tu máquina, y recibes un presupuesto fijo. Sin horas abiertas ni extras.</p>
-      </article>
-      <article class="card-hover bg-night-card border border-night-line clip-corner p-7 reveal">
-        <div class="font-titulo text-5xl text-safety mb-4">03</div>
-        <h3 class="font-bold text-lg mb-3">Programación y validación</h3>
-        <p class="text-steel-400 text-sm leading-relaxed">Generamos las trayectorias y las validamos en gemelo digital: cero colisiones antes de tocar tu máquina.</p>
-      </article>
-      <article class="card-hover bg-night-card border border-night-line clip-corner p-7 reveal">
-        <div class="font-titulo text-5xl text-safety mb-4">04</div>
-        <h3 class="font-bold text-lg mb-3">Entrega y primera pieza</h3>
-        <p class="text-steel-400 text-sm leading-relaxed">Código G, kit de preparación de taller y acompañamiento técnico hasta que la primera pieza sale conforme.</p>
-      </article>
-    </div>
-    <div class="text-center mt-12 reveal">
-      <a href="#contact" class="inline-flex items-center justify-center gap-3 bg-safety text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition text-base"><i aria-hidden="true" class="fa-solid fa-paper-plane"></i> ¿Tienes una pieza atascada? Envíala ahora</a>
-    </div>
-  </div>
-</section>
-
+<!-- CAPA 07 · REFERENCIAS -->
 <section id="testimonials" data-label="Referencias" class="layer border-b border-night-line overflow-hidden">
-  <span class="layer-num" data-speed="12">09</span>
+  <span class="layer-num" data-speed="12">07</span>
   <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20 w-full">
     <div class="max-w-2xl mb-14">
       <p class="tag text-xs text-safety uppercase mb-3 reveal">Referencias</p>
@@ -685,9 +489,9 @@
   </div>
 </section>
 
-<!-- CAPA 09 · FAQ -->
+<!-- CAPA 08 · FAQ -->
 <section id="faq" data-label="FAQ" class="layer border-b border-night-line bg-night-soft overflow-hidden">
-  <span class="layer-num" data-speed="12">10</span>
+  <span class="layer-num" data-speed="12">08</span>
   <div class="relative max-w-4xl mx-auto px-5 lg:px-10 py-20 w-full">
     <div class="text-center max-w-2xl mx-auto mb-12">
       <p class="tag text-xs text-safety uppercase mb-3 reveal">Matriz de confianza</p>
@@ -715,10 +519,10 @@
   </div>
 </section>
 
-<!-- CAPA 10 · CONTACTO -->
+<!-- CAPA 09 · CONTACTO -->
 <section id="contact" data-label="Contacto" class="layer border-b border-night-line relative overflow-hidden">
   <div class="absolute inset-0 bg-grid opacity-30 pointer-events-none"></div>
-  <span class="layer-num" data-speed="12">11</span>
+  <span class="layer-num" data-speed="12">09</span>
   <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20 grid lg:grid-cols-12 gap-12 w-full">
     <div class="lg:col-span-5">
       <p class="tag text-xs text-safety uppercase mb-3 reveal">Contacto directo</p>
@@ -781,6 +585,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="app.js?v=5" defer></script>
+<script src="app.js?v=6" defer></script>
 </body>
 </html>
