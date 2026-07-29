@@ -16,6 +16,16 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://mag-industries.vercel.app/capacidades.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mag-industries.vercel.app/sectores.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://mag-industries.vercel.app/privacidad.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
