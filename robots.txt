@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://mag-industries.vercel.app/sitemap.xml
+Sitemap: https://www.magindustries.es/sitemap.xml
