@@ -1,8 +1,8 @@
 # PROJECT_STATE — MAG INDUSTRIES
 
-**Última sesión:** 29 julio 2026 (Sesión 4)
-**Estado:** En producción. Arquitectura multipágina, embudo montado, web sin afirmaciones falsas.
-**Siguiente sesión esperada:** Desbloquear FormSubmit, dominio + email, primeros testimonios reales
+**Última sesión:** 30 julio 2026 (Sesión 6)
+**Estado:** En producción en dominio propio (magindustries.es). Supabase operativo. Falta el correo corporativo.
+**Siguiente sesión esperada:** Alta de Google Workspace y verificación de MX/SPF/DKIM/DMARC
 
 ---
 
@@ -10,12 +10,31 @@
 
 | # | Bloqueador | Impacto | Acción del usuario |
 |---|-----------|---------|--------------------|
-| 1 | **Precios publicados sin confirmar** | Las tarifas (280/190/60 €) y las igualas (590/990/1.690 €) son la recomendación del plan, no cifras validadas por el usuario. Están **en vivo**. | Revisar `servicios.html` y ajustar o confirmar |
-| 2 | **Referencias ofrecidas sin permiso** | La web ofrece poner en contacto a prospectos con los 2 talleres actuales. | Pedir permiso a JPARENTE y Gil-bo antes de que alguien lo solicite |
-| 3 | Sin dominio ni email corporativo | Se retiró `proyectos@magindustries.com` (no existía y los leads rebotaban). Hoy solo hay teléfono, WhatsApp y formulario. | Comprar dominio y configurar Zoho Mail |
-| 4 | Analytics de Vercel sin activar | No hay medición de tráfico ni de conversión de la landing. | Activar en el dashboard de Vercel |
+| 1 | **Google Workspace pendiente** | El dominio ya es tuyo pero no hay buzón. Hasta que exista, la web no publica ninguna dirección `@magindustries.es` (publicarla provocaría rebotes). | Alta en Workspace Business Starter + registros MX/SPF/DKIM/DMARC |
+| 2 | **Referencia pendiente de permiso** | La web ofrece poner en contacto a prospectos con el taller de matricería. | Pedir permiso a JPARENTE antes de que alguien lo solicite |
+| 3 | Analytics de Vercel sin activar | No hay medición de tráfico ni de conversión de la landing. | Activar en el dashboard de Vercel |
+
+**Resueltos:** FormSubmit ya estaba activo · Supabase (sesión 5) · Precios confirmados por el usuario como cifras de partida (sesión 6) · Dominio propio en producción (sesión 6).
 
 **Resueltos:** FormSubmit sí estaba activo (el email de aviso llega correctamente — el dato de «pendiente de activar» venía desactualizado de sesiones anteriores). Supabase resuelto en la sesión 5.
+
+---
+
+## 🌐 Dominio (verificado 30-jul-2026)
+
+**`magindustries.es`** — registrado en DonDominio (4,95 €/año), en producción.
+
+| Registro | Valor | Estado |
+|---|---|---|
+| Apex `magindustries.es` | → `216.198.79.65` / `64.29.17.65` (Vercel) | 308 → www |
+| `www` | CNAME → `58b50ebb31dd7a95.vercel-dns-017.com` | 200 OK |
+| SSL | Emitido por Vercel | Válido |
+
+⚠️ **DNS gestionado en DonDominio**, no en Vercel. Al añadir registros de correo hay que **borrar antes los MX de DonDominio** (`mailsrv1.dondominio.com`) y **editar** el TXT SPF existente (`v=spf1 include:spf.dondominio.com`) en vez de añadir uno segundo — dos SPF rompen la validación de ambos.
+
+`magindustries.com` está en manos de un especulador (nameservers de NameBright). No perseguirlo.
+
+Aún **no se publica ninguna dirección `@magindustries.es`** en la web hasta que Workspace esté activo. FormSubmit sigue apuntando a la dirección de Gmail actual a propósito: cambiar el destino exige activar antes la nueva en FormSubmit, y hacerlo prematuramente dejaría la captación rota.
 
 ---
 
