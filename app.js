@@ -6,12 +6,16 @@
    `window.supabase`; declarar `let/const supabase` en el top-level de este
    script clásico colisiona con ese global y lanza un SyntaxError que aborta
    app.js ENTERO (toggle, quiz, formularios y raster dejan de funcionar). */
+/* Proyecto `supabase-aero-bell`. La clave es publicable: viaja en este archivo
+   y cualquiera puede verla. La tabla `leads` tiene RLS con politica solo de
+   INSERT para el rol anonimo, asi que con esta clave se pueden registrar
+   contactos pero NO leer los existentes. */
 let supabaseClient = null;
 try {
   if (window.supabase && typeof window.supabase.createClient === 'function') {
     supabaseClient = window.supabase.createClient(
-      'https://bisioblvzoegaqokamel.supabase.co',
-      'sb_publishable_7__8eQRRx5RD09DRgnZQBw_Trn7Fqde'
+      'https://lryyubgldnrrxokkeeef.supabase.co',
+      'sb_publishable_LnAfjL6RQRdoPnOw5ZSEkA_jlCcbNBZ'
     );
   }
 } catch (e) { console.warn('Supabase no disponible; el formulario usará solo el envío por email.', e); }
@@ -463,19 +467,22 @@ if(contactForm) contactForm.addEventListener('submit',async(e)=>{
   btn.disabled=true;
   msg.classList.remove('hidden','text-alert');msg.classList.add('text-cyber');
   msg.textContent='Enviando tu solicitud...';
-  /* Origen del lead: sin columna nueva en Supabase, va al principio de `detalles`
-     para poder medir qué página trae cada contacto. */
+  /* Origen del lead: para medir qué página trae cada contacto. */
   const origen=f.dataset.origen||document.title||location.pathname;
-  const detalles=('[Origen: '+origen+'] '+v('description')).trim();
+  const detalles=v('description');
   try{
+    /* El guardado en base de datos no bloquea el envío: si Supabase falla, el
+       aviso por email sale igualmente y el contacto no se pierde. */
     if(supabaseClient){
       supabaseClient.from('leads').insert({
         nombre:v('name'),
         empresa:v('company'),
         email:v('email'),
         telefono:v('phone'),
+        maquinas:v('machines'),
+        inactividad:v('downtime'),
         detalles:detalles,
-        inactividad:v('downtime')
+        origen:origen
       }).then(({error})=>{ if(error) console.error('Supabase insert error:', error); }).catch(()=>{});
     }
     const r=await fetch('https://formsubmit.co/ajax/chapy9716@gmail.com',{
