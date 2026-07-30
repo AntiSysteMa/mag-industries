@@ -10,11 +10,30 @@
 
 | # | Bloqueador | Impacto | Acción del usuario |
 |---|-----------|---------|--------------------|
-| 1 | **FormSubmit sin activar** | La landing capta leads pero el email de aviso NO llega. El lead sí queda en Supabase, pero el visitante ve mensaje de error. | Enviar el formulario una vez y pulsar «Activate» en el correo de FormSubmit |
-| 2 | **Precios publicados sin confirmar** | Las tarifas (280/190/60 €) y las igualas (590/990/1.690 €) son la recomendación del plan, no cifras validadas por el usuario. Están **en vivo**. | Revisar `servicios.html` y ajustar o confirmar |
-| 3 | **Referencias ofrecidas sin permiso** | La web ofrece poner en contacto a prospectos con los 2 talleres actuales. | Pedir permiso a JPARENTE y Gil-bo antes de que alguien lo solicite |
-| 4 | Sin dominio ni email corporativo | Se retiró `proyectos@magindustries.com` (no existía y los leads rebotaban). Hoy solo hay teléfono, WhatsApp y formulario. | Comprar dominio y configurar Zoho Mail |
-| 5 | Analytics de Vercel sin activar | No hay medición de tráfico ni de conversión de la landing. | Activar en el dashboard de Vercel |
+| 1 | **Precios publicados sin confirmar** | Las tarifas (280/190/60 €) y las igualas (590/990/1.690 €) son la recomendación del plan, no cifras validadas por el usuario. Están **en vivo**. | Revisar `servicios.html` y ajustar o confirmar |
+| 2 | **Referencias ofrecidas sin permiso** | La web ofrece poner en contacto a prospectos con los 2 talleres actuales. | Pedir permiso a JPARENTE y Gil-bo antes de que alguien lo solicite |
+| 3 | Sin dominio ni email corporativo | Se retiró `proyectos@magindustries.com` (no existía y los leads rebotaban). Hoy solo hay teléfono, WhatsApp y formulario. | Comprar dominio y configurar Zoho Mail |
+| 4 | Analytics de Vercel sin activar | No hay medición de tráfico ni de conversión de la landing. | Activar en el dashboard de Vercel |
+
+**Resueltos:** FormSubmit sí estaba activo (el email de aviso llega correctamente — el dato de «pendiente de activar» venía desactualizado de sesiones anteriores). Supabase resuelto en la sesión 5.
+
+---
+
+## 🔐 Datos de infraestructura verificados (29-jul-2026)
+
+| Recurso | Valor | Estado |
+|---|---|---|
+| Proyecto Supabase | `lryyubgldnrrxokkeeef` · «supabase-aero-bell» · eu-central-2 | ACTIVE_HEALTHY |
+| Clave publicable | `sb_publishable_LnAfjL6RQRdoPnOw5ZSEkA_jlCcbNBZ` | En uso |
+| Tabla | `public.leads` | Creada, RLS activo |
+| Política RLS | Solo INSERT para `anon`. **Sin política de SELECT** a propósito | Verificada |
+| Aviso por email | FormSubmit → chapy9716@gmail.com | Funciona |
+
+⚠️ **`bisioblvzoegaqokamel` no existe.** Es el ref que estuvo en el código desde el principio y devuelve NXDOMAIN. Si vuelve a aparecer en algún sitio, es un error — no lo restaures.
+
+Otro proyecto en la cuenta, `vdlnqgudysfzbysvztdp` («Love-moon»), es una app distinta sin relación con MAG. No tocar.
+
+Para leer los leads: panel de Supabase o `service_role`. Con la clave publicable no se pueden leer, y eso es intencionado.
 
 ---
 
