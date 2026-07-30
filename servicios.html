@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="tailwind.css?v=7">
+<link rel="stylesheet" href="tailwind.css?v=8">
 <script>
   (function(){ try{ var t=localStorage.getItem('mag-theme')||'dark'; document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark'); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
   window.addEventListener('load',function(){ setTimeout(function(){ try{ document.querySelectorAll('.reveal').forEach(function(el){ if(parseFloat(getComputedStyle(el).opacity)<0.05){ el.style.opacity='1'; el.style.transform='none'; el.classList.add('in'); } }); }catch(e){} },1600); });
@@ -86,11 +86,22 @@
       <p class="text-steel-400 reveal">Para encargos sueltos o para probar cómo trabajamos. Todos los precios incluyen la programación, la simulación de colisiones y la documentación de taller.</p>
     </div>
 
+    <div class="bg-night-card border border-night-line border-l-4 border-l-safety clip-corner p-6 sm:p-8 mb-10 reveal">
+      <div class="flex items-start gap-4">
+        <i aria-hidden="true" class="fa-solid fa-circle-info text-safety text-xl mt-0.5 flex-shrink-0"></i>
+        <div class="space-y-4 text-steel-200 leading-relaxed">
+          <p><span class="font-bold underline decoration-safety decoration-2 underline-offset-4">Según la complejidad de la pieza, el proyecto o su categorización, todos los precios de esta página son cifras de partida: el importe final se fija siempre desde ese mínimo hacia arriba.</span></p>
+          <p><span class="font-bold underline decoration-safety decoration-2 underline-offset-4">En todos los casos se celebra una reunión previa en la que ambas partes deben estar de acuerdo con el presupuesto, la viabilidad técnica y la disponibilidad para la cooperación B2B.</span></p>
+          <p class="text-sm text-steel-400">Ninguna cifra de esta página es un compromiso automático: es la referencia para que sepas de qué orden de magnitud hablamos antes de invertir tiempo en una reunión.</p>
+        </div>
+      </div>
+    </div>
+
     <div class="grid md:grid-cols-3 gap-6 mb-8">
       <article class="card-hover bg-night-card border border-night-line clip-corner p-7 reveal">
         <span class="tag text-[10px] text-steel-500 uppercase block mb-4">Matricería y moldes</span>
         <h3 class="text-xl font-bold mb-3">Postizos y cavidades 3D</h3>
-        <div class="flex items-baseline gap-2 mb-5"><span class="text-4xl font-extrabold text-safety tracking-tight">280 €</span><span class="text-steel-500 text-sm">/ pieza</span></div>
+        <div class="flex items-baseline gap-2 mb-5"><span class="text-steel-400 text-sm mr-1">desde</span><span class="text-4xl font-extrabold text-safety tracking-tight">280 €</span><span class="text-steel-500 text-sm">/ pieza</span></div>
         <p class="text-steel-400 text-sm leading-relaxed mb-5">Cavidades profundas, contrasalidas y superficies complejas en acero de herramienta. Control de altura de cresta y carga de viruta constante.</p>
         <p class="text-xs text-steel-500 border-t border-night-line pt-4">Entrega habitual en 48 h. Geometrías muy complejas o de 5 ejes continuos, hasta 320 €.</p>
       </article>
@@ -98,7 +109,7 @@
       <article class="card-hover bg-night-card border border-night-line clip-corner p-7 reveal">
         <span class="tag text-[10px] text-steel-500 uppercase block mb-4">Pieza 3D</span>
         <h3 class="text-xl font-bold mb-3">Piezas y utillajes</h3>
-        <div class="flex items-baseline gap-2 mb-5"><span class="text-4xl font-extrabold text-safety tracking-tight">190 €</span><span class="text-steel-500 text-sm">/ pieza</span></div>
+        <div class="flex items-baseline gap-2 mb-5"><span class="text-steel-400 text-sm mr-1">desde</span><span class="text-4xl font-extrabold text-safety tracking-tight">190 €</span><span class="text-steel-500 text-sm">/ pieza</span></div>
         <p class="text-steel-400 text-sm leading-relaxed mb-5">Piezas tridimensionales de dificultad media, amarres y utillajes de producción con verificación de colisiones.</p>
         <p class="text-xs text-steel-500 border-t border-night-line pt-4">Entrega habitual en 48 h.</p>
       </article>
@@ -106,7 +117,7 @@
       <article class="card-hover bg-night-card border border-night-line clip-corner p-7 reveal">
         <span class="tag text-[10px] text-steel-500 uppercase block mb-4">Trabajo 2D</span>
         <h3 class="text-xl font-bold mb-3">Taladros y perfiles</h3>
-        <div class="flex items-baseline gap-2 mb-5"><span class="text-4xl font-extrabold text-safety tracking-tight">60 €</span><span class="text-steel-500 text-sm">/ trabajo</span></div>
+        <div class="flex items-baseline gap-2 mb-5"><span class="text-steel-400 text-sm mr-1">desde</span><span class="text-4xl font-extrabold text-safety tracking-tight">60 €</span><span class="text-steel-500 text-sm">/ trabajo</span></div>
         <p class="text-steel-400 text-sm leading-relaxed mb-5">Taladrados, contorneados y perfiles 2D. El trabajo rápido que satura tu oficina técnica sin aportar valor.</p>
         <p class="text-xs text-steel-500 border-t border-night-line pt-4">Entrega en 24 h. Importe mínimo por encargo.</p>
       </article>
@@ -270,6 +281,6 @@
 </a>
 
 <script defer src="/_vercel/insights/script.js"></script>
-<script src="app.js?v=7" defer></script>
+<script src="app.js?v=8" defer></script>
 </body>
 </html>
