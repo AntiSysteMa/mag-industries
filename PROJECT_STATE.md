@@ -14,9 +14,7 @@
 | 2 | **Referencia pendiente de permiso** | La web ofrece poner en contacto a prospectos con el taller de matricería. | Pedir permiso a JPARENTE antes de que alguien lo solicite |
 | 3 | Analytics de Vercel sin activar | No hay medición de tráfico ni de conversión de la landing. | Activar en el dashboard de Vercel |
 
-**Resueltos:** FormSubmit ya estaba activo · Supabase (sesión 5) · Precios confirmados por el usuario como cifras de partida (sesión 6) · Dominio propio en producción (sesión 6).
-
-**Resueltos:** FormSubmit sí estaba activo (el email de aviso llega correctamente — el dato de «pendiente de activar» venía desactualizado de sesiones anteriores). Supabase resuelto en la sesión 5.
+**Resueltos:** FormSubmit sí estaba activo (el aviso por email llega bien; el dato de «pendiente de activar» venía desactualizado de sesiones anteriores) · Supabase operativo (sesión 5) · Precios confirmados por el usuario como cifras de partida (sesión 6) · Dominio propio en producción (sesión 6).
 
 ---
 
@@ -60,14 +58,15 @@ Para leer los leads: panel de Supabase o `service_role`. Con la clave publicable
 
 | Métrica | Valor | Estado |
 |---------|-------|--------|
-| Sitio web | Live en Vercel | ✅ |
-| Bugs críticos JS | Resuelto (supabase naming) | ✅ |
-| Simulación Canvas | Funcional + optimizada | ✅ |
-| Email corporativo | Pendiente | ⏳ |
-| Leads en DB | 0 (formulario activo) | 📝 |
+| Sitio web | Live en `www.magindustries.es` | ✅ |
+| Dominio propio | `magindustries.es` (DonDominio, DNS → Vercel, SSL OK) | ✅ |
+| Arquitectura | 6 páginas (home + landing + tarifas + capacidades + sectores + privacidad) | ✅ |
+| Guardado de leads | Supabase `public.leads`, RLS solo INSERT | ✅ |
+| Aviso por email | FormSubmit → Gmail actual | ✅ |
+| Contenido verificable | Sin cifras ni testimonios inventados | ✅ |
+| Email corporativo | Pendiente (Google Workspace) | ⏳ |
 | Analytics activadas | No | ⏳ |
-| Dominio propio | No (Vercel domain) | ⏳ |
-| SEO básico | Completo | ✅ |
+| Leads captados | 0 (embudo recién publicado) | 📝 |
 | Git + Vercel integration | Activa | ✅ |
 
 ---
