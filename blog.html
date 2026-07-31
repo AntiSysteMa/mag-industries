@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog técnico de programación CNC y CAM | MAG INDUSTRIES</title>
+<meta name="description" content="Artículos sobre estrategias de mecanizado, costes de programación CNC y decisiones de oficina técnica. Sin humo comercial: números y criterio técnico.">
+<link rel="canonical" href="https://www.magindustries.es/blog.html">
+<meta name="robots" content="index, follow">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Blog técnico de programación CNC y CAM | MAG INDUSTRIES">
+<meta property="og:description" content="Artículos sobre estrategias de mecanizado, costes de programación CNC y decisiones de oficina técnica.">
+<meta property="og:url" content="https://www.magindustries.es/blog.html">
+<meta property="og:image" content="https://www.magindustries.es/assets/og-image.png">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="assets/logo-oscuro.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="tailwind.css?v=9">
+<script>
+  (function(){ try{ var t=localStorage.getItem('mag-theme')||'dark'; document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark'); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
+  window.addEventListener('load',function(){ setTimeout(function(){ try{ document.querySelectorAll('.reveal').forEach(function(el){ if(parseFloat(getComputedStyle(el).opacity)<0.05){ el.style.opacity='1'; el.style.transform='none'; el.classList.add('in'); } }); }catch(e){} },1600); });
+</script>
+</head>
+<body class="font-sans text-steel-100 antialiased selection:bg-safety selection:text-night">
+
+<header id="site-header" class="fixed top-0 inset-x-0 z-50 transition-all duration-300 border-b border-transparent">
+  <nav class="max-w-7xl mx-auto px-5 lg:px-10 h-[72px] flex items-center justify-between" aria-label="Navegación principal">
+    <a href="index.html" class="flex items-center gap-3" aria-label="MAG INDUSTRIES · Inicio">
+      <span class="w-11 h-11 flex items-center justify-center flex-shrink-0">
+        <img src="assets/logo-oscuro.png" alt="Logo MAG INDUSTRIES" width="44" height="44" decoding="async" class="logo-dark w-full h-full object-contain">
+        <img src="assets/logo-claro.png" alt="Logo MAG INDUSTRIES" width="44" height="44" decoding="async" class="logo-light w-full h-full object-contain">
+      </span>
+      <span class="leading-none">
+        <span class="block font-titulo tracking-tight text-lg">MAG <span class="text-safety">INDUSTRIES</span></span>
+        <span class="block tag text-[9px] text-steel-500 uppercase mt-1">Ingeniería a un clic</span>
+      </span>
+    </a>
+    <ul class="hidden lg:flex items-center gap-6 text-sm text-steel-300">
+      <li><a href="index.html#proceso" class="hover:text-safety transition">Cómo trabajamos</a></li>
+      <li><a href="capacidades.html" class="hover:text-safety transition">Capacidades</a></li>
+      <li><a href="sectores.html" class="hover:text-safety transition">Sectores</a></li>
+      <li><a href="servicios.html" class="hover:text-safety transition">Tarifas</a></li>
+      <li><a href="blog.html" class="text-safety font-semibold transition">Blog</a></li>
+    </ul>
+    <div class="flex items-center gap-3">
+      <button id="theme-btn" class="theme-btn clip-tab" aria-label="Cambiar entre modo claro y oscuro" title="Cambiar tema">
+        <i aria-hidden="true" class="fa-solid fa-moon theme-icon-moon"></i><i aria-hidden="true" class="fa-solid fa-sun theme-icon-sun"></i>
+      </button>
+      <a href="auditoria-gratuita.html" class="hidden sm:inline-flex items-center gap-2 bg-safety text-night font-bold text-sm px-5 py-2.5 clip-tab hover:brightness-110 transition"><i aria-hidden="true" class="fa-solid fa-gauge-high"></i> Auditoría gratuita</a>
+      <button id="menu-btn" class="lg:hidden w-10 h-10 flex items-center justify-center text-steel-200 border border-night-line rounded-sm" aria-label="Abrir menú"><i aria-hidden="true" class="fa-solid fa-bars"></i></button>
+    </div>
+  </nav>
+  <div id="mobile-menu" class="lg:hidden hidden bg-night-soft border-b border-night-line">
+    <div class="px-5 py-4 flex flex-col gap-1 text-steel-200">
+      <a href="index.html#proceso" class="mobile-link py-3 border-b border-night-line/60">Cómo trabajamos</a>
+      <a href="capacidades.html" class="mobile-link py-3 border-b border-night-line/60">Capacidades</a>
+      <a href="sectores.html" class="mobile-link py-3 border-b border-night-line/60">Sectores</a>
+      <a href="servicios.html" class="mobile-link py-3 border-b border-night-line/60">Tarifas y planes</a>
+      <a href="blog.html" class="mobile-link py-3 border-b border-night-line/60 text-safety font-semibold">Blog</a>
+      <a href="auditoria-gratuita.html" class="mobile-link mt-3 bg-safety text-night font-bold text-center py-3 clip-tab">Auditoría gratuita</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="relative overflow-hidden bg-grid bg-glow-top border-b border-night-line pt-[72px]">
+  <div class="relative max-w-4xl mx-auto px-5 lg:px-10 py-16 lg:py-20 text-center">
+    <p class="tag text-xs text-safety uppercase mb-4 reveal">Blog técnico</p>
+    <h1 class="font-titulo text-3xl sm:text-4xl lg:text-5xl leading-[1.1] tracking-tight mb-6 reveal">Criterio técnico, no folletos</h1>
+    <p class="text-lg text-steel-300 max-w-2xl mx-auto reveal">Estrategias de mecanizado, costes de oficina técnica y decisiones que se toman en el taller. Escrito para gente que sabe leer un plano, con las cifras a la vista y diciendo también cuándo <em>no</em> nos necesitas.</p>
+  </div>
+</section>
+
+<!-- ARTÍCULO DESTACADO -->
+<section class="border-b border-night-line">
+  <div class="max-w-5xl mx-auto px-5 lg:px-10 py-16">
+    <p class="tag text-xs text-cyber uppercase mb-6 reveal">Último artículo</p>
+
+    <a href="blog-plantilla-o-externalizar.html" class="group block bg-night-card border border-night-line clip-corner overflow-hidden card-hover reveal">
+      <div class="grid md:grid-cols-5">
+        <div class="md:col-span-2 screen relative min-h-[220px] border-b md:border-b-0 md:border-r border-night-line overflow-hidden">
+          <div class="absolute inset-0 bg-grid opacity-40"></div>
+          <svg viewBox="0 0 300 220" class="absolute inset-0 w-full h-full" aria-hidden="true">
+            <line x1="40" y1="180" x2="270" y2="180" stroke="#4A5B6E" stroke-width="1.4"/>
+            <line x1="40" y1="180" x2="40" y2="30" stroke="#4A5B6E" stroke-width="1.4"/>
+            <!-- coste interno por pieza: cae con el volumen -->
+            <path d="M55,45 C100,140 150,168 265,176" fill="none" stroke="#D4AF37" stroke-width="2.4"/>
+            <!-- coste externo por pieza: constante -->
+            <path d="M55,130 L265,130" fill="none" stroke="#12F7A0" stroke-width="2.4" stroke-dasharray="7 5"/>
+            <circle cx="132" cy="130" r="5.5" fill="#EFFFF7"/>
+            <text x="140" y="120" fill="#8592A3" font-size="10" class="tag">punto de equilibrio</text>
+            <text x="196" y="146" fill="#12F7A0" font-size="9" class="tag">externo</text>
+            <text x="196" y="192" fill="#D4AF37" font-size="9" class="tag">interno</text>
+            <text x="46" y="205" fill="#8592A3" font-size="9" class="tag">piezas / año →</text>
+          </svg>
+        </div>
+        <div class="md:col-span-3 p-7 sm:p-9">
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 tag text-[10px] text-steel-500 uppercase mb-4">
+            <span>30 julio 2026</span><span>·</span><span>7 min</span><span>·</span><span class="text-cyber">Costes de producción</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-4 group-hover:text-safety transition">Programador CNC en plantilla o externalizar: los números reales</h2>
+          <p class="text-steel-400 leading-relaxed mb-6">Un programador en nómina cuesta entre 45.000 y 53.000 € al año, no los 30.000 del bruto. Calculamos dónde está el punto de equilibrio en piezas al año y en qué casos contratar es la decisión correcta, aunque eso signifique que no nos contrates.</p>
+          <span class="inline-flex items-center gap-2 text-safety font-bold text-sm">Leer el artículo <i aria-hidden="true" class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i></span>
+        </div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- EN PREPARACIÓN -->
+<section class="border-b border-night-line bg-night-soft">
+  <div class="max-w-5xl mx-auto px-5 lg:px-10 py-16">
+    <div class="max-w-2xl mb-10">
+      <p class="tag text-xs text-safety uppercase mb-3 reveal">En preparación</p>
+      <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-4 reveal">Lo que viene</h2>
+      <p class="text-steel-400 reveal">El blog acaba de arrancar. Estos son los temas ya en el tintero, uno cada dos semanas. Si hay alguno que te interesa especialmente, dímelo y lo adelanto.</p>
+    </div>
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div class="bg-night-card border border-night-line p-6 clip-tab reveal">
+        <span class="tag text-[10px] text-steel-500 uppercase block mb-2">Estrategias</span>
+        <h3 class="font-bold mb-2">Por qué el trocoidal salva filos en acero de herramienta</h3>
+        <p class="text-steel-400 text-sm">Inmersión radial, ángulo de compromiso y por qué una fresa pequeña aguanta más que una grande en D2 templado.</p>
+      </div>
+      <div class="bg-night-card border border-night-line p-6 clip-tab reveal">
+        <span class="tag text-[10px] text-steel-500 uppercase block mb-2">Riesgo</span>
+        <h3 class="font-bold mb-2">Lo que cuesta de verdad una colisión</h3>
+        <p class="text-steel-400 text-sm">Husillo, plazo de reparación, pieza perdida y hueco de producción. El cálculo completo del incidente que nadie presupuesta.</p>
+      </div>
+      <div class="bg-night-card border border-night-line p-6 clip-tab reveal">
+        <span class="tag text-[10px] text-steel-500 uppercase block mb-2">Documentación</span>
+        <h3 class="font-bold mb-2">La hoja de proceso que tu operario sí lee</h3>
+        <p class="text-steel-400 text-sm">Qué tiene que llevar, en qué orden, y por qué la mayoría acaban en un cajón sin abrir.</p>
+      </div>
+      <div class="bg-night-card border border-night-line p-6 clip-tab reveal">
+        <span class="tag text-[10px] text-steel-500 uppercase block mb-2">Postprocesadores</span>
+        <h3 class="font-bold mb-2">Heidenhain, Fanuc y Siemens: lo que cambia de verdad</h3>
+        <p class="text-steel-400 text-sm">Más allá de la sintaxis: ciclos, compensaciones y las trampas al portar un programa de un control a otro.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="border-b border-night-line relative overflow-hidden">
+  <div class="absolute inset-0 bg-grid opacity-30 pointer-events-none"></div>
+  <div class="relative max-w-3xl mx-auto px-5 lg:px-10 py-16 text-center">
+    <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-4 reveal">¿Tienes una pieza que se te resiste?</h2>
+    <p class="text-steel-400 mb-8 reveal">Leer está bien, pero se aprende más viendo tu pieza en pantalla. Mándamela y te enseño cómo la programaría.</p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center reveal">
+      <a href="auditoria-gratuita.html" class="inline-flex items-center justify-center gap-3 bg-cyber text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition"><i aria-hidden="true" class="fa-solid fa-paper-plane"></i> Manda tu plano y te digo la viabilidad</a>
+      <a href="https://wa.me/34635013953?text=Hola%2C%20vengo%20del%20blog%20y%20quiero%20consultar%20una%20pieza." target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-3 border border-night-line text-steel-200 font-bold px-7 py-4 clip-tab hover:border-safety/60 hover:text-safety transition"><i aria-hidden="true" class="fa-brands fa-whatsapp"></i> Consultar por WhatsApp</a>
+    </div>
+  </div>
+</section>
+
+<footer class="bg-night">
+  <div class="max-w-7xl mx-auto px-5 lg:px-10 py-10">
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+      <a href="index.html" class="flex items-center gap-3">
+        <span class="w-9 h-9 flex items-center justify-center flex-shrink-0">
+          <img src="assets/logo-oscuro.png" alt="Logo MAG INDUSTRIES" width="36" height="36" decoding="async" class="logo-dark w-full h-full object-contain">
+          <img src="assets/logo-claro.png" alt="Logo MAG INDUSTRIES" width="36" height="36" decoding="async" class="logo-light w-full h-full object-contain">
+        </span>
+        <span class="font-titulo tracking-tight">MAG <span class="text-safety">INDUSTRIES</span></span>
+      </a>
+      <p class="text-xs text-steel-500 text-center">© 2026 MAG INDUSTRIES · <a href="index.html" class="underline hover:text-safety transition">Inicio</a> · <a href="servicios.html" class="underline hover:text-safety transition">Tarifas</a> · <a href="privacidad.html" class="underline hover:text-safety transition">Privacidad</a></p>
+    </div>
+  </div>
+</footer>
+
+<a id="wa-btn" href="https://wa.me/34635013953?text=Hola%2C%20vengo%20del%20blog%20y%20quiero%20consultar%20una%20pieza." target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">
+  <i aria-hidden="true" class="fa-brands fa-whatsapp"></i><span class="wa-label">WhatsApp</span>
+</a>
+
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="app.js?v=9" defer></script>
+</body>
+</html>
