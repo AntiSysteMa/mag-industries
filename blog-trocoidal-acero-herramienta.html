@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fresado trocoidal en acero de herramienta: por qué salva filos | MAG</title>
+<meta name="description" content="Por qué el ranurado a pleno ancho rompe fresas y cómo el trocoidal lo evita: ángulo de compromiso, adelgazamiento de viruta y parámetros de partida para D2, H13 y titanio.">
+<link rel="canonical" href="https://www.magindustries.es/blog-trocoidal-acero-herramienta.html">
+<meta name="robots" content="index, follow">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fresado trocoidal en acero de herramienta: por qué salva filos">
+<meta property="og:description" content="Ángulo de compromiso, adelgazamiento de viruta y parámetros de partida para desbastar D2, H13 y Ti-6Al-4V sin romper herramienta.">
+<meta property="og:url" content="https://www.magindustries.es/blog-trocoidal-acero-herramienta.html">
+<meta property="og:image" content="https://www.magindustries.es/assets/og-image.png">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary_large_image">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Fresado trocoidal en acero de herramienta: por qué salva filos",
+  "description": "Por qué el ranurado a pleno ancho rompe fresas y cómo el trocoidal lo evita: ángulo de compromiso, adelgazamiento de viruta y parámetros de partida para D2, H13 y titanio.",
+  "datePublished": "2026-08-01",
+  "dateModified": "2026-08-01",
+  "inLanguage": "es-ES",
+  "url": "https://www.magindustries.es/blog-trocoidal-acero-herramienta.html",
+  "image": "https://www.magindustries.es/assets/og-image.png",
+  "author": { "@type": "Organization", "name": "MAG INDUSTRIES", "url": "https://www.magindustries.es/" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "MAG INDUSTRIES",
+    "logo": { "@type": "ImageObject", "url": "https://www.magindustries.es/assets/logo-oscuro.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://www.magindustries.es/blog-trocoidal-acero-herramienta.html" }
+}
+</script>
+
+<link rel="icon" href="assets/logo-oscuro.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="tailwind.css?v=10">
+<script>
+  (function(){ try{ var t=localStorage.getItem('mag-theme')||'dark'; document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark'); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
+  /* La animacion de entrada es una MEJORA, no un requisito para ver la web.
+     Ocultamos el contenido solo si este script corre, y lo destapamos por
+     temporizador pase lo que pase. app.js cancela ese temporizador cuando ya
+     controla el revelado. Sin esto, un CDN lento deja la pagina EN BLANCO. */
+  (function(){
+    var h=document.documentElement;
+    h.classList.add("anim-ready");
+    window.__magFailsafe=setTimeout(function(){ h.classList.remove("anim-ready"); },1800);
+  })();
+  /* Segunda red: al terminar la carga, revela cualquier .reveal que siga oculto. */
+  window.addEventListener("load",function(){ setTimeout(function(){ try{ document.querySelectorAll(".reveal").forEach(function(el){ if(parseFloat(getComputedStyle(el).opacity)<0.05){ el.style.opacity="1"; el.style.transform="none"; el.classList.add("in"); } }); }catch(e){} },1200); });
+</script>
+</head>
+<body class="font-sans text-steel-100 antialiased selection:bg-safety selection:text-night">
+
+<header id="site-header" class="fixed top-0 inset-x-0 z-50 transition-all duration-300 border-b border-transparent">
+  <nav class="max-w-7xl mx-auto px-5 lg:px-10 h-[72px] flex items-center justify-between" aria-label="Navegación principal">
+    <a href="index.html" class="flex items-center gap-3" aria-label="MAG INDUSTRIES · Inicio">
+      <span class="w-11 h-11 flex items-center justify-center flex-shrink-0">
+        <img src="assets/logo-oscuro.png" alt="Logo MAG INDUSTRIES" width="44" height="44" decoding="async" class="logo-dark w-full h-full object-contain">
+        <img src="assets/logo-claro.png" alt="Logo MAG INDUSTRIES" width="44" height="44" decoding="async" class="logo-light w-full h-full object-contain">
+      </span>
+      <span class="leading-none">
+        <span class="block font-titulo tracking-tight text-lg">MAG <span class="text-safety">INDUSTRIES</span></span>
+        <span class="block tag text-[9px] text-steel-500 uppercase mt-1">Ingeniería a un clic</span>
+      </span>
+    </a>
+    <ul class="hidden lg:flex items-center gap-6 text-sm text-steel-300">
+      <li><a href="index.html#proceso" class="hover:text-safety transition">Cómo trabajamos</a></li>
+      <li><a href="capacidades.html" class="hover:text-safety transition">Capacidades</a></li>
+      <li><a href="sectores.html" class="hover:text-safety transition">Sectores</a></li>
+      <li><a href="servicios.html" class="hover:text-safety transition">Tarifas</a></li>
+      <li><a href="blog.html" class="text-safety font-semibold transition">Blog</a></li>
+    </ul>
+    <div class="flex items-center gap-3">
+      <button id="theme-btn" class="theme-btn clip-tab" aria-label="Cambiar entre modo claro y oscuro" title="Cambiar tema">
+        <i aria-hidden="true" class="fa-solid fa-moon theme-icon-moon"></i><i aria-hidden="true" class="fa-solid fa-sun theme-icon-sun"></i>
+      </button>
+      <a href="auditoria-gratuita.html" class="hidden sm:inline-flex items-center gap-2 bg-safety text-night font-bold text-sm px-5 py-2.5 clip-tab hover:brightness-110 transition"><i aria-hidden="true" class="fa-solid fa-gauge-high"></i> Auditoría gratuita</a>
+      <button id="menu-btn" class="lg:hidden w-10 h-10 flex items-center justify-center text-steel-200 border border-night-line rounded-sm" aria-label="Abrir menú"><i aria-hidden="true" class="fa-solid fa-bars"></i></button>
+    </div>
+  </nav>
+  <div id="mobile-menu" class="lg:hidden hidden bg-night-soft border-b border-night-line">
+    <div class="px-5 py-4 flex flex-col gap-1 text-steel-200">
+      <a href="index.html#proceso" class="mobile-link py-3 border-b border-night-line/60">Cómo trabajamos</a>
+      <a href="capacidades.html" class="mobile-link py-3 border-b border-night-line/60">Capacidades</a>
+      <a href="sectores.html" class="mobile-link py-3 border-b border-night-line/60">Sectores</a>
+      <a href="servicios.html" class="mobile-link py-3 border-b border-night-line/60">Tarifas y planes</a>
+      <a href="blog.html" class="mobile-link py-3 border-b border-night-line/60 text-safety font-semibold">Blog</a>
+      <a href="auditoria-gratuita.html" class="mobile-link mt-3 bg-safety text-night font-bold text-center py-3 clip-tab">Auditoría gratuita</a>
+    </div>
+  </div>
+</header>
+
+<article>
+<header class="relative overflow-hidden bg-grid bg-glow-top border-b border-night-line pt-[72px]">
+  <div class="relative max-w-3xl mx-auto px-5 lg:px-10 py-14 lg:py-20">
+    <nav aria-label="Miga de pan" class="tag text-[11px] text-steel-500 uppercase mb-6">
+      <a href="index.html" class="hover:text-safety transition">Inicio</a> <span class="mx-2">·</span>
+      <a href="blog.html" class="hover:text-safety transition">Blog</a> <span class="mx-2">·</span>
+      <span class="text-steel-400">Estrategias</span>
+    </nav>
+    <h1 class="font-titulo text-3xl sm:text-4xl lg:text-[2.8rem] leading-[1.12] tracking-tight mb-6">
+      Por qué el trocoidal salva filos en acero de herramienta
+    </h1>
+    <p class="text-lg text-steel-300 leading-relaxed mb-8">
+      Si rompes fresas ranurando en D2 o H13, el problema casi nunca es la calidad de la herramienta. Es que le estás pidiendo 180° de compromiso a algo diseñado para trabajar a 15°. Aquí está la física, los números y cuándo esta estrategia <em>no</em> compensa.
+    </p>
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-2 tag text-[11px] text-steel-500 uppercase border-t border-night-line pt-5">
+      <span><i aria-hidden="true" class="fa-regular fa-calendar mr-2"></i>1 agosto 2026</span>
+      <span><i aria-hidden="true" class="fa-regular fa-clock mr-2"></i>9 min de lectura</span>
+      <span><i aria-hidden="true" class="fa-solid fa-tag mr-2"></i>Estrategias de mecanizado</span>
+    </div>
+  </div>
+</header>
+
+<div class="border-b border-night-line">
+  <div class="max-w-3xl mx-auto px-5 lg:px-10 py-16 text-steel-300 leading-relaxed space-y-6">
+
+    <p class="text-lg">Es la llamada más repetida que recibo: «se nos están rompiendo las fresas en la ranura y ya hemos probado con tres marcas». Cambiar de marca no arregla esto, porque el problema no está en el filo: está en la geometría del corte.</p>
+
+    <h2 class="font-titulo text-2xl sm:text-3xl text-steel-100 tracking-tight pt-6">El ángulo de compromiso, que es de lo que va todo</h2>
+
+    <p>Cuando fresas una ranura a pleno ancho, la herramienta entra en el material y lo abraza por completo: <strong class="text-steel-100">180° de arco de contacto</strong>. Cada filo está cortando durante media vuelta entera y descansando la otra media. Suena razonable hasta que miras lo que implica:</p>
+
+    <ul class="list-disc pl-6 space-y-2 marker:text-steel-500">
+      <li><strong class="text-steel-100">El calor no tiene por dónde salir.</strong> Medio giro cortando es medio giro acumulando temperatura en el mismo punto del filo, con muy poco tiempo de enfriamiento entre pasadas.</li>
+      <li><strong class="text-steel-100">La viruta no evacúa.</strong> Queda atrapada en la ranura y vuelve a pasar por la zona de corte. Recortar viruta ya cortada es una de las formas más rápidas de romper un filo.</li>
+      <li><strong class="text-steel-100">Cortas a favor y en contra a la vez.</strong> En un lado de la ranura la fresa trabaja en concordancia y en el otro en oposición. Las fuerzas se compensan de forma inestable y aparece vibración.</li>
+      <li><strong class="text-steel-100">Solo trabaja la punta.</strong> Como la profundidad axial en ranurado suele ser pequeña, todo el desgaste se concentra en los primeros milímetros del filo. Compras 30 mm de longitud de corte y gastas 4.</li>
+    </ul>
+
+    <p>En acero de construcción esto se aguanta. En un D2 templado a 58-60 HRC, o en un H13, el filo se recalienta y se descascarilla antes de que te des cuenta.</p>
+
+    <!-- DIAGRAMA -->
+    <figure class="my-10">
+      <div class="screen relative border border-night-line clip-corner overflow-hidden" style="aspect-ratio:16/7">
+        <div class="absolute inset-0 bg-grid opacity-40"></div>
+        <svg viewBox="0 0 640 280" class="absolute inset-0 w-full h-full" role="img" aria-label="Comparación entre ranurado a pleno ancho, con 180 grados de contacto, y trocoidal, con unos 40 grados">
+          <!-- IZQUIERDA: pleno ancho -->
+          <text x="30" y="34" fill="#8592A3" font-size="12" class="tag">RANURADO A PLENO ANCHO</text>
+          <rect x="30" y="60" width="250" height="170" fill="#0F1823" stroke="#2C3B4C"/>
+          <rect x="105" y="60" width="100" height="170" fill="#16222F"/>
+          <line x1="105" y1="60" x2="105" y2="230" stroke="#4A5B6E" stroke-width="1.4"/>
+          <line x1="205" y1="60" x2="205" y2="230" stroke="#4A5B6E" stroke-width="1.4"/>
+          <path d="M155,95 m-50,0 a50,50 0 0 0 100,0" fill="none" stroke="#FF5A3C" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="155" cy="95" r="50" fill="none" stroke="#CDD8E4" stroke-width="1.8"/>
+          <circle cx="155" cy="95" r="4" fill="#CDD8E4"/>
+          <text x="155" y="160" fill="#FF5A3C" font-size="19" text-anchor="middle" font-weight="700">180°</text>
+          <text x="155" y="180" fill="#8592A3" font-size="11" text-anchor="middle" class="tag">de contacto</text>
+          <text x="155" y="252" fill="#FF5A3C" font-size="11" text-anchor="middle" class="tag">ae = 100 % · ap pequeño</text>
+
+          <!-- DERECHA: trocoidal -->
+          <text x="360" y="34" fill="#8592A3" font-size="12" class="tag">TROCOIDAL</text>
+          <rect x="360" y="60" width="250" height="170" fill="#0F1823" stroke="#2C3B4C"/>
+          <rect x="435" y="60" width="100" height="170" fill="#16222F"/>
+          <line x1="435" y1="60" x2="435" y2="230" stroke="#4A5B6E" stroke-width="1.4"/>
+          <line x1="535" y1="60" x2="535" y2="230" stroke="#4A5B6E" stroke-width="1.4"/>
+          <!-- bucles -->
+          <g fill="none" stroke="#12F7A0" stroke-width="1.2" opacity="0.45">
+            <circle cx="455" cy="110" r="34"/><circle cx="470" cy="145" r="34"/><circle cx="485" cy="180" r="34"/>
+          </g>
+          <path d="M497,84 a34,34 0 0 0 -30,-14" fill="none" stroke="#FF5A3C" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="475" cy="95" r="34" fill="none" stroke="#CDD8E4" stroke-width="1.8"/>
+          <circle cx="475" cy="95" r="4" fill="#CDD8E4"/>
+          <text x="500" y="163" fill="#12F7A0" font-size="19" text-anchor="middle" font-weight="700">~40°</text>
+          <text x="500" y="183" fill="#8592A3" font-size="11" text-anchor="middle" class="tag">de contacto</text>
+          <text x="485" y="252" fill="#12F7A0" font-size="11" text-anchor="middle" class="tag">ae = 8 % · ap grande</text>
+        </svg>
+      </div>
+      <figcaption class="text-sm text-steel-500 mt-3">El arco rojo es el tramo que está cortando en cada instante. La herramienta es la misma; lo que cambia es cuánto material abarca de una vez.</figcaption>
+    </figure>
+
+    <h2 class="font-titulo text-2xl sm:text-3xl text-steel-100 tracking-tight pt-6">Qué hace distinto el trocoidal</h2>
+
+    <p>La idea es sencilla: en vez de empujar la fresa en línea recta comiéndose todo el ancho, la haces describir bucles circulares mientras avanza. Cada bucle muerde una rebanada estrecha de material.</p>
+
+    <p>Al bajar la inmersión radial (<code class="font-mono text-cyber text-sm bg-night-soft px-1.5 py-0.5">ae</code>) al 5-15 % del diámetro, el arco de contacto se desploma de 180° a unos 30-50°. Y como las fuerzas radiales caen con él, puedes permitirte lo que antes era impensable: <strong class="text-steel-100">meter mucha profundidad axial</strong> (<code class="font-mono text-cyber text-sm bg-night-soft px-1.5 py-0.5">ap</code>), a menudo 1,5 o 2 veces el diámetro.</p>
+
+    <p>Ese cambio de reparto es todo el truco:</p>
+
+    <div class="border-l-4 border-cyber bg-night-card p-6 my-8">
+      <p class="text-steel-200"><strong>Poco ancho, mucho fondo.</strong> El desgaste deja de concentrarse en la punta y se reparte a lo largo de toda la longitud de corte. Estás usando la herramienta entera en vez de un cuarto de ella, y por eso una fresa aguanta varias veces más aunque estés arrancando el mismo volumen de material.</p>
+    </div>
+
+    <p>De paso resuelves lo demás: cada filo tiene un intervalo largo de enfriamiento entre mordidas, la viruta sale limpia porque nunca queda encerrada, y todo el corte ocurre en concordancia, sin la alternancia de fuerzas del ranurado.</p>
+
+    <h2 class="font-titulo text-2xl sm:text-3xl text-steel-100 tracking-tight pt-6">El adelgazamiento de viruta: por qué tienes que subir el avance</h2>
+
+    <p>Aquí es donde mucha gente lo prueba, le va lento y lo abandona pensando que no sirve.</p>
+
+    <p>Cuando la inmersión radial es menor que la mitad del diámetro, la viruta que realmente sale <strong class="text-steel-100">es más fina que el avance por diente que has programado</strong>. Es pura geometría: el filo entra y sale del material describiendo un arco corto, y el espesor máximo de viruta nunca llega al valor nominal.</p>
+
+    <p>Si no lo compensas, estás cortando con virutas demasiado finas. Y una viruta demasiado fina no corta: frota. El filo se calienta, se endurece la superficie y la herramienta se muere igualmente, esta vez por rozamiento en vez de por sobrecarga.</p>
+
+    <p>El factor de corrección se calcula así:</p>
+
+    <div class="bg-night-card border border-night-line clip-corner p-6 my-6 font-mono text-sm overflow-x-auto">
+      <p class="text-cyber">f<sub>z</sub> corregido = f<sub>z</sub> nominal × D / (2 × √(ae × D − ae²))</p>
+    </div>
+
+    <p>Con una fresa de 10 mm y una inmersión del 10 % (ae = 1 mm), el factor sale <strong class="text-steel-100">1,67</strong>: tienes que subir el avance por diente un 67 % respecto al de catálogo. Al 5 % de inmersión el factor pasa de 2,2.</p>
+
+    <p class="text-sm text-steel-400">La mayoría de los CAM modernos lo aplican solos si les dices que estás en trocoidal, pero conviene comprobarlo. Es la diferencia entre que la estrategia funcione o que parezca inútil.</p>
+
+    <h2 class="font-titulo text-2xl sm:text-3xl text-steel-100 tracking-tight pt-6">Parámetros de partida</h2>
+
+    <p>Valores orientativos para fresa de metal duro con recubrimiento, cuatro filos, en máquina rígida. Son <em>puntos de arranque</em> para la primera prueba, no una receta: ajusta con lo que veas y oigas en tu máquina.</p>
+
+    <div class="overflow-x-auto my-8">
+      <table class="w-full text-sm border border-night-line">
+        <thead>
+          <tr class="bg-night-soft">
+            <th class="text-left px-4 py-3 tag text-[10px] uppercase text-steel-400 border-b border-night-line">Material</th>
+            <th class="text-right px-4 py-3 tag text-[10px] uppercase text-steel-400 border-b border-night-line">ae (% D)</th>
+            <th class="text-right px-4 py-3 tag text-[10px] uppercase text-steel-400 border-b border-night-line">ap</th>
+            <th class="text-right px-4 py-3 tag text-[10px] uppercase text-steel-400 border-b border-night-line">Vc (m/min)</th>
+          </tr>
+        </thead>
+        <tbody class="text-steel-300">
+          <tr><td class="px-4 py-3 border-b border-night-line">Acero templado D2 / H13 (54-60 HRC)</td><td class="px-4 py-3 border-b border-night-line text-right font-mono">5 – 8 %</td><td class="px-4 py-3 border-b border-night-line text-right font-mono">1,0 – 1,5 × D</td><td class="px-4 py-3 border-b border-night-line text-right font-mono">80 – 130</td></tr>
+          <tr><td class="px-4 py-3 border-b border-night-line">Acero de herramienta recocido</td><td class="px-4 py-3 border-b border-night-line text-right font-mono">8 – 12 %</td><td class="px-4 py-3 border-b border-night-line text-right font-mono">1,5 – 2 × D</td><td class="px-4 py-3 border-b border-night-line text-right font-mono">140 – 200</td></tr>
+          <tr><td class="px-4 py-3 border-b border-night-line">Inoxidable 316 / dúplex</td><td class="px-4 py-3 border-b border-night-line text-right font-mono">8 – 10 %</td><td class="px-4 py-3 border-b border-night-line text-right font-mono">1,0 – 1,5 × D</td><td class="px-4 py-3 border-b border-night-line text-right font-mono">90 – 140</td></tr>
+          <tr><td class="px-4 py-3">Ti-6Al-4V</td><td class="px-4 py-3 text-right font-mono">5 – 10 %</td><td class="px-4 py-3 text-right font-mono">1,0 – 2 × D</td><td class="px-4 py-3 text-right font-mono">50 – 80</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>En titanio, además, el refrigerante deja de ser opcional: sin evacuación de calor la viruta se suelda al filo y arruinas la herramienta en minutos.</p>
+
+    <h2 class="font-titulo text-2xl sm:text-3xl text-steel-100 tracking-tight pt-6">Cuándo el trocoidal <em>no</em> compensa</h2>
+
+    <p>No es una estrategia universal, y venderla como tal es lo que hace que la gente desconfíe. Casos en los que yo no la uso:</p>
+
+    <ul class="list-disc pl-6 space-y-3 marker:text-steel-500">
+      <li><strong class="text-steel-100">Control con procesado de bloque lento.</strong> Este es el motivo más habitual y el que menos se menciona. El trocoidal genera miles de segmentos cortos. Si tu control no digiere bloques lo bastante rápido, se queda sin datos, el avance real cae muy por debajo del programado y la máquina va a tirones. Con un control moderno y look-ahead amplio no hay problema; en una máquina con veinte años y lectura por serie, puedes acabar tardando más que ranurando.</li>
+      <li><strong class="text-steel-100">Ranuras muy cortas.</strong> Los bucles añaden recorrido en vacío. Si la ranura mide dos veces el diámetro, el sobrecoste de trayectoria se come la ventaja.</li>
+      <li><strong class="text-steel-100">Ranuras más estrechas que la fresa más el bucle.</strong> Si no cabe el bucle, no hay trocoidal posible: toca fresa más pequeña o ranurado convencional a bocados.</li>
+      <li><strong class="text-steel-100">Acabado.</strong> Esto es desbaste. Para el acabado mandan otras cosas: altura de cresta, dirección de pasada y estabilidad.</li>
+      <li><strong class="text-steel-100">Máquina con poca rigidez o husillo justo de revoluciones.</strong> El trocoidal se apoya en girar rápido. Un husillo de 6.000 rpm limita bastante lo que puedes sacarle.</li>
+    </ul>
+
+    <h2 class="font-titulo text-2xl sm:text-3xl text-steel-100 tracking-tight pt-6">Lo que se lleva el taller</h2>
+
+    <p>Cuando encaja —y en matricería encaja casi siempre— lo que notas no es tanto ir más rápido como <strong class="text-steel-100">dejar de tener sorpresas</strong>: la herramienta dura un número previsible de piezas, no se rompe a mitad de una cavidad y la máquina puede quedarse desatendida sin que nadie vigile el ruido.</p>
+
+    <p>Esa previsibilidad vale más que unos minutos de ciclo. Una fresa que revienta dentro de un postizo casi acabado no te cuesta el precio de la fresa: te cuesta el postizo, el tiempo de máquina invertido y la entrega.</p>
+
+    <p class="text-sm text-steel-500 border-t border-night-line pt-6 mt-8">Nota sobre los valores: las cifras de corte dependen del fabricante de la herramienta, el recubrimiento, la refrigeración y la rigidez del conjunto. Empieza siempre por la tabla del fabricante de tu fresa y usa esta como referencia de orden de magnitud.</p>
+
+  </div>
+</div>
+</article>
+
+<!-- CTA -->
+<section class="border-b border-night-line bg-night-soft relative overflow-hidden">
+  <div class="absolute inset-0 bg-grid opacity-30 pointer-events-none"></div>
+  <div class="relative max-w-3xl mx-auto px-5 lg:px-10 py-16 text-center">
+    <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-4">¿Se te rompen fresas en una pieza concreta?</h2>
+    <p class="text-steel-400 mb-8">Mándamela con los datos de tu máquina y te enseño en 45 minutos cómo la programaría, con la simulación y el tiempo de ciclo estimado. Sin coste y sin compromiso.</p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="auditoria-gratuita.html" class="inline-flex items-center justify-center gap-3 bg-cyber text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition"><i aria-hidden="true" class="fa-solid fa-paper-plane"></i> Manda tu plano y te digo la viabilidad</a>
+      <a href="blog.html" class="inline-flex items-center justify-center gap-3 border border-night-line text-steel-200 font-bold px-7 py-4 clip-tab hover:border-safety/60 hover:text-safety transition">Ver más artículos</a>
+    </div>
+  </div>
+</section>
+
+<footer class="bg-night">
+  <div class="max-w-7xl mx-auto px-5 lg:px-10 py-10">
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+      <a href="index.html" class="flex items-center gap-3">
+        <span class="w-9 h-9 flex items-center justify-center flex-shrink-0">
+          <img src="assets/logo-oscuro.png" alt="Logo MAG INDUSTRIES" width="36" height="36" decoding="async" class="logo-dark w-full h-full object-contain">
+          <img src="assets/logo-claro.png" alt="Logo MAG INDUSTRIES" width="36" height="36" decoding="async" class="logo-light w-full h-full object-contain">
+        </span>
+        <span class="font-titulo tracking-tight">MAG <span class="text-safety">INDUSTRIES</span></span>
+      </a>
+      <p class="text-xs text-steel-500 text-center">© 2026 MAG INDUSTRIES · <a href="blog.html" class="underline hover:text-safety transition">Blog</a> · <a href="servicios.html" class="underline hover:text-safety transition">Tarifas</a> · <a href="privacidad.html" class="underline hover:text-safety transition">Privacidad</a></p>
+    </div>
+  </div>
+</footer>
+
+<a id="wa-btn" href="https://wa.me/34635013953?text=Hola%2C%20he%20le%C3%ADdo%20el%20art%C3%ADculo%20sobre%20trocoidal%20y%20quiero%20consultar%20una%20pieza." target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">
+  <i aria-hidden="true" class="fa-brands fa-whatsapp"></i><span class="wa-label">WhatsApp</span>
+</a>
+
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="app.js?v=10" defer></script>
+</body>
+</html>
