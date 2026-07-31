@@ -121,9 +121,15 @@ html.no-gsap .w-in{ transform:none; }
 .chip.d2{ animation-duration:.65s; animation-delay:.2s; }
 .chip.d3{ animation-duration:.95s; animation-delay:.45s; }
 
-.reveal{ opacity:0; transform:translateY(26px); transition:opacity .7s ease, transform .7s ease; }
-html.no-gsap .reveal.in{ opacity:1; transform:none; }
-html.gsap-on .reveal{ transition:none; }
+/* El contenido es VISIBLE POR DEFECTO. La animación de entrada es una mejora,
+   no un requisito para poder leer la web. Solo se oculta bajo `html.anim-ready`,
+   clase que pone el script en línea del <head> y que él mismo retira por
+   temporizador si el JS no llega a tomar el control: si un CDN va lento o cae,
+   la página se ve igualmente en vez de quedarse en blanco. */
+.reveal{ opacity:1; transform:none; }
+html.anim-ready .reveal{ opacity:0; transform:translateY(26px); transition:opacity .7s ease, transform .7s ease; }
+html.anim-ready .reveal.in{ opacity:1; transform:none; }
+html.anim-ready.gsap-on .reveal{ transition:none; }
 
 @media (prefers-reduced-motion: reduce){
   .reveal{opacity:1 !important; transform:none !important; transition:none;}

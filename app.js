@@ -2,23 +2,29 @@
 /* Supabase es OPCIONAL: si su SDK (CDN externo) no carga, la web debe seguir
    funcionando al 100% y el formulario envía igualmente por email. Nunca debe
    abortar app.js. */
-/* OJO: NO llamar a esta variable `supabase`. El SDK por CDN crea un global
-   `window.supabase`; declarar `let/const supabase` en el top-level de este
-   script clásico colisiona con ese global y lanza un SyntaxError que aborta
-   app.js ENTERO (toggle, quiz, formularios y raster dejan de funcionar). */
-/* Proyecto `supabase-aero-bell`. La clave es publicable: viaja en este archivo
-   y cualquiera puede verla. La tabla `leads` tiene RLS con politica solo de
-   INSERT para el rol anonimo, asi que con esta clave se pueden registrar
+/* Guardamos el lead con un POST a la API REST de Supabase, SIN su SDK. El SDK
+   pesaba 210 KB y se descargaba en TODAS las visitas solo para hacer un insert
+   ocasional: era el recurso externo más pesado de la web y bloqueaba el pintado
+   en móvil. Un `fetch` hace exactamente lo mismo y elimina la dependencia.
+
+   Proyecto `supabase-aero-bell`. La clave es publicable: viaja en este archivo
+   y cualquiera puede verla. La tabla `leads` tiene RLS con política solo de
+   INSERT para el rol anónimo, así que con esta clave se pueden registrar
    contactos pero NO leer los existentes. */
-let supabaseClient = null;
-try {
-  if (window.supabase && typeof window.supabase.createClient === 'function') {
-    supabaseClient = window.supabase.createClient(
-      'https://lryyubgldnrrxokkeeef.supabase.co',
-      'sb_publishable_LnAfjL6RQRdoPnOw5ZSEkA_jlCcbNBZ'
-    );
-  }
-} catch (e) { console.warn('Supabase no disponible; el formulario usará solo el envío por email.', e); }
+const SUPA_URL = 'https://lryyubgldnrrxokkeeef.supabase.co';
+const SUPA_KEY = 'sb_publishable_LnAfjL6RQRdoPnOw5ZSEkA_jlCcbNBZ';
+function guardarLead(datos){
+  return fetch(SUPA_URL + '/rest/v1/leads', {
+    method: 'POST',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(datos)
+  });
+}
 
 /* Todos los bloques comprueban que sus elementos existan: este mismo archivo se
    carga en index.html y en las landings, que no tienen todas las secciones.
@@ -473,18 +479,18 @@ if(contactForm) contactForm.addEventListener('submit',async(e)=>{
   try{
     /* El guardado en base de datos no bloquea el envío: si Supabase falla, el
        aviso por email sale igualmente y el contacto no se pierde. */
-    if(supabaseClient){
-      supabaseClient.from('leads').insert({
-        nombre:v('name'),
-        empresa:v('company'),
-        email:v('email'),
-        telefono:v('phone'),
-        maquinas:v('machines'),
-        inactividad:v('downtime'),
-        detalles:detalles,
-        origen:origen
-      }).then(({error})=>{ if(error) console.error('Supabase insert error:', error); }).catch(()=>{});
-    }
+    /* No esperamos a Supabase: si falla, el aviso por email sale igualmente. */
+    guardarLead({
+      nombre:v('name'),
+      empresa:v('company'),
+      email:v('email'),
+      telefono:v('phone'),
+      maquinas:v('machines'),
+      inactividad:v('downtime'),
+      detalles:detalles,
+      origen:origen
+    }).then(r=>{ if(!r.ok) console.warn('Supabase no registró el lead:', r.status); })
+      .catch(err=>console.warn('Supabase inaccesible; el lead va solo por email.', err));
     const r=await fetch('https://formsubmit.co/ajax/chapy9716@gmail.com',{
       method:'POST',
       headers:{'Content-Type':'application/json','Accept':'application/json'},
@@ -583,6 +589,11 @@ if(contactForm) contactForm.addEventListener('submit',async(e)=>{
       sections[go].scrollIntoView({behavior:reduced?'auto':'smooth'});
     });
   }
+
+  /* A partir de aquí ya controlamos el revelado, así que cancelamos el
+     temporizador de seguridad del <head>. Si nunca llegamos hasta aquí —CDN
+     colgado, error arriba— ese temporizador salta y muestra el contenido. */
+  if(window.__magFailsafe){ clearTimeout(window.__magFailsafe); window.__magFailsafe=null; }
 
   /* Sin GSAP/ScrollTrigger (CDN bloqueado o red inestable) o con movimiento reducido: fallback simple.
      El contenido se revela con IntersectionObserver, sin depender de ningún CDN. */
