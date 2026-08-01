@@ -491,7 +491,7 @@ if(contactForm) contactForm.addEventListener('submit',async(e)=>{
       origen:origen
     }).then(r=>{ if(!r.ok) console.warn('Supabase no registró el lead:', r.status); })
       .catch(err=>console.warn('Supabase inaccesible; el lead va solo por email.', err));
-    const r=await fetch('https://formsubmit.co/ajax/chapy9716@gmail.com',{
+    const r=await fetch('https://formsubmit.co/ajax/info@magindustries.es',{
       method:'POST',
       headers:{'Content-Type':'application/json','Accept':'application/json'},
       body:JSON.stringify({
