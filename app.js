@@ -2,25 +2,26 @@
 /* Supabase es OPCIONAL: si su SDK (CDN externo) no carga, la web debe seguir
    funcionando al 100% y el formulario envía igualmente por email. Nunca debe
    abortar app.js. */
-/* Guardamos el lead con un POST a la API REST de Supabase, SIN su SDK. El SDK
-   pesaba 210 KB y se descargaba en TODAS las visitas solo para hacer un insert
-   ocasional: era el recurso externo más pesado de la web y bloqueaba el pintado
-   en móvil. Un `fetch` hace exactamente lo mismo y elimina la dependencia.
+/* El lead se envía a la Edge Function `submit-lead`, no a la tabla. Antes esto
+   era un POST directo contra /rest/v1/leads, lo que obligaba a dar privilegio
+   de INSERT al rol anónimo: con la clave publicable a la vista aquí abajo,
+   cualquiera podía inundar la tabla hasta agotar el almacenamiento.
 
-   Proyecto `supabase-aero-bell`. La clave es publicable: viaja en este archivo
-   y cualquiera puede verla. La tabla `leads` tiene RLS con política solo de
-   INSERT para el rol anónimo, así que con esta clave se pueden registrar
-   contactos pero NO leer los existentes. */
+   Ahora el INSERT lo hace la service_role dentro de la función, que nunca sale
+   del servidor, y cada petición pasa antes por lista blanca de origen, límite
+   de tamaño, honeypot, validación y rate limiting por IP (5/hora, 15/día).
+   El rol anónimo ya no puede escribir en `leads` por ningún camino.
+
+   No usamos el SDK de Supabase: pesaba 210 KB en todas las visitas para un
+   insert ocasional. Un `fetch` hace lo mismo sin la dependencia. */
 const SUPA_URL = 'https://lryyubgldnrrxokkeeef.supabase.co';
 const SUPA_KEY = 'sb_publishable_LnAfjL6RQRdoPnOw5ZSEkA_jlCcbNBZ';
 function guardarLead(datos){
-  return fetch(SUPA_URL + '/rest/v1/leads', {
+  return fetch(SUPA_URL + '/functions/v1/submit-lead', {
     method: 'POST',
     headers: {
       'apikey': SUPA_KEY,
-      'Authorization': 'Bearer ' + SUPA_KEY,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=minimal'
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify(datos)
   });
