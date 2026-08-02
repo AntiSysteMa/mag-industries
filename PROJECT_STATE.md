@@ -1,8 +1,8 @@
 # PROJECT_STATE — MAG INDUSTRIES
 
-**Última sesión:** 2 agosto 2026 (Sesión 7)
-**Estado:** En producción. Seguridad extrema: Edge Function con rate limiting, honeypot en servidor, CSP+6 cabeceras, `leads` cerrada a anon. Analytics activo (46 visitors/semana). Documentación reescrita y verificada.
-**Siguiente sesión esperada:** Construir panel de lectura de leads o validar Supabase, luego optimización de rendimiento
+**Última sesión:** 2 agosto 2026 (Sesión 8)
+**Estado:** En producción y con **la infraestructura entera cerrada**. Correo corporativo autenticado (SPF+DKIM+DMARC verificados en DNS público), seguridad extrema (Edge Function con rate limiting, honeypot en servidor, CSP+6 cabeceras, `leads` cerrada a anon), Analytics activadas, FormSubmit y WhatsApp operativos.
+**Siguiente sesión esperada:** Deja de haber trabajo técnico bloqueante. El cuello de botella pasa a ser **presencia y captación**: LinkedIn + Google Business Profile, y agenda para la auditoría gratuita.
 
 ---
 
@@ -13,12 +13,14 @@
 | 1 | **Sin panel de lectura de leads** | Los contactos solo se consultan abriendo Supabase. 46 visitors en 7 días: es fricción creciente. | Edge Function autenticada o bastar con Supabase |
 | 2 | **Referencia pendiente de permiso** | La web ofrece contacto con taller de matricería. | Pedir permiso a JPARENTE antes de que alguien lo solicite |
 | 3 | **Rendimiento pendiente** | Font Awesome full (~100 KB) para ~15 iconos, Google Fonts render-blocking. Afecta Core Web Vitals y SEO. | Sesión estratégica: prioridad vs. otros trabajos |
+| 4 | **Sin presencia social** | LinkedIn y Google Business Profile **no existen**. Los enlaces sociales del footer apuntan a `#`. Es el hueco nº1 que señalan los dos artefactos estratégicos (D-04 y OP-050): una empresa sin perfil parece una empresa que no existe, y LinkedIn es el único canal donde están los tier 1/2. | Crear ambos perfiles. No es trabajo de código |
+| 5 | **La auditoría gratuita no se puede agendar** | La landing es el activo de conversión central del plan (conversión esperada a prueba de pago ~50 %) pero solo ofrece formulario: el lead deja el dato y luego hay ida y vuelta por email. Sin agenda se pierde el momento. | Cal.com gratis enlazado desde `auditoria-gratuita.html` |
 
 **Decisiones del usuario, no bloqueadores** (no las «arregles» en próximas sesiones):
-- **Razón social y NIF ocultos** en `privacidad.html` hasta que toque exponerse masivamente. La frase queda completa y veraz, sin placeholder visible. Es una decisión consciente, no un olvido.
+- **Razón social y NIF ocultos** en `privacidad.html`. **Criterio de salida fijado en la sesión 8:** se publicarán cuando haya **un cliente recurrente y 2.000 €/mes recurrentes**, no antes. Hasta entonces la frase queda completa y veraz, sin placeholder visible. Es una decisión consciente con umbral explícito, no un olvido.
 - **Borrado a 2 años manual.** La política lo promete y se cumplirá a mano; con el volumen actual no compensa automatizarlo. La narrativa de la política **no se toca**.
 
-**Resueltos:** FormSubmit activo · Supabase operativo (sesión 5) · Precios confirmados (sesión 6) · Dominio propio en producción (sesión 6) · **Google Workspace con `info@magindustries.es` (sesión 7)** · **Tabla huérfana `doc_memory` eliminada (sesión 7)** · **`leads` cerrada a `anon` por completo (sesión 7)** · **Cabeceras de seguridad desplegadas (sesión 7)** · **Rate limiting por IP y honeypot en servidor (sesión 7)**.
+**Resueltos:** FormSubmit activo y **confirmado operativo** · WhatsApp operativo · Supabase operativo (sesión 5) · Precios confirmados (sesión 6) · Dominio propio en producción (sesión 6) · **Google Workspace con `info@magindustries.es` (sesión 7)** · **Tabla huérfana `doc_memory` eliminada (sesión 7)** · **`leads` cerrada a `anon` por completo (sesión 7)** · **Cabeceras de seguridad desplegadas (sesión 7)** · **Rate limiting por IP y honeypot en servidor (sesión 7)** · **SPF + DKIM + DMARC verificados en DNS público (sesión 8)** · **Vercel Analytics activadas (sesión 8)**.
 
 ---
 
@@ -70,6 +72,8 @@ Para leer los leads: panel de Supabase o `service_role`. Con la clave publicable
 | Aviso por email | FormSubmit → `info@magindustries.es` | ✅ |
 | Contenido verificable | Sin cifras ni testimonios inventados | ✅ |
 | Email corporativo | Google Workspace: `info@`, `proyectos@`, `ventas@`, `noreply@` | ✅ |
+| Correo autenticado (SPF/DKIM/DMARC) | Los tres verificados en DNS público | ✅ |
+| Presencia social (LinkedIn, Google Business) | No existe. Footer con enlaces a `#` | ❌ |
 | Cabeceras de seguridad | CSP + 6 cabeceras más, verificadas en producción | ✅ |
 | Analytics activadas | Sí (46 visitors/semana medidos) | ✅ |
 | Leads captados | 0 (embudo recién publicado) | 📝 |
@@ -294,6 +298,51 @@ Razón social y NIF **ocultos** en `privacidad.html` (frase reescrita para que s
 
 **Deuda anotada:** `.hp-field` está declarado dos veces en `input.css` (líneas 161 y 185), resto de una refactorización. Es cosmético, no afecta al funcionamiento.
 
+### Sesión 8 (2 agosto 2026)
+**Objetivo:** Autenticar el correo corporativo (SPF/DKIM/DMARC) para que los envíos desde `@magindustries.es` no caigan en spam, y reconciliar la documentación con lo que de verdad está activo.
+
+**Sin cambios de código.** Todo el trabajo fue en la zona DNS de DonDominio.
+
+**1. Autenticación de correo — los tres registros**
+
+Google Workspace llevaba desde la sesión 7 recibiendo correo (MX → `smtp.google.com`), pero **enviaba sin autenticar**: ni SPF, ni DKIM, ni DMARC. Un dominio nuevo enviando sin ninguno de los tres es el perfil que los filtros clasifican como sospechoso por defecto — y el emisor no se entera, porque el correo no rebota, se archiva en spam del destinatario.
+
+| Host | Tipo | Valor |
+|---|---|---|
+| `magindustries.es` | TXT | `v=spf1 include:_spf.google.com ~all` |
+| `google._domainkey` | TXT | `v=DKIM1; k=rsa; p=MIIBIjANBg…` (2048 bits, emitida por Google Admin) |
+| `_dmarc` | TXT | `v=DMARC1; p=quarantine; rua=mailto:info@magindustries.es; fo=1` |
+
+**Verificado con `nslookup -type=TXT <host> 8.8.8.8`**, no asumido ni dado por bueno desde el panel del registrador: los tres resuelven contra DNS público. La propagación fue casi inmediata, no las 24-48 h habituales.
+
+**2. Correcciones sobre el plan inicial**
+
+Tres cosas que este documento y los artefactos daban por buenas y no lo eran:
+
+- **No existía ningún SPF previo de DonDominio que editar.** `CLAUDE.md` y este archivo advertían de «editar el TXT SPF existente en vez de añadir un segundo». Esa advertencia describía un riesgo real pero un estado falso: la zona no tenía SPF de ninguna clase. Se creó uno limpio. La advertencia se mantiene reescrita porque **sí aplicará** en cuanto se añada un segundo emisor.
+- **Tampoco había MX de DonDominio que borrar.** El único MX era ya el de Google, prioridad 0. Otro paso previsto que no hizo falta.
+- **`rua=` apunta a `info@`, no a `postmaster@`.** El valor de manual es `postmaster@`, pero ese buzón **no existe** en este Workspace (solo `info@`, `proyectos@`, `ventas@`, `noreply@`). Con `postmaster@` los informes DMARC habrían rebotado en silencio: el registro se vería correcto y no llegaría nada.
+- **`formsubmit.co` fuera del SPF.** Se descartó incluirlo: FormSubmit envía el aviso **desde su propio dominio**, no suplantando `@magindustries.es`. El SPF solo autoriza a quien dice ser tú; meter emisores que no lo hacen es ruido que además gasta uno de los 10 lookups DNS que permite la especificación.
+
+**3. Estado real confirmado por el usuario**
+
+Tres cosas que este documento listaba como pendientes y llevaban tiempo hechas:
+
+- **Vercel Analytics activadas.** El bloqueador «un clic del usuario» del Hito 1 está cerrado.
+- **FormSubmit activo** (el «falta pulsar Activate» del reporte estratégico de julio).
+- **WhatsApp operativo** como canal directo.
+
+**4. Decisión del usuario registrada**
+
+Razón social y NIF permanecen ocultos en `privacidad.html` hasta alcanzar **un cliente recurrente y 2.000 €/mes recurrentes**. Antes el criterio era difuso («hasta que toque exponerse»); ahora es un umbral medible.
+
+**Decisiones:**
+- `p=quarantine` y no `p=reject`: con `reject` desde el día uno, cualquier emisor legítimo aún no autorizado pierde correo de forma irrecuperable. Se endurecerá cuando los informes DMARC confirmen que no falla nada legítimo.
+- `~all` y no `-all`, por el mismo motivo.
+- No se limpió el ruido heredado de la zona (CNAMEs `mail.`/`smtp.`/`pop.`/`imap.`/`webmail.` → DonDominio, wildcard `*` → parking, y un registro malformado `magindustries.es.magindustries.es`). No rompe nada porque el MX manda; tocarlo sin necesidad es riesgo gratuito sobre un servicio que acaba de quedar bien.
+
+**Pendiente de esta sesión:** el DNS está correcto, pero **la entrega real solo se confirma con un envío**. Prueba a `check-auth@verifier.port25.com` o revisando cabeceras en un Gmail de destino → debe leerse SPF PASS / DKIM PASS / DMARC PASS.
+
 ---
 
 ## 📝 Estado técnico por módulo
@@ -322,7 +371,8 @@ Razón social y NIF **ocultos** en `privacidad.html` (frase reescrita para que s
 | Supabase Auth | ⏳ | No usado (aún) |
 | FormSubmit.co | ✅ | Activo, destino `info@magindustries.es` |
 | Email corporativo | ✅ | Google Workspace. Buzones: `info@` (principal, usado por la web), `proyectos@`, `ventas@`, `noreply@`. MX → `smtp.google.com` verificado |
-| Analytics | ⏳ | Script Vercel en `<head>`, no activado en dashboard |
+| Autenticación de correo | ✅ | SPF · DKIM · DMARC los tres resueltos en DNS público (sesión 8). `p=quarantine` y `~all` a propósito. **Un solo TXT `v=spf1`**: al añadir emisor nuevo se edita, no se duplica |
+| Analytics | ✅ | Vercel Web Analytics activadas en el dashboard (confirmado sesión 8). Script ya presente en las 9 páginas |
 
 ### DevOps
 | Componente | Estado | Notas |
@@ -377,15 +427,16 @@ Razón social y NIF **ocultos** en `privacidad.html` (frase reescrita para que s
 
 ### Hito 1 — Fundamentos ✅ COMPLETADO (sesiones 3-7)
 
-Email corporativo, FormSubmit, landing de auditoría, tarifas publicadas, dominio
-propio, limpieza de contenido inventado y endurecimiento completo de seguridad.
-**La infraestructura ya no es el cuello de botella.**
+Email corporativo **autenticado**, FormSubmit, WhatsApp, landing de auditoría,
+tarifas publicadas, dominio propio, Analytics activadas, limpieza de contenido
+inventado y endurecimiento completo de seguridad.
 
-Queda un único resto, y es un clic del usuario:
+**Cerrado sin restos (sesión 8). La infraestructura ya no es el cuello de
+botella, y ya no queda ningún trabajo técnico que bloquee la captación.**
 
-- [ ] **Activar Analytics en Vercel** — dashboard → proyecto `mag-industries` →
-  pestaña Analytics → *Enable*. Comprobado por API el 2-ago: devuelve `404`.
-  El script ya está en las 9 páginas; sin el toggle no recoge nada.
+El cuello de botella pasa a ser, textualmente, lo que dice el reporte
+estratégico de julio: **presencia y prueba**. La web está lista para recibir
+tráfico que hoy no existe.
 
 ---
 
@@ -506,7 +557,64 @@ Queda un único resto, y es un clic del usuario:
 
 ---
 
-## 🎯 Roadmap de sesiones siguientes (verificado 2-ago-2026)
+## 🎯 Roadmap de sesiones siguientes (revisado 2-ago-2026, sesión 8)
+
+> **Contrastado con los dos artefactos estratégicos:** «Reporte estratégico»
+> (rev. A, 12-jul) y «Plan de operación 0→5k» (28-jul). Lo que sigue reordena el
+> roadmap técnico según lo que esos documentos identifican como cuello de
+> botella real — que **no es la web**.
+
+**Lo que los artefactos daban por pendiente y ya está hecho:** dominio propio ·
+email corporativo (fueron a Google Workspace en vez del Zoho Free que proponía
+el plan: más caro, mejor decisión) · **SPF/DKIM/DMARC**, que el plan marcaba
+como «configura esto o tus emails van a spam» · FormSubmit activado · WhatsApp ·
+Analytics · retirada de cifras y testimonios inventados (D-01, D-02) ·
+publicación de plazos y tarifas (A-03, A-05).
+
+**Lo que los artefactos piden y sigue sin existir** — y es dónde está ahora el
+retorno:
+
+| Origen | Hueco | Estado |
+|---|---|---|
+| D-04 · OP-050 | LinkedIn + Google Business Profile | ❌ No existen. Footer con enlaces a `#` |
+| Embudo etapa 4 | Agenda para la auditoría gratuita (Cal.com) | ❌ Solo formulario |
+| OP-030 | Lead magnet descargable (checklist PDF) | ❌ |
+| OP-030 | Calculadora de coste de máquina parada | ❌ |
+| OP-030 | El resultado del quiz VIP no llega a ningún sitio | ❌ Se muestra y se pierde |
+| OP-030 · D-03 | Clips reales de simulación | ⏳ `docs/clips-spec.md` escrito, sin producir |
+| Stack | CRM (HubSpot Free) | ❌ |
+| C-03 · C-05 | Plantilla NDA · seguro RC profesional | ❌ Fuera del repo, pero la web ya los promete |
+| §02 del plan | Alta censal / RETA | ❌ Techo del negocio, no del código |
+
+---
+
+**Prioridad 0: Presencia y captura (semana 1) — desbloqueado por la sesión 8**
+
+0.1 **LinkedIn (perfil personal + página) y Google Business Profile.** Coste 0,
+    ~2 h. Es el hueco nº1 de los dos artefactos y el único canal donde están los
+    tier 1/2. Arreglar de paso los enlaces `#` del footer.
+
+0.2 **Cal.com enlazado en `auditoria-gratuita.html`.** Coste 0, ~1 h. La landing
+    es el activo de conversión central (50 % esperado a prueba de pago) y hoy
+    pierde el momento entre el formulario y el email de vuelta.
+
+0.3 **El quiz VIP debe enviar sus respuestas.** Un visitante que se autocalifica
+    como VIP (>10 máquinas, >20 h paradas) y no rellena el formulario es hoy un
+    lead perdido en silencio. Es trabajo pequeño en `app.js`.
+
+0.4 **Prueba de entrega de correo.** Enviar desde `info@` a
+    `check-auth@verifier.port25.com` y confirmar SPF/DKIM/DMARC PASS. Cierra la
+    sesión 8 de verdad.
+
+⚠️ **Antes de cualquier campaña de correo en frío:** el dominio acaba de empezar
+a autenticarse y **no tiene reputación**. Enviar volumen de golpe desde
+`magindustries.es` quema justo lo que se acaba de construir. Calentar despacio
+(5-10 correos/día las primeras semanas, subiendo gradual), y si algún día hay
+envíos masivos o newsletter, hacerlos desde un **subdominio** (`mail.` o
+`news.magindustries.es`) para que un problema de reputación no arrastre al
+correo con el que se habla con los clientes.
+
+---
 
 **Prioridad 1: Visibilidad de leads (semana 1-2)**
 
@@ -579,8 +687,15 @@ Queda un único resto, y es un clic del usuario:
 
 ---
 
-**Resumen estado (2-ago-2026):**
-✅ Fundamentos (dominio, correo, seguridad, Analytics)  
+**Resumen estado (2-ago-2026, tras sesión 8):**
+✅ **Fundamentos — cerrados.** Dominio · correo **autenticado** · seguridad · Analytics · FormSubmit · WhatsApp  
+❌ **Presencia — no existe.** LinkedIn y Google Business sin crear: el hueco de mayor retorno hoy  
+❌ **Captura — incompleta.** Sin agenda para la auditoría, sin lead magnet, el quiz VIP se pierde  
 ⏳ Visibilidad (panel de leads, avisos instantáneos)  
 ⏳ Rendimiento (Font Awesome, Fonts, lazy load)  
-⏳ Autoridad (case study, LinkedIn, blog)
+⏳ Autoridad (case study, clips de simulación, blog)
+
+**La frase que resume la sesión 8:** la web lleva semanas lista para convertir
+tráfico que no llega. Todo el trabajo técnico restante mejora una máquina que
+aún no tiene combustible. El siguiente euro de esfuerzo rinde más en LinkedIn y
+en una agenda de Cal.com que en optimizar Font Awesome.

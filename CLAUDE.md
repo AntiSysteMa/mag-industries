@@ -40,8 +40,9 @@ estaba en producción. No lo reintroduzcas bajo ninguna forma.
 | Repo | `github.com/AntiSysteMa/mag-industries`, rama `main` |
 | Supabase | `lryyubgldnrrxokkeeef` · «supabase-aero-bell» · eu-central-2 |
 | Clave publicable | `sb_publishable_LnAfjL6RQRdoPnOw5ZSEkA_jlCcbNBZ` |
-| Correo | Google Workspace. MX → `smtp.google.com` |
+| Correo | Google Workspace. MX → `smtp.google.com` (único MX, prioridad 0) |
 | Buzones | `info@` (el que usa la web), `proyectos@`, `ventas@`, `noreply@` |
+| Autenticación de correo | SPF · DKIM · DMARC los tres activos y resueltos en DNS público (ver abajo) |
 | Node.js | LTS en `C:\Program Files\nodejs` — **no está en PATH** |
 
 ⚠️ **`bisioblvzoegaqokamel` no existe** (devuelve NXDOMAIN). Fue el ref erróneo
@@ -54,8 +55,37 @@ cuenta de Supabase. No tocar.
 ⚠️ **`magindustries.com`** está en manos de un especulador. No perseguirlo, y
 no publicar direcciones `@magindustries.com`: no son nuestras.
 
-⚠️ Al tocar DNS de correo: borrar antes los MX de DonDominio y **editar** el TXT
-SPF existente en vez de añadir un segundo — dos SPF invalidan ambos.
+### Autenticación de correo (verificada por DNS público 2-ago-2026)
+
+Los tres registros existen y resuelven contra `8.8.8.8`. Comprobado con
+`nslookup -type=TXT <host> 8.8.8.8`, no asumido:
+
+| Host | Tipo | Valor |
+|---|---|---|
+| `magindustries.es` | TXT | `v=spf1 include:_spf.google.com ~all` |
+| `google._domainkey` | TXT | `v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A…` (2048 bits, la emitida por Google Admin) |
+| `_dmarc` | TXT | `v=DMARC1; p=quarantine; rua=mailto:info@magindustries.es; fo=1` |
+
+⚠️ **Un solo SPF, siempre.** Si hay que autorizar otro emisor (Brevo, un CRM,
+una herramienta de secuencias), se **edita** ese TXT añadiendo su `include:`
+dentro del mismo registro. Dos TXT `v=spf1` invalidan ambos y todo el correo
+cae. Al final va `~all`, nunca `-all` hasta que se sepa que ningún emisor
+legítimo queda fuera.
+
+⚠️ **`rua=` apunta a `info@`**, no a `postmaster@`: ese buzón no existe y los
+informes DMARC rebotarían sin que nadie se entere.
+
+⚠️ **`p=quarantine` es deliberado**, no un paso a medias. Endurecer a
+`p=reject` solo cuando los informes DMARC confirmen durante semanas que no hay
+emisores legítimos fallando. Con `reject` prematuro se pierden correos reales.
+
+⚠️ **Ruido heredado en la zona, sin resolver:** siguen los CNAME de DonDominio
+`mail.` · `smtp.` · `pop.` · `pop3.` · `imap.` · `webmail.` → `mailsrv1/webmail-01.dondominio.com`,
+un wildcard `*.magindustries.es` → `parkingsrv0.dondominio.com`, y un registro
+malformado `magindustries.es.magindustries.es` A `76.76.21.21`. **Nada de esto
+rompe el correo hoy** — el MX manda y es de Google — pero el wildcard hace que
+cualquier subdominio inexistente resuelva en vez de dar NXDOMAIN. Limpieza
+cosmética pendiente; no urgente.
 
 ---
 
