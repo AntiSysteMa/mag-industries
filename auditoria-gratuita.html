@@ -94,10 +94,10 @@
         <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" class="hp-field" aria-hidden="true">
 
         <div class="space-y-4">
-          <label class="block"><span class="text-sm text-steel-300 block mb-1.5">Nombre y apellidos *</span><input name="name" required autocomplete="name" placeholder="Ej. Jordi Camps" class="w-full bg-night-soft border border-night-line px-3.5 py-2.5 text-sm rounded-sm focus:outline-none focus:border-safety/60"></label>
-          <label class="block"><span class="text-sm text-steel-300 block mb-1.5">Empresa o taller *</span><input name="company" required autocomplete="organization" placeholder="Razón social" class="w-full bg-night-soft border border-night-line px-3.5 py-2.5 text-sm rounded-sm focus:outline-none focus:border-safety/60"></label>
-          <label class="block"><span class="text-sm text-steel-300 block mb-1.5">Correo profesional *</span><input name="email" type="email" required autocomplete="email" placeholder="tunombre@tuempresa.com" class="w-full bg-night-soft border border-night-line px-3.5 py-2.5 text-sm rounded-sm focus:outline-none focus:border-safety/60"></label>
-          <label class="block"><span class="text-sm text-steel-300 block mb-1.5">Teléfono *</span><input name="phone" type="tel" required autocomplete="tel" placeholder="+34 xxx xxx xxx" class="w-full bg-night-soft border border-night-line px-3.5 py-2.5 text-sm rounded-sm focus:outline-none focus:border-safety/60"></label>
+          <label class="block"><span class="text-sm text-steel-300 block mb-1.5">Nombre y apellidos *</span><input name="name" required maxlength="120" autocomplete="name" placeholder="Ej. Jordi Camps" class="w-full bg-night-soft border border-night-line px-3.5 py-2.5 text-sm rounded-sm focus:outline-none focus:border-safety/60"></label>
+          <label class="block"><span class="text-sm text-steel-300 block mb-1.5">Empresa o taller *</span><input name="company" required maxlength="160" autocomplete="organization" placeholder="Razón social" class="w-full bg-night-soft border border-night-line px-3.5 py-2.5 text-sm rounded-sm focus:outline-none focus:border-safety/60"></label>
+          <label class="block"><span class="text-sm text-steel-300 block mb-1.5">Correo profesional *</span><input name="email" type="email" required maxlength="254" autocomplete="email" placeholder="tunombre@tuempresa.com" class="w-full bg-night-soft border border-night-line px-3.5 py-2.5 text-sm rounded-sm focus:outline-none focus:border-safety/60"></label>
+          <label class="block"><span class="text-sm text-steel-300 block mb-1.5">Teléfono *</span><input name="phone" type="tel" required maxlength="40" autocomplete="tel" placeholder="+34 xxx xxx xxx" class="w-full bg-night-soft border border-night-line px-3.5 py-2.5 text-sm rounded-sm focus:outline-none focus:border-safety/60"></label>
           <label class="block"><span class="text-sm text-steel-300 block mb-1.5">¿Cuántas máquinas CNC tenéis?</span>
             <select name="machines" class="w-full bg-night-soft border border-night-line px-3.5 py-2.5 text-sm rounded-sm focus:outline-none focus:border-safety/60">
               <option value="">Selecciona una opción</option>
@@ -107,7 +107,7 @@
               <option>Aún ninguna / en proyecto</option>
             </select>
           </label>
-          <label class="block"><span class="text-sm text-steel-300 block mb-1.5">¿Qué pieza quieres que revisemos?</span><textarea name="description" rows="3" placeholder="Material, máquina y qué te está pasando: tiempos largos, rotura de herramienta, acabado, colisiones..." class="w-full bg-night-soft border border-night-line px-3.5 py-2.5 text-sm rounded-sm focus:outline-none focus:border-safety/60 resize-none"></textarea></label>
+          <label class="block"><span class="text-sm text-steel-300 block mb-1.5">¿Qué pieza quieres que revisemos?</span><textarea name="description" rows="3" maxlength="4000" placeholder="Material, máquina y qué te está pasando: tiempos largos, rotura de herramienta, acabado, colisiones..." class="w-full bg-night-soft border border-night-line px-3.5 py-2.5 text-sm rounded-sm focus:outline-none focus:border-safety/60 resize-none"></textarea></label>
         </div>
 
         <button type="submit" class="mt-7 w-full bg-cyber text-night font-bold py-3.5 clip-tab hover:brightness-110 transition">Reservar mi auditoría gratuita</button>
