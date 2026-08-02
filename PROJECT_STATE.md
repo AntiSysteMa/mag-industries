@@ -1,8 +1,8 @@
 # PROJECT_STATE — MAG INDUSTRIES
 
 **Última sesión:** 2 agosto 2026 (Sesión 7)
-**Estado:** En producción en dominio propio (magindustries.es). Correo corporativo operativo. Base de datos y cabeceras endurecidas.
-**Siguiente sesión esperada:** Rate limiting de inserciones, razón social/NIF en privacidad.html y panel de lectura de leads
+**Estado:** En producción en dominio propio (magindustries.es). Correo corporativo operativo. Captación de leads cerrada tras Edge Function con rate limiting; `leads` inaccesible para roles públicos.
+**Siguiente sesión esperada:** Activar Analytics en Vercel (toggle de dashboard) y decidir si se construye panel de lectura de leads
 
 ---
 
@@ -10,13 +10,15 @@
 
 | # | Bloqueador | Impacto | Acción del usuario |
 |---|-----------|---------|--------------------|
-| 1 | **`[RAZÓN SOCIAL — NIF]` sin rellenar** | `privacidad.html` sigue con el placeholder mientras ya se tratan datos personales reales. Exposición legal activa ante la AEPD. | Sustituir por la razón social y NIF definitivos |
+| 1 | **Analytics de Vercel sin activar** | Verificado por API el 2-ago: devuelve `404 Web Analytics not found`. El script está en las 9 páginas, pero la función está apagada. Sin medición de tráfico ni de conversión. | Vercel → proyecto `mag-industries` → pestaña **Analytics** → *Enable*. Es un toggle de dashboard, no hay API |
 | 2 | **Referencia pendiente de permiso** | La web ofrece poner en contacto a prospectos con el taller de matricería. | Pedir permiso a JPARENTE antes de que alguien lo solicite |
-| 3 | Sin rate limiting de inserciones | Los CHECK acotan el tamaño de cada fila, pero no el número de filas. Un atacante con la clave publicable puede inundar la tabla. El aviso por email seguiría llegando. | Edge Function con límite por IP, o monitorización de volumen |
-| 4 | Sin borrado automático a 2 años | La política de privacidad lo promete; no hay nada que lo ejecute. | Cron de Supabase o revisión manual periódica |
-| 5 | Analytics de Vercel sin activar | El script está en el HTML pero no está habilitado en el dashboard. | Activar en el dashboard de Vercel |
+| 3 | Sin panel de lectura de leads | Los contactos solo se pueden consultar abriendo el panel de Supabase. Con volumen creciente será fricción diaria. | Decidir si se construye panel propio o basta con Supabase |
 
-**Resueltos:** FormSubmit activo · Supabase operativo (sesión 5) · Precios confirmados (sesión 6) · Dominio propio en producción (sesión 6) · **Google Workspace operativo con `info@magindustries.es` (sesión 7)** · **Tabla huérfana `doc_memory` eliminada y `leads` endurecida (sesión 7)** · **Cabeceras de seguridad desplegadas (sesión 7)**.
+**Decisiones del usuario, no bloqueadores** (no las «arregles» en próximas sesiones):
+- **Razón social y NIF ocultos** en `privacidad.html` hasta que toque exponerse masivamente. La frase queda completa y veraz, sin placeholder visible. Es una decisión consciente, no un olvido.
+- **Borrado a 2 años manual.** La política lo promete y se cumplirá a mano; con el volumen actual no compensa automatizarlo. La narrativa de la política **no se toca**.
+
+**Resueltos:** FormSubmit activo · Supabase operativo (sesión 5) · Precios confirmados (sesión 6) · Dominio propio en producción (sesión 6) · **Google Workspace con `info@magindustries.es` (sesión 7)** · **Tabla huérfana `doc_memory` eliminada (sesión 7)** · **`leads` cerrada a `anon` por completo (sesión 7)** · **Cabeceras de seguridad desplegadas (sesión 7)** · **Rate limiting por IP y honeypot en servidor (sesión 7)**.
 
 ---
 
@@ -45,8 +47,9 @@ Aún **no se publica ninguna dirección `@magindustries.es`** en la web hasta qu
 | Proyecto Supabase | `lryyubgldnrrxokkeeef` · «supabase-aero-bell» · eu-central-2 | ACTIVE_HEALTHY |
 | Clave publicable | `sb_publishable_LnAfjL6RQRdoPnOw5ZSEkA_jlCcbNBZ` | En uso |
 | Tabla | `public.leads` | Creada, RLS activo |
-| Política RLS | Solo INSERT para `anon`. **Sin política de SELECT** a propósito | Verificada |
-| Aviso por email | FormSubmit → chapy9716@gmail.com | Funciona |
+| Política RLS | **Ninguna.** RLS activo y cero políticas: `anon` y `authenticated` no acceden por ningún camino | Verificada 2-ago |
+| Escritura | Solo `service_role`, dentro de la Edge Function `submit-lead` | Verificada 2-ago |
+| Aviso por email | FormSubmit → info@magindustries.es | Funciona |
 
 ⚠️ **`bisioblvzoegaqokamel` no existe.** Es el ref que estuvo en el código desde el principio y devuelve NXDOMAIN. Si vuelve a aparecer en algún sitio, es un error — no lo restaures.
 
@@ -63,7 +66,7 @@ Para leer los leads: panel de Supabase o `service_role`. Con la clave publicable
 | Sitio web | Live en `www.magindustries.es` | ✅ |
 | Dominio propio | `magindustries.es` (DonDominio, DNS → Vercel, SSL OK) | ✅ |
 | Arquitectura | 9 páginas (home + landing + tarifas + capacidades + sectores + privacidad + blog y 2 artículos) | ✅ |
-| Guardado de leads | Supabase `public.leads`, RLS solo INSERT | ✅ |
+| Guardado de leads | Supabase `public.leads` vía Edge Function, con rate limiting por IP | ✅ |
 | Aviso por email | FormSubmit → `info@magindustries.es` | ✅ |
 | Contenido verificable | Sin cifras ni testimonios inventados | ✅ |
 | Email corporativo | Google Workspace: `info@`, `proyectos@`, `ventas@`, `noreply@` | ✅ |
@@ -256,7 +259,40 @@ Verificado en las 9 páginas de producción: todas responden 200 con las cabecer
 - `script-src` conserva `'unsafe-inline'`: el script de tema debe ejecutarse antes del pintado para evitar parpadeo, y Vercel estático no permite nonces por petición. Se acepta el compromiso porque hoy la web no renderiza contenido de terceros; las demás directivas sí acotan orígenes.
 - Los CHECK acotan el tamaño de cada fila pero **no** el número de filas: el rate limiting real exige una Edge Function que vea la IP. Queda pendiente y anotado como bloqueador.
 
+**5. Rate limiting y honeypot en servidor (`f427a79`)**
+
+Los CHECK acotaban el tamaño de cada fila pero no cuántas, y el honeypot `_gotcha` se validaba solo en JavaScript. Ambos agujeros se cierran con la Edge Function **`submit-lead`** (`verify_jwt: false`, endpoint público de formulario), que ahora es el **único** camino de escritura.
+
+Cada petición atraviesa, en orden: lista blanca de origen → tamaño del cuerpo (16 KB, comprobado antes de parsear) → honeypot → longitudes y formato de email → rate limiting por IP (5/hora, 15/día). Solo entonces inserta con `service_role`, que nunca sale del servidor.
+
+Detalles que importan:
+- Ante un honeypot positivo se responde **200 sin insertar**. Si el bot recibiera un error, reintentaría variando el payload.
+- La IP se guarda como **HMAC-SHA256** con la `service_role` de clave, nunca en claro: es dato personal y no hay motivo para conservarla legible. Verificado leyendo `rate_limit`: solo hashes.
+- Los contadores viven en `public.rate_limit`, con RLS activo y **cero políticas**, más `bump_rate()` en `security definer` con `revoke` a los roles públicos.
+- Si el contador falla, se registra y **se continúa**: perder un lead real es peor que aceptar uno de más.
+- Un 429 no pierde el contacto: el aviso por FormSubmit es un camino independiente.
+
+**6. Cierre del INSERT directo**
+
+Con la función ya en producción se eliminó la política `anon puede registrar leads` y se revocaron todos los grants. **`leads` queda con RLS activo y cero políticas**: ningún rol público la lee ni la escribe. Solo `service_role`.
+
+Verificado desde el navegador, en producción, antes y después del revoke:
+
+| Prueba | Antes | Después |
+|---|---|---|
+| Lead vía Edge Function | 201 | **201** |
+| INSERT directo en la tabla | 201 | **401** |
+| SELECT de la tabla | 401 | **401** |
+
+Y contra la función: origen ajeno `403` · email inválido `400` · sin nombre `400` · honeypot `200` sin fila · cuerpo de 20 KB `413` · lead legítimo `201` · sexta petición de la misma IP `429`.
+
+**7. Decisiones del usuario aplicadas**
+
+Razón social y NIF **ocultos** en `privacidad.html` (frase reescrita para que se lea completa y veraz, sin placeholder). Borrado a 2 años **queda manual** y la narrativa de la política no se toca. Script de analítica añadido a `privacidad.html`, la única página que no lo llevaba.
+
 **Riesgo latente anotado:** `detalles` es texto controlado por quien envía el formulario. Cuando se construya el panel de lectura de leads, nunca debe volcarse con `innerHTML`.
+
+**Deuda anotada:** `.hp-field` está declarado dos veces en `input.css` (líneas 161 y 185), resto de una refactorización. Es cosmético, no afecta al funcionamiento.
 
 ---
 
@@ -281,7 +317,8 @@ Verificado en las 9 páginas de producción: todas responden 200 con las cabecer
 ### Backend
 | Componente | Estado | Notas |
 |-----------|--------|-------|
-| Supabase DB | ✅ | PostgreSQL, tabla `leads`, RLS activo |
+| Supabase DB | ✅ | PostgreSQL. `leads` y `rate_limit` con RLS activo y cero políticas |
+| Edge Function `submit-lead` | ✅ | Único camino de escritura. Código versionado en `supabase/functions/submit-lead/index.ts`. **Un push a `main` NO la redespliega**: hay que desplegarla aparte |
 | Supabase Auth | ⏳ | No usado (aún) |
 | FormSubmit.co | ✅ | Activo, destino `info@magindustries.es` |
 | Email corporativo | ✅ | Google Workspace. Buzones: `info@` (principal, usado por la web), `proyectos@`, `ventas@`, `noreply@`. MX → `smtp.google.com` verificado |
@@ -300,12 +337,14 @@ Verificado en las 9 páginas de producción: todas responden 200 con las cabecer
 | Componente | Estado | Notas |
 |-----------|--------|-------|
 | HTTPS | ✅ | Vercel + Let's Encrypt |
-| RGPD (privacidad.html) | ⏳ | Plantilla lista, PENDIENTE: NIF + razón social |
+| RGPD (privacidad.html) | ✅ | Razón social y NIF **ocultos por decisión del usuario** hasta la exposición masiva. La frase se lee completa y veraz, sin placeholder |
+| Camino de escritura | ✅ | Único: Edge Function `submit-lead` con `service_role`. `anon` no puede escribir en la tabla por ninguna vía |
+| Rate limiting | ✅ | 5/hora y 15/día por IP. Contadores en `rate_limit` (RLS activo, cero políticas). IP guardada como HMAC-SHA256, nunca en claro |
 | CSP | ✅ | Desplegada 2-ago-2026 en `vercel.json`. `script-src` mantiene `'unsafe-inline'` a propósito: el script de tema va inline en el `<head>` para evitar parpadeo. Verificada en las 9 páginas |
 | Otras cabeceras | ✅ | `frame-ancestors 'none'` + `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP, HSTS con `includeSubDomains` |
-| Grants de `leads` | ✅ | `anon` conserva solo INSERT. Antes tenía SELECT/UPDATE/DELETE/TRUNCATE y RLS era la única barrera |
-| Límites de entrada | ✅ | CHECK de longitud por columna + formato de email + nombre/email obligatorios en BD, con `maxlength` espejo en ambos formularios |
-| Honeypot formulario | ⚠️ | Campo `_gotcha`, pero se valida **solo en JavaScript** ([app.js:468](app.js:468)): un POST directo a la REST API lo ignora |
+| Grants de `leads` | ✅ | `anon` y `authenticated` **sin ningún grant** y sin políticas. Antes tenían SELECT/UPDATE/DELETE/TRUNCATE con RLS como única barrera |
+| Límites de entrada | ✅ | CHECK de longitud por columna + formato de email + nombre/email obligatorios en BD, `maxlength` espejo en los formularios y revalidación en la Edge Function |
+| Honeypot formulario | ✅ | `_gotcha` validado **en servidor**. Un positivo responde 200 sin insertar, para no enseñarle al bot que fue detectado |
 | SEO (og-image, canonical, sitemap) | ✅ | JSON-LD ProfessionalService incluido |
 
 ---
@@ -336,39 +375,45 @@ Verificado en las 9 páginas de producción: todas responden 200 con las cabecer
 
 ## 🚀 Siguiente sesión: Roadmap inmediato
 
-### Hito 1 (Semana 1-2) — Captura de leads & fundamentos
-**Propósito:** máquina de leads + identidad corporativa
+### Hito 1 — Fundamentos ✅ COMPLETADO (sesiones 3-7)
 
-- [ ] **Email corporativo**
-  - Crear proyecto@magindustries.com o contacto@
-  - Actualizar en `index.html`, `app.js` (formulario), `privacidad.html`
-  - Reemplazar todas las instancias de chapy9716@gmail.com
+Email corporativo, FormSubmit, landing de auditoría, tarifas publicadas, dominio
+propio, limpieza de contenido inventado y endurecimiento completo de seguridad.
+**La infraestructura ya no es el cuello de botella.**
 
-- [ ] **Activar FormSubmit.co**
-  - Usuario: ir a https://formsubmit.co/confirmacion
-  - Confirmar email en bandeja
-  - Post al formulario empezará a funcionar sin honeypot block
+Queda un único resto, y es un clic del usuario:
 
-- [ ] **CRM básico en Supabase**
-  - Dashboard Supabase: crear vistas/reports de `leads`
-  - KPIs: leads/mes, conversión %, ciudad, sector
-  - (Alternativa: Airtable/Notion si prefieres UI más simple)
+- [ ] **Activar Analytics en Vercel** — dashboard → proyecto `mag-industries` →
+  pestaña Analytics → *Enable*. Comprobado por API el 2-ago: devuelve `404`.
+  El script ya está en las 9 páginas; sin el toggle no recoge nada.
 
-- [ ] **Case study + testimonial**
-  - Entrevistar 1 cliente real (proyecto pasado)
-  - Documentar: problema → solución → impacto (% mejora)
-  - Subir a sección "resultados" o blog
+---
 
-- [ ] **Landing "Auditoría gratis 30 min"**
-  - Nueva subpágina: `/auditoria-gratuita.html`
-  - Copy: problema → solución → formulario
-  - Goal: 2-5% conversión
+### Hito 1.5 (próximas 1-2 semanas) — Ver y aprovechar lo que entra
+**Propósito:** cerrar el bucle entre lead captado y lead trabajado
 
-- [ ] **Activar Analytics en Vercel**
-  - Dashboard Vercel → Analytics → Enable
-  - Comienza a recopilar: page views, referrers, top pages
+- [ ] **Panel de lectura de leads**
+  - Hoy hay que abrir Supabase para ver un contacto
+  - Opción A: bastarse con el panel de Supabase (coste 0, fricción diaria)
+  - Opción B: página protegida que lea con `service_role` desde una Edge
+    Function autenticada
+  - ⚠️ **`textContent`, nunca `innerHTML`**: `detalles` es texto del atacante
 
-**Tiempo estimado:** 6-8h | **Impacto:** CAC + conversión + visibilidad
+- [ ] **Aviso instantáneo de lead**
+  - Hoy llega por FormSubmit; valorar push a WhatsApp o Slack
+  - Un lead B2B respondido en <1 h convierte mucho más que a las 24 h
+
+- [ ] **Medir el embudo por origen**
+  - `leads.origen` ya distingue home / landing / blog
+  - Con Analytics activo: visitas por página ÷ leads por origen = conversión real
+  - Sirve para decidir dónde invertir, en vez de intuir
+
+- [ ] **Case study real**
+  - Entrevistar a un cliente actual: problema → solución → impacto medido
+  - **Con permiso explícito por escrito.** Nada de cifras estimadas ni
+    reconstruidas: es exactamente lo que se retiró en la sesión 3
+
+**Tiempo estimado:** 4-6 h | **Impacto:** velocidad de respuesta y decisión con datos
 
 ---
 
@@ -388,10 +433,11 @@ Verificado en las 9 páginas de producción: todas responden 200 con las cabecer
   - Script frío: 15 seg, problema → solución → CTA
   - Follow-up: día 1, 3, 7, 14
 
-- [ ] **Subpáginas**
-  - `/servicios.html` — 3 ofertas (auditoría, programming, optimización)
-  - `/proceso.html` — cómo trabajamos (ya existe, mejorar)
-  - `/pricing.html` — rango de precios indicativo (tranquilidad B2B)
+- [ ] **Rendimiento** (pendiente desde la sesión 2, nunca abordado)
+  - Font Awesome completo (~100 KB) para ~15 iconos → SVG inline
+  - Google Fonts bloquea el render → self-host de Barlow y Saira Stencil One
+  - Ambas son cargas de terceros: quitarlas **también simplifica la CSP**
+  - Impacto directo en Core Web Vitals y por tanto en SEO
 
 **Tiempo estimado:** 12-16h | **Impacto:** posicionamiento SEO + brand awareness
 
@@ -429,9 +475,10 @@ Verificado en las 9 páginas de producción: todas responden 200 con las cabecer
 - [ ] Revisar memory en `C:\Users\chapy\.claude\projects\...\memory\`
 
 **Trabajo (sesión):**
-- [ ] Seleccionar 1-2 items de "Hito 1"
+- [ ] Seleccionar 1-2 items del hito activo
 - [ ] Ejecutar con commits pequeños y verificables
 - [ ] Documentar decisiones
+- [ ] **Verificar contra producción antes de marcar nada como hecho**
 
 **Al cerrar (5 min):**
 - [ ] Actualizar PROJECT_STATE.md:
@@ -447,12 +494,14 @@ Verificado en las 9 páginas de producción: todas responden 200 con las cabecer
 
 ## 🔗 Referencias rápidas
 
-**Documento maestro:** CLAUDE.md (arquitectura, stack, decisiones)  
-**Estado actual:** PROJECT_STATE.md (este archivo)  
-**Memoria persistent:** `memory/mag-industries-website.md`  
-**Web en vivo:** https://mag-industries.vercel.app  
+**Documento maestro:** `CLAUDE.md` (arquitectura, stack, modelo de seguridad)  
+**Estado actual:** `PROJECT_STATE.md` (este archivo)  
+**Edge Function:** `supabase/functions/submit-lead/index.ts` — **no se despliega con `git push`**  
+**Web en vivo:** https://www.magindustries.es  
 **Repo:** https://github.com/AntiSysteMa/mag-industries  
+**Supabase:** proyecto `lryyubgldnrrxokkeeef`  
+**Vercel:** equipo `magi-ndustries` · proyecto `mag-industries`  
 
 ---
 
-**Siguiente: Seleccionar trabajo del Hito 1 y ejecutar.**
+**Siguiente: activar Analytics (1 clic del usuario) y decidir el panel de lectura de leads.**
