@@ -1,8 +1,8 @@
 # PROJECT_STATE — MAG INDUSTRIES
 
-**Última sesión:** 30 julio 2026 (Sesión 6)
-**Estado:** En producción en dominio propio (magindustries.es). Supabase operativo. Falta el correo corporativo.
-**Siguiente sesión esperada:** Alta de Google Workspace y verificación de MX/SPF/DKIM/DMARC
+**Última sesión:** 2 agosto 2026 (Sesión 7)
+**Estado:** En producción en dominio propio (magindustries.es). Correo corporativo operativo. Base de datos y cabeceras endurecidas.
+**Siguiente sesión esperada:** Rate limiting de inserciones, razón social/NIF en privacidad.html y panel de lectura de leads
 
 ---
 
@@ -10,11 +10,13 @@
 
 | # | Bloqueador | Impacto | Acción del usuario |
 |---|-----------|---------|--------------------|
-| 1 | **Google Workspace pendiente** | El dominio ya es tuyo pero no hay buzón. Hasta que exista, la web no publica ninguna dirección `@magindustries.es` (publicarla provocaría rebotes). | Alta en Workspace Business Starter + registros MX/SPF/DKIM/DMARC |
+| 1 | **`[RAZÓN SOCIAL — NIF]` sin rellenar** | `privacidad.html` sigue con el placeholder mientras ya se tratan datos personales reales. Exposición legal activa ante la AEPD. | Sustituir por la razón social y NIF definitivos |
 | 2 | **Referencia pendiente de permiso** | La web ofrece poner en contacto a prospectos con el taller de matricería. | Pedir permiso a JPARENTE antes de que alguien lo solicite |
-| 3 | Analytics de Vercel sin activar | No hay medición de tráfico ni de conversión de la landing. | Activar en el dashboard de Vercel |
+| 3 | Sin rate limiting de inserciones | Los CHECK acotan el tamaño de cada fila, pero no el número de filas. Un atacante con la clave publicable puede inundar la tabla. El aviso por email seguiría llegando. | Edge Function con límite por IP, o monitorización de volumen |
+| 4 | Sin borrado automático a 2 años | La política de privacidad lo promete; no hay nada que lo ejecute. | Cron de Supabase o revisión manual periódica |
+| 5 | Analytics de Vercel sin activar | El script está en el HTML pero no está habilitado en el dashboard. | Activar en el dashboard de Vercel |
 
-**Resueltos:** FormSubmit sí estaba activo (el aviso por email llega bien; el dato de «pendiente de activar» venía desactualizado de sesiones anteriores) · Supabase operativo (sesión 5) · Precios confirmados por el usuario como cifras de partida (sesión 6) · Dominio propio en producción (sesión 6).
+**Resueltos:** FormSubmit activo · Supabase operativo (sesión 5) · Precios confirmados (sesión 6) · Dominio propio en producción (sesión 6) · **Google Workspace operativo con `info@magindustries.es` (sesión 7)** · **Tabla huérfana `doc_memory` eliminada y `leads` endurecida (sesión 7)** · **Cabeceras de seguridad desplegadas (sesión 7)**.
 
 ---
 
@@ -60,11 +62,12 @@ Para leer los leads: panel de Supabase o `service_role`. Con la clave publicable
 |---------|-------|--------|
 | Sitio web | Live en `www.magindustries.es` | ✅ |
 | Dominio propio | `magindustries.es` (DonDominio, DNS → Vercel, SSL OK) | ✅ |
-| Arquitectura | 6 páginas (home + landing + tarifas + capacidades + sectores + privacidad) | ✅ |
+| Arquitectura | 9 páginas (home + landing + tarifas + capacidades + sectores + privacidad + blog y 2 artículos) | ✅ |
 | Guardado de leads | Supabase `public.leads`, RLS solo INSERT | ✅ |
-| Aviso por email | FormSubmit → Gmail actual | ✅ |
+| Aviso por email | FormSubmit → `info@magindustries.es` | ✅ |
 | Contenido verificable | Sin cifras ni testimonios inventados | ✅ |
-| Email corporativo | Pendiente (Google Workspace) | ⏳ |
+| Email corporativo | Google Workspace: `info@`, `proyectos@`, `ventas@`, `noreply@` | ✅ |
+| Cabeceras de seguridad | CSP + 6 cabeceras más, verificadas en producción | ✅ |
 | Analytics activadas | No | ⏳ |
 | Leads captados | 0 (embudo recién publicado) | 📝 |
 | Git + Vercel integration | Activa | ✅ |
@@ -220,6 +223,41 @@ Con qué se ha sustituido — compromisos verificables en lugar de historial:
 
 **Corregido de paso:** enlace roto `index.html#capacidades` en `servicios.html`, que apuntaba a una sección que ya no existe en la home.
 
+### Sesión 7 (2 agosto 2026)
+**Objetivo:** Migrar al correo corporativo y auditar los flancos de seguridad de la base de datos y los formularios.
+
+**Commits:** `5818376` · `b341265`
+
+**1. Correo corporativo (`5818376`)**
+
+Google Workspace operativo sobre `magindustries.es`, MX verificado apuntando a `smtp.google.com`. Buzones creados: `info@` (principal), `proyectos@`, `ventas@` y `noreply@`. El destino de FormSubmit en `app.js` pasa de `chapy9716@gmail.com` a `info@magindustries.es`, y `privacidad.html` deja de publicar `proyectos@magindustries.com` — un dominio que **no es nuestro**: cualquier ejercicio de derechos RGPD enviado ahí llegaba a un tercero.
+
+**2. Auditoría de seguridad — hallazgo crítico no documentado**
+
+La tabla **`public.doc_memory`** vivía en el mismo proyecto Supabase que `leads` con la política `single_user_full_access`: `ALL` para `anon` y `authenticated`, `USING(true)` y `WITH CHECK(true)`. Cualquiera que leyese `app.js` obtenía la clave publicable y con ella podía leer, escribir, borrar y truncar esa tabla — es decir, usar el proyecto como almacenamiento gratuito, incluido contenido ilegal alojado bajo esta cuenta. No estaba referenciada en ningún archivo del repositorio y tenía 0 filas. **Eliminada.**
+
+**3. Endurecimiento de `leads`**
+
+- CHECK de longitud en las 8 columnas (`detalles` máx. 4000, `email` máx. 254, etc.). Antes se podían insertar strings de megabytes por POST directo y agotar el almacenamiento.
+- CHECK de formato de email y de campos mínimos (`nombre` y `email` no vacíos): la validación de `app.js` solo protege al que usa el navegador.
+- `revoke all ... from anon, authenticated` + `grant insert to anon`. Antes `anon` tenía SELECT/UPDATE/DELETE/TRUNCATE y **RLS era lo único** que impedía leer los contactos con una clave publicada en `app.js`. El INSERT sigue funcionando porque `app.js` usa `Prefer: return=minimal` y no necesita SELECT.
+
+Verificado con peticiones reales usando la clave publicable: INSERT legítimo `201`; SELECT de leads `401`; DELETE masivo `401`; payload de 50 KB `400`; email inválido `400`.
+
+**4. Cabeceras de seguridad (`b341265`)**
+
+Los headers de producción eran **solo HSTS**. No había CSP, pese a que este documento afirmaba «CSP ✅ Strict (no inline scripts, no CDN lejanos)» — falso en los tres puntos: hay script inline en el `<head>` y se cargan dos CDN externos. Creer que existía una CSP era peor que saber que no.
+
+CSP nueva ajustada a los orígenes reales (cdnjs para GSAP y Font Awesome, Google Fonts, Unsplash, Supabase, FormSubmit) más `frame-ancestors 'none'`, `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP y HSTS con `includeSubDomains`.
+
+Verificado en las 9 páginas de producción: todas responden 200 con las cabeceras, ningún origen externo queda bloqueado, y en navegador GSAP 3.12.5 carga sin necesitar `unsafe-eval`, Font Awesome y Barlow renderizan, la simulación del hero corre y no hay imágenes rotas.
+
+**Decisiones:**
+- `script-src` conserva `'unsafe-inline'`: el script de tema debe ejecutarse antes del pintado para evitar parpadeo, y Vercel estático no permite nonces por petición. Se acepta el compromiso porque hoy la web no renderiza contenido de terceros; las demás directivas sí acotan orígenes.
+- Los CHECK acotan el tamaño de cada fila pero **no** el número de filas: el rate limiting real exige una Edge Function que vea la IP. Queda pendiente y anotado como bloqueador.
+
+**Riesgo latente anotado:** `detalles` es texto controlado por quien envía el formulario. Cuando se construya el panel de lectura de leads, nunca debe volcarse con `innerHTML`.
+
 ---
 
 ## 📝 Estado técnico por módulo
@@ -245,8 +283,8 @@ Con qué se ha sustituido — compromisos verificables en lugar de historial:
 |-----------|--------|-------|
 | Supabase DB | ✅ | PostgreSQL, tabla `leads`, RLS activo |
 | Supabase Auth | ⏳ | No usado (aún) |
-| FormSubmit.co | ⏳ | Conectado, PENDIENTE: usuario activa email |
-| Email corporativo | ⏳ | No existe (usar chapy9716@gmail.com por ahora) |
+| FormSubmit.co | ✅ | Activo, destino `info@magindustries.es` |
+| Email corporativo | ✅ | Google Workspace. Buzones: `info@` (principal, usado por la web), `proyectos@`, `ventas@`, `noreply@`. MX → `smtp.google.com` verificado |
 | Analytics | ⏳ | Script Vercel en `<head>`, no activado en dashboard |
 
 ### DevOps
@@ -263,8 +301,11 @@ Con qué se ha sustituido — compromisos verificables en lugar de historial:
 |-----------|--------|-------|
 | HTTPS | ✅ | Vercel + Let's Encrypt |
 | RGPD (privacidad.html) | ⏳ | Plantilla lista, PENDIENTE: NIF + razón social |
-| CSP | ✅ | Strict (no inline scripts, no CDN lejanos) |
-| Honeypot formulario | ✅ | Campo `_gotcha` en FormSubmit |
+| CSP | ✅ | Desplegada 2-ago-2026 en `vercel.json`. `script-src` mantiene `'unsafe-inline'` a propósito: el script de tema va inline en el `<head>` para evitar parpadeo. Verificada en las 9 páginas |
+| Otras cabeceras | ✅ | `frame-ancestors 'none'` + `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP, HSTS con `includeSubDomains` |
+| Grants de `leads` | ✅ | `anon` conserva solo INSERT. Antes tenía SELECT/UPDATE/DELETE/TRUNCATE y RLS era la única barrera |
+| Límites de entrada | ✅ | CHECK de longitud por columna + formato de email + nombre/email obligatorios en BD, con `maxlength` espejo en ambos formularios |
+| Honeypot formulario | ⚠️ | Campo `_gotcha`, pero se valida **solo en JavaScript** ([app.js:468](app.js:468)): un POST directo a la REST API lo ignora |
 | SEO (og-image, canonical, sitemap) | ✅ | JSON-LD ProfessionalService incluido |
 
 ---
