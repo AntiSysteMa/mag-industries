@@ -1,18 +1,18 @@
 # PROJECT_STATE — MAG INDUSTRIES
 
 **Última sesión:** 2 agosto 2026 (Sesión 7)
-**Estado:** En producción en dominio propio (magindustries.es). Correo corporativo operativo. Captación de leads cerrada tras Edge Function con rate limiting; `leads` inaccesible para roles públicos.
-**Siguiente sesión esperada:** Activar Analytics en Vercel (toggle de dashboard) y decidir si se construye panel de lectura de leads
+**Estado:** En producción. Seguridad extrema: Edge Function con rate limiting, honeypot en servidor, CSP+6 cabeceras, `leads` cerrada a anon. Analytics activo (46 visitors/semana). Documentación reescrita y verificada.
+**Siguiente sesión esperada:** Construir panel de lectura de leads o validar Supabase, luego optimización de rendimiento
 
 ---
 
 ## ⚠️ BLOQUEADORES ACTIVOS (leer primero)
 
-| # | Bloqueador | Impacto | Acción del usuario |
-|---|-----------|---------|--------------------|
-| 1 | **Analytics de Vercel sin activar** | Verificado por API el 2-ago: devuelve `404 Web Analytics not found`. El script está en las 9 páginas, pero la función está apagada. Sin medición de tráfico ni de conversión. | Vercel → proyecto `mag-industries` → pestaña **Analytics** → *Enable*. Es un toggle de dashboard, no hay API |
-| 2 | **Referencia pendiente de permiso** | La web ofrece poner en contacto a prospectos con el taller de matricería. | Pedir permiso a JPARENTE antes de que alguien lo solicite |
-| 3 | Sin panel de lectura de leads | Los contactos solo se pueden consultar abriendo el panel de Supabase. Con volumen creciente será fricción diaria. | Decidir si se construye panel propio o basta con Supabase |
+| # | Bloqueador | Impacto | Acción |
+|---|-----------|---------|----|
+| 1 | **Sin panel de lectura de leads** | Los contactos solo se consultan abriendo Supabase. 46 visitors en 7 días: es fricción creciente. | Edge Function autenticada o bastar con Supabase |
+| 2 | **Referencia pendiente de permiso** | La web ofrece contacto con taller de matricería. | Pedir permiso a JPARENTE antes de que alguien lo solicite |
+| 3 | **Rendimiento pendiente** | Font Awesome full (~100 KB) para ~15 iconos, Google Fonts render-blocking. Afecta Core Web Vitals y SEO. | Sesión estratégica: prioridad vs. otros trabajos |
 
 **Decisiones del usuario, no bloqueadores** (no las «arregles» en próximas sesiones):
 - **Razón social y NIF ocultos** en `privacidad.html` hasta que toque exponerse masivamente. La frase queda completa y veraz, sin placeholder visible. Es una decisión consciente, no un olvido.
@@ -71,7 +71,7 @@ Para leer los leads: panel de Supabase o `service_role`. Con la clave publicable
 | Contenido verificable | Sin cifras ni testimonios inventados | ✅ |
 | Email corporativo | Google Workspace: `info@`, `proyectos@`, `ventas@`, `noreply@` | ✅ |
 | Cabeceras de seguridad | CSP + 6 cabeceras más, verificadas en producción | ✅ |
-| Analytics activadas | No | ⏳ |
+| Analytics activadas | Sí (46 visitors/semana medidos) | ✅ |
 | Leads captados | 0 (embudo recién publicado) | 📝 |
 | Git + Vercel integration | Activa | ✅ |
 
@@ -504,4 +504,83 @@ Queda un único resto, y es un clic del usuario:
 
 ---
 
-**Siguiente: activar Analytics (1 clic del usuario) y decidir el panel de lectura de leads.**
+---
+
+## 🎯 Roadmap de sesiones siguientes (verificado 2-ago-2026)
+
+**Prioridad 1: Visibilidad de leads (semana 1-2)**
+
+1. **Panel de lectura de leads** (4-6h)
+   - Opción A: Edge Function protegida que lee de `leads` con `service_role`
+   - Opción B: Satisfacerse con panel de Supabase (coste 0, fricción diaria)
+   - ⚠️ Usar `textContent`, nunca `innerHTML` — `detalles` es texto del atacante
+   - Incluir: fecha, origen, nombre, empresa, email, resumen de `detalles`
+
+2. **Aviso instantáneo de lead** (2-3h)
+   - Hoy: aviso por FormSubmit (24h después)
+   - Mejorar: push a WhatsApp o Slack (<1 min)
+   - Un lead B2B respondido en <1h convierte 3x más
+
+3. **Embudo de conversión** (1-2h)
+   - Analytics ya da: visitas por página + fecha
+   - Cruzar: visitas de `index.html` / leads de home → conversión %
+   - Repetir para cada origen → decidir dónde invertir
+
+**Prioridad 2: Rendimiento (semana 3-4) — impacta SEO directo**
+
+4. **Font Awesome → SVG inline** (3-4h)
+   - Full consume ~100 KB para ~15 iconos
+   - Identificar los 15, convertirlos a SVG inline en `app.js`
+   - Gain: -100 KB de CDN, CSP más simple
+
+5. **Google Fonts → self-host** (2-3h)
+   - Barlow + Saira Stencil One descargados localmente
+   - Referencia desde `/assets/fonts/` en lugar de `fonts.googleapis.com`
+   - Gain: no render-blocking, -1 CDN del CSP
+
+6. **Lazy load de secciones bajo pliegue** (4-5h)
+   - `sectores.html` carga 15 imágenes Unsplash en paralelo
+   - Lazy load hasta intersection
+   - Resultado: mejora FCP + LCP
+
+**Prioridad 3: Autoridad (semana 5-8) — genera leads orgánicos**
+
+7. **Case study real con permiso** (4-5h)
+   - Entrevistar cliente actual (técnica + impacto medido)
+   - **Exigir permiso escrito** — no cifras estimadas
+   - Documentar: problema → solución (paso a paso) → resultado (% mejora)
+   - Subir a sección nueva o blog
+
+8. **LinkedIn strategy** (1-2h planning + 8-10h ejecución)
+   - 1 post/semana: tip técnico + case study + reflexión
+   - Segmentación: gerentes de producción, 20-200 empleados
+   - Presupuesto sugerido: €300-500/mes en ads
+
+9. **SEO: 5 artículos blog** (20-24h)
+   - Ya hay 2 (`blog-trocoidal-acero-herramienta.html`, `blog-plantilla-o-externalizar.html`)
+   - Faltan 3: «productividad CNC», «checklist auditoría», «reducción de tiempos de ciclo»
+   - Backlinks: cámaras de industria, asociaciones técnicas
+
+**Prioridad 4: Escala (mes 2-3)**
+
+10. **Dashboard de KPIs** (2-3h)
+    - Looker Studio (free): leads → conversión → MRR
+    - Métricas: CAC, LTV, payback
+    - Actualización semanal
+
+11. **SOP formal** (6-8h)
+    - Auditoría: checklist + template reporte
+    - Propuesta: template + hoja de términos
+    - Entrega: hitos, feedback loop
+
+12. **Subcontratista identificado** (ongoing)
+    - Programador CNC freelance (Portugal/México opción)
+    - Para picos de demanda
+
+---
+
+**Resumen estado (2-ago-2026):**
+✅ Fundamentos (dominio, correo, seguridad, Analytics)  
+⏳ Visibilidad (panel de leads, avisos instantáneos)  
+⏳ Rendimiento (Font Awesome, Fonts, lazy load)  
+⏳ Autoridad (case study, LinkedIn, blog)

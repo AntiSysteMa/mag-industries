@@ -244,8 +244,8 @@ este archivo.
 
 - **Web:** https://www.magindustries.es
 - **Repo:** https://github.com/AntiSysteMa/mag-industries
-- **Vercel:** https://vercel.com/magi-ndustries/mag-industries
+- **Vercel:** https://vercel.com/magi-ndustries/mag-industries (Analytics ✅ activo)
 - **Supabase:** https://app.supabase.com → proyecto `lryyubgldnrrxokkeeef`
-- **Correo:** info@magindustries.es
+- **Correo:** info@magindustries.es (Google Workspace)
 
 **Siguiente lectura obligatoria:** `PROJECT_STATE.md`
