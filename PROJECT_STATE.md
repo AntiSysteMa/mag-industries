@@ -1,7 +1,7 @@
 # PROJECT_STATE — MAG INDUSTRIES
 
-**Última sesión:** 3 agosto 2026 (Sesión 10)
-**Estado:** En producción, infraestructura cerrada y **entrega de correo confirmada con envío real** (SPF/DKIM/DMARC pass). Captación reforzada: el quiz ya captura, la landing tiene agenda y la home calculadora de coste. `capacidades.html` reescrita por áreas, sin nombrar software, y con una séptima área de transformación digital.
+**Última sesión:** 3 agosto 2026 (Sesión 11)
+**Estado:** En producción, infraestructura cerrada y **entrega de correo confirmada con envío real** (SPF/DKIM/DMARC pass). Captación reforzada: el quiz ya captura, la landing tiene agenda y la home calculadora de coste. **Sitio a cero menciones de software CAD/CAM**, con Mazak añadido a los controles y una séptima área de transformación digital.
 **Siguiente sesión esperada:** Guiones y clips de simulación + estrategia visual — **a petición del usuario, no antes de que él lo pida**. Antes, dos datos suyos: URL del calendario de citas y URL de LinkedIn / Google Business.
 
 ---
@@ -422,17 +422,37 @@ La tarjeta nueva lleva **SVG propio** (diagrama de flujo digitalizado con pulsos
 
 **Verificado en producción:** 7 tarjetas con sus 7 títulos, **0 menciones** de software concreto, SVG nuevo renderizando con sus 3 pulsos animados, 0 imágenes remotas, y sin scroll horizontal ni títulos cortados en escritorio (1280) ni en móvil (375).
 
-⚠️ **Inconsistencia pendiente, no resuelta (decisión del usuario).** El resto del sitio **sigue nombrando software concreto** en 11 puntos. Conviene separar dos cosas distintas:
+⚠️ Quedaban 11 menciones de software en el resto del sitio. **Resueltas en la sesión 11.**
 
-- **Software CAM propio** — es lo que crea el riesgo de licencias que motivó este cambio:
-  - `index.html:506` «Plataformas CAM: Fusion 360, SolidWorks, Mastercam, ESPRIT y BobCAD»
-  - `index.html:8` (keywords) «programador de BobCAD-CAM»
-  - `index.html:155` «BobCAD-CAM»
-  - `index.html:190` «nativo de SolidWorks o Fusion»
-  - `auditoria-gratuita.html:247` (FAQ) la lista de las cinco plataformas
-- **Controles de máquina del cliente** (Heidenhain, Fanuc, Siemens) — `index.html` ×4, `servicios.html:221`, `blog.html:181`. **No implican licencia propia**: son el control de la máquina del cliente y decir que se posprocesa para ellos es información útil, no una afirmación de propiedad. El riesgo aquí es distinto y menor.
+### Sesión 11 (3 agosto 2026)
+**Objetivo:** Extender al sitio entero la regla de no nombrar software CAD/CAM, y añadir Mazak a los controles.
 
-Si se quiere coherencia total, el primer grupo es el que hay que revisar. No se ha tocado porque el encargo era la página de capacidades.
+**Commit:** `pendiente` · sin cambios en `app.js` ni CSS.
+
+**1. Cero menciones de suites CAD/CAM en todo el sitio**
+
+Verificado con búsqueda de `CATIA|SolidWorks|Mastercam|ESPRIT|BobCAD|Fusion|NX|Vericut|Inventor|Creo` sobre todos los `.html`: **0 coincidencias**.
+
+Lo que se cambió, y por qué cada uno:
+- `index.html` · meta keywords: fuera «programador de BobCAD-CAM», entran «programación CAM multiplataforma» e «independencia de plataforma CAD CAM».
+- `index.html` · pie del panel del hero: «BobCAD-CAM · postprocesador…» → «posprocesado para…».
+- `index.html` · paso 01 del onboarding: «un nativo de SolidWorks o Fusion» → «el fichero nativo de tu CAD».
+- `index.html` · tarjeta «Plataformas CAM» → **«Independencia de plataforma»**, reescrita con la narrativa nueva. El contador pasa de `5` (plataformas CAM) a `4` (familias de control) con su etiqueta, porque el número anterior contaba justo lo que se ha dejado de nombrar.
+- `auditoria-gratuita.html` · FAQ «¿Con qué software trabajáis?»: reescrita entera. Ahora el énfasis está en programar **con la licencia del cliente** para que el archivo quede en su entorno, y en que el proceso no depende del software.
+
+**2. Mazak añadido a los controles, en los 8 puntos**
+
+`index.html` ×6, `servicios.html` y `blog.html`. Se usa «Mazak Mazatrol» donde hay detalle de modelos y «Mazak» en las listas cortas. Verificado que ningún punto quedó sin actualizar: una lista incoherente entre páginas es peor que no darla.
+
+**3. La narrativa que sustituye a la lista de productos**
+
+Textual del usuario, y es el argumento que se ha llevado al copy: *el que sabe hacer el proceso puede hacerlo en cualquier software; el mecanizado y el diseño siguen los mismos caminos con distintas interfaces, y lo esencial es la planificación de ingeniería.* Sigue expresando dominio multiplataforma, pero sin declarar qué licencias se poseen.
+
+**4. JSON-LD ampliado**
+
+`description` y `knowsAbout` de `ProfessionalService` incorporan transformación digital y automatización de procesos, que faltaban desde que se añadió el área en la sesión 10.
+
+**Regla escrita en `CLAUDE.md`** (Visión + regla de oro nº9) para que no se reintroduzca en una sesión futura.
 
 ---
 
@@ -748,6 +768,19 @@ correo con el que se habla con los clientes.
    - Resultado: mejora FCP + LCP
 
 **Prioridad 3: Autoridad (semana 5-8) — genera leads orgánicos**
+
+6.5 **Portfolio de casos de transformación digital** (pedido por el usuario, sesión 11)
+   - Casos de implantación en **distintos comercios**, no solo industria: es la
+     prueba que sostiene el área nueva de `capacidades.html`
+   - Hoy esa capacidad se ofrece **sin nada que enseñar**. Es el mismo hueco que
+     D-01/D-02 señalaban para el mecanizado, y se resolvió retirando lo que no
+     era demostrable — aquí toca resolverlo al revés: documentando lo que sí
+   - **Con permiso escrito y sin cifras reconstruidas.** Aplica la regla de la
+     sesión 3 sin excepción: nada inventado, nada estimado a posteriori
+   - Formato sugerido: problema → qué se automatizó → qué cambió de medible
+     (horas ahorradas, errores evitados, tiempo de respuesta)
+   - Ubicación por decidir: sección propia en `capacidades.html`, página nueva
+     o entradas de blog
 
 7. **Case study real con permiso** (4-5h)
    - Entrevistar cliente actual (técnica + impacto medido)

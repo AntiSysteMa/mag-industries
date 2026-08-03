@@ -1,6 +1,6 @@
 # MAG INDUSTRIES — Contexto de Proyecto
 
-**Última actualización:** 2 agosto 2026 | **Sesiones:** 7
+**Última actualización:** 3 agosto 2026 | **Sesiones:** 11
 
 > Este archivo describe **cómo es el proyecto**. El estado sesión-a-sesión vive
 > en `PROJECT_STATE.md`. Lee los dos antes de tocar nada.
@@ -15,11 +15,33 @@
 ## 📌 Visión
 
 **MAG INDUSTRIES** es una consultoría B2B de ingeniería CAD/CAM/CNC:
-- Programación CNC externa (Heidenhain TNC, Fanuc 0i/30i, Siemens 840D)
+- Programación CNC externa (Heidenhain TNC, Fanuc 0i/30i, Siemens 840D, Mazak Mazatrol)
 - Optimización de procesos de mecanizado
 - Auditorías técnicas de talleres
 - Simulación en gemelo digital
+- **Transformación digital y automatización de procesos** (desde ago-2026)
 - Verticales: aeronáutica, automoción, defensa, médico, matricería
+
+### ⚠️ Regla de contenido: no se nombra software CAD/CAM
+
+Decisión del usuario, sesión 10. **En ninguna página se menciona con qué
+software se programa** (nombres de suites CAD/CAM). Motivo doble: nombrar
+herramientas expone a que se cuestionen las licencias y a una inspección por
+sospecha de uso de múltiples suites, y además obliga a defender cada nombre en
+una llamada técnica — un nombre que no se sostenga resta credibilidad a los que
+sí. Lo recogen A-04 y B-04 (crítica) del reporte estratégico.
+
+La narrativa que sustituye a la lista de productos: **el proceso no cambia con
+el software, cambia la interfaz.** El mecanizado y el diseño siguen los mismos
+caminos; lo que decide el resultado es la planificación de ingeniería. Se
+trabaja en el entorno que ya tenga el cliente.
+
+**Sí se nombran los controles de máquina** —Heidenhain, Fanuc, Siemens,
+Mazak— porque son de la máquina *del cliente*: decir que se posprocesa para
+ellos es información útil de compatibilidad, no una afirmación de propiedad de
+licencia. Al añadir un control nuevo, hay que añadirlo en los **8 puntos** donde
+aparece la lista (`index.html` ×6, `servicios.html`, `blog.html`) o quedará
+incoherente.
 
 **Posicionamiento:** «No vendemos antigüedad. Vendemos compromisos.» Fundador
 único con 7 años de ingeniería CAD/CAM. **Nada de cifras, testimonios ni casos
@@ -178,7 +200,7 @@ contenido se repartió en páginas temáticas.
 | `index.html` | Conversión. 9 capas: hero → cómo empezamos → evidencia → servicios → quiz → compromisos → referencias → FAQ → contacto |
 | `auditoria-gratuita.html` | Landing de captación. Una sola acción, cabecera **sin navegación** (sin rutas de escape), sin GSAP a propósito (velocidad) |
 | `servicios.html` | Tarifas por pieza e igualas mensuales |
-| `capacidades.html` | Autoridad técnica: fresado, torneado, EDM, hilo, láser |
+| `capacidades.html` | Autoridad técnica. **7 áreas** por proceso, sin nombrar software: ingeniería de producto, CNC multieje, torneado, hilo, EDM, marcado láser y transformación digital |
 | `sectores.html` | SEO y cualificación. 9 tarjetas de sector |
 | `blog.html` + 2 artículos | SEO de fondo |
 | `privacidad.html` | Legal · RGPD |
@@ -249,6 +271,10 @@ todas a la vez tras un cambio importante de `app.js`. Va por **v=11**.
 7. **Commits pequeños y atómicos.** Un cambio, un commit, mensaje que explique
    el *porqué*.
 8. **`main` es producción.** Cada push despliega.
+9. **Nunca nombres una suite CAD/CAM en el contenido.** Ni en copy, ni en meta
+   keywords, ni en JSON-LD. Los controles de máquina sí. Ver la regla completa
+   en «Visión»; el sitio quedó a cero menciones en la sesión 10 y volver a
+   introducir una lo rompe.
 
 ---
 
