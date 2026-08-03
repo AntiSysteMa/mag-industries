@@ -1,8 +1,8 @@
 # PROJECT_STATE — MAG INDUSTRIES
 
-**Última sesión:** 2 agosto 2026 (Sesión 8)
-**Estado:** En producción y con **la infraestructura entera cerrada**. Correo corporativo autenticado (SPF+DKIM+DMARC verificados en DNS público), seguridad extrema (Edge Function con rate limiting, honeypot en servidor, CSP+6 cabeceras, `leads` cerrada a anon), Analytics activadas, FormSubmit y WhatsApp operativos.
-**Siguiente sesión esperada:** Deja de haber trabajo técnico bloqueante. El cuello de botella pasa a ser **presencia y captación**: LinkedIn + Google Business Profile, y agenda para la auditoría gratuita.
+**Última sesión:** 3 agosto 2026 (Sesión 9)
+**Estado:** En producción, infraestructura cerrada y **entrega de correo confirmada con envío real** (SPF/DKIM/DMARC pass). Captación reforzada: el quiz ya captura, la landing tiene agenda y la home calculadora de coste.
+**Siguiente sesión esperada:** Guiones y clips de simulación + estrategia visual — **a petición del usuario, no antes de que él lo pida**. Antes, dos datos suyos: URL del calendario de citas y URL de LinkedIn / Google Business.
 
 ---
 
@@ -13,8 +13,8 @@
 | 1 | **Sin panel de lectura de leads** | Los contactos solo se consultan abriendo Supabase. 46 visitors en 7 días: es fricción creciente. | Edge Function autenticada o bastar con Supabase |
 | 2 | **Referencia pendiente de permiso** | La web ofrece contacto con taller de matricería. | Pedir permiso a JPARENTE antes de que alguien lo solicite |
 | 3 | **Rendimiento pendiente** | Font Awesome full (~100 KB) para ~15 iconos, Google Fonts render-blocking. Afecta Core Web Vitals y SEO. | Sesión estratégica: prioridad vs. otros trabajos |
-| 4 | **Sin presencia social** | LinkedIn y Google Business Profile **no existen**. Los enlaces sociales del footer apuntan a `#`. Es el hueco nº1 que señalan los dos artefactos estratégicos (D-04 y OP-050): una empresa sin perfil parece una empresa que no existe, y LinkedIn es el único canal donde están los tier 1/2. | Crear ambos perfiles. No es trabajo de código |
-| 5 | **La auditoría gratuita no se puede agendar** | La landing es el activo de conversión central del plan (conversión esperada a prueba de pago ~50 %) pero solo ofrece formulario: el lead deja el dato y luego hay ida y vuelta por email. Sin agenda se pierde el momento. | Cal.com gratis enlazado desde `auditoria-gratuita.html` |
+| 4 | **Perfiles sociales sin personalizar y sin enlazar** | LinkedIn y Google Business Profile **ya creados** (sesión 9), pendientes de personalizar. La web no los enlaza todavía: el footer oculta los iconos hasta tener URL. | Personalizar ambos y **pasar las dos URL** para pegarlas en el footer |
+| 5 | **Falta la URL del calendario de citas** | La sección `#agenda` de la landing está construida y desplegada, pero `data-cal-embed` / `data-cal-link` están vacíos, así que se oculta entera. Es el último paso para que la auditoría se pueda agendar sola. | Crear el horario de citas en Google Calendar y **pasar las dos URL** (ver guía al final de la sesión 9) |
 
 **Decisiones del usuario, no bloqueadores** (no las «arregles» en próximas sesiones):
 - **Razón social y NIF ocultos** en `privacidad.html`. **Criterio de salida fijado en la sesión 8:** se publicarán cuando haya **un cliente recurrente y 2.000 €/mes recurrentes**, no antes. Hasta entonces la frase queda completa y veraz, sin placeholder visible. Es una decisión consciente con umbral explícito, no un olvido.
@@ -343,6 +343,63 @@ Razón social y NIF permanecen ocultos en `privacidad.html` hasta alcanzar **un 
 
 **Pendiente de esta sesión:** el DNS está correcto, pero **la entrega real solo se confirma con un envío**. Prueba a `check-auth@verifier.port25.com` o revisando cabeceras en un Gmail de destino → debe leerse SPF PASS / DKIM PASS / DMARC PASS.
 
+### Sesión 9 (3 agosto 2026)
+**Objetivo:** Ejecutar la Prioridad 0 del roadmap — cerrar los huecos de captación que los artefactos señalaban y el correo autenticado desbloqueó.
+
+**Commit:** `c20329c` · caché a `app.js?v=12` y `tailwind.css?v=11`
+
+**0. Entrega de correo confirmada (cierra la sesión 8)**
+
+Envío real desde `info@magindustries.es` a `check-auth@verifier.port25.com`:
+**SPF pass · DKIM pass · iprev pass**. El DKIM verifica con `header.d=magindustries.es` y el `mail-from` es del mismo dominio, así que ambos identificadores están alineados con el `From:` y **DMARC pasa**. La sesión 8 quedaba pendiente de esto y ya no lo está.
+
+Dato secundario que salió del informe: el `iprev` de Google también pasa. No es algo que controlemos, pero es una de las señales de reputación que miran los filtros.
+
+**1. El quiz ya no pierde leads**
+
+Las respuestas morían dentro del IIFE: se pintaba el resultado y se perdían. Quien se autocalificaba como VIP y no bajaba a rellenar el formulario era un lead perdido en silencio — precisamente el de más valor. Era el hueco OP-030 del reporte estratégico.
+
+Ahora hace tres cosas:
+- El resultado pide **nombre y correo ahí mismo** (dos campos, sin bajar) y envía por los dos caminos de siempre: Edge Function + FormSubmit, con el diagnóstico ya redactado en `detalles`.
+- Publica las respuestas en `sessionStorage`, así que si el visitante baja al formulario grande —o salta a la landing— el lead llega con el diagnóstico adjunto.
+- Un lead VIP se marca en `origen`, para poder medirlo aparte.
+
+El honeypot `_gotcha` va también en este formulario: sin él, este camino sería el más fácil de automatizar de toda la web.
+
+**2. Agenda de la auditoría**
+
+Sección `#agenda` nueva en la landing, preparada para el **horario de citas de Google Calendar** (nativo de Workspace: sin terceros nuevos, sin coste extra, y la disponibilidad sale del calendario real).
+
+El iframe se carga **solo al pulsar**. Esta landing se hizo sin GSAP a propósito para que cargara rápido; meter a Google en el primer pintado deshacía justo eso. Hasta que alguien pulsa, la página no habla con Google.
+
+⚠️ **`data-cal-embed` y `data-cal-link` están vacíos**: falta pegar la URL del calendario. Mientras lo estén, `app.js` oculta la sección **y los dos enlaces que apuntan a ella**, y el formulario sigue siendo el camino. Nunca se enseña un botón que no lleva a ningún sitio. Verificado en producción: sección oculta, 2 de 2 CTA ocultos.
+
+**3. Calculadora de coste de máquina parada**
+
+En la capa 05, bajo el quiz: dos barras (horas paradas/semana × coste/hora) y la cifra en euros por semana y por año. Es el hueco OP-030 «calculadora».
+
+Sobre **46 semanas y no 52**, descontando vacaciones y paradas de planta. Inflar esa cifra la haría más golosa y menos creíble, que es lo contrario de lo que buscamos con un lector técnico. Se explica bajo el resultado.
+
+**4. Enlaces sociales del footer**
+
+Apuntaban a `#` (hueco D-04). Ahora se ocultan solos si no tienen URL real, y aparecen sin tocar código en cuanto se pegue una. Sustituido el icono de X por el de Google, que es el perfil que sí existe. **Pendiente: pegar las URL de LinkedIn y Google Business Profile.**
+
+**Verificado en producción** (no en local), tras el deploy:
+- CSP sirve `frame-src https://calendar.google.com`
+- Quiz completo por la ruta VIP → aparece el formulario de captura, botón en `rgb(46,230,168)` (cyber), `sessionStorage` con el diagnóstico
+- Calculadora: 20 h × 90 € → 1.800 €/semana y 82.800 €/año
+- Sección agenda y sus CTA ocultos al no haber URL
+- Honeypot posicionado fuera de pantalla
+
+**No se enviaron leads de prueba**: habrían creado filas reales en `leads` y disparado avisos a `info@`. El camino de envío está verificado por código y por la validación previa de la sesión 7, no por un envío nuevo.
+
+**Decisiones:**
+- **Google Calendar y no Cal.com**: ya se paga Workspace, la sincronización es nativa, no añade un tercero al que dar acceso al calendario y no amplía la CSP más allá de un `frame-src`.
+- **Clases Tailwind literales en las dos ramas del quiz**, nunca concatenadas (`bg-${acento}`): Tailwind compila escaneando texto, así que una clase construida en tiempo de ejecución no llega a la hoja de estilos y el botón habría salido sin color. Se duplica markup a cambio de que no pueda romperse.
+- **`f.elements.name` y no `f.name`** en el formulario del quiz: `name` colisiona con la propiedad nativa `HTMLFormElement.name`.
+
+**Deuda saldada:** el bloque de ~20 líneas duplicado en `input.css` (foco, honeypot y `#wa-btn` declarados dos veces) estaba anotado desde la sesión 7. Eliminada la primera copia, que era la que quedaba sobrescrita; el resultado visual no cambia.
+
 ---
 
 ## 📝 Estado técnico por módulo
@@ -576,11 +633,11 @@ retorno:
 
 | Origen | Hueco | Estado |
 |---|---|---|
-| D-04 · OP-050 | LinkedIn + Google Business Profile | ❌ No existen. Footer con enlaces a `#` |
-| Embudo etapa 4 | Agenda para la auditoría gratuita (Cal.com) | ❌ Solo formulario |
+| D-04 · OP-050 | LinkedIn + Google Business Profile | 🔶 Creados (sesión 9), sin personalizar; footer a la espera de las URL |
+| Embudo etapa 4 | Agenda para la auditoría gratuita | 🔶 Construida (sesión 9), oculta hasta tener la URL del calendario |
 | OP-030 | Lead magnet descargable (checklist PDF) | ❌ |
-| OP-030 | Calculadora de coste de máquina parada | ❌ |
-| OP-030 | El resultado del quiz VIP no llega a ningún sitio | ❌ Se muestra y se pierde |
+| OP-030 | Calculadora de coste de máquina parada | ✅ Sesión 9 |
+| OP-030 | El resultado del quiz VIP no llega a ningún sitio | ✅ Sesión 9 |
 | OP-030 · D-03 | Clips reales de simulación | ⏳ `docs/clips-spec.md` escrito, sin producir |
 | Stack | CRM (HubSpot Free) | ❌ |
 | C-03 · C-05 | Plantilla NDA · seguro RC profesional | ❌ Fuera del repo, pero la web ya los promete |
@@ -588,23 +645,28 @@ retorno:
 
 ---
 
-**Prioridad 0: Presencia y captura (semana 1) — desbloqueado por la sesión 8**
+**Prioridad 0: Presencia y captura (semana 1)**
 
-0.1 **LinkedIn (perfil personal + página) y Google Business Profile.** Coste 0,
-    ~2 h. Es el hueco nº1 de los dos artefactos y el único canal donde están los
-    tier 1/2. Arreglar de paso los enlaces `#` del footer.
+0.1 ✅ **Prueba de entrega de correo** — SPF/DKIM/DMARC pass (sesión 9).
 
-0.2 **Cal.com enlazado en `auditoria-gratuita.html`.** Coste 0, ~1 h. La landing
-    es el activo de conversión central (50 % esperado a prueba de pago) y hoy
-    pierde el momento entre el formulario y el email de vuelta.
+0.2 ✅ **El quiz captura al VIP** — formulario de dos campos en el propio
+    resultado + diagnóstico adjunto al formulario grande (sesión 9).
 
-0.3 **El quiz VIP debe enviar sus respuestas.** Un visitante que se autocalifica
-    como VIP (>10 máquinas, >20 h paradas) y no rellena el formulario es hoy un
-    lead perdido en silencio. Es trabajo pequeño en `app.js`.
+0.3 ✅ **Calculadora de coste de máquina parada** en la home (sesión 9).
 
-0.4 **Prueba de entrega de correo.** Enviar desde `info@` a
-    `check-auth@verifier.port25.com` y confirmar SPF/DKIM/DMARC PASS. Cierra la
-    sesión 8 de verdad.
+0.4 🔶 **Agenda de la auditoría** — construida y desplegada, oculta hasta
+    recibir la URL del horario de citas de Google Calendar.
+
+0.5 🔶 **Perfiles sociales** — creados; pendientes de personalizar y de que sus
+    URL lleguen al footer.
+
+**Guía para crear el horario de citas** (Google Calendar, cuenta de Workspace):
+Crear → *Horario de citas* · duración 45 min · franjas de disponibilidad reales ·
+tiempo de margen entre citas · añadir preguntas al reservar (empresa, teléfono,
+qué pieza) para que el hueco llegue ya cualificado · **activar Google Meet** para
+que la invitación lleve el enlace de videollamada. Luego *Compartir* y copiar las
+**dos** URL: la larga de incrustar (`…/appointments/schedules/…?gv=true`) y la
+corta (`https://calendar.app.google/…`).
 
 ⚠️ **Antes de cualquier campaña de correo en frío:** el dominio acaba de empezar
 a autenticarse y **no tiene reputación**. Enviar volumen de golpe desde
@@ -687,15 +749,16 @@ correo con el que se habla con los clientes.
 
 ---
 
-**Resumen estado (2-ago-2026, tras sesión 8):**
-✅ **Fundamentos — cerrados.** Dominio · correo **autenticado** · seguridad · Analytics · FormSubmit · WhatsApp  
-❌ **Presencia — no existe.** LinkedIn y Google Business sin crear: el hueco de mayor retorno hoy  
-❌ **Captura — incompleta.** Sin agenda para la auditoría, sin lead magnet, el quiz VIP se pierde  
+**Resumen estado (3-ago-2026, tras sesión 9):**
+✅ **Fundamentos — cerrados.** Dominio · correo autenticado y **entrega confirmada** · seguridad · Analytics · FormSubmit · WhatsApp  
+✅ **Captura — cerrada por el lado del código.** Quiz que captura · agenda construida · calculadora · footer preparado  
+🔶 **Dos datos del usuario** desbloquean lo que queda: URL del calendario y URL de los perfiles sociales  
+❌ **Presencia — pendiente de personalizar** los perfiles ya creados  
 ⏳ Visibilidad (panel de leads, avisos instantáneos)  
 ⏳ Rendimiento (Font Awesome, Fonts, lazy load)  
-⏳ Autoridad (case study, clips de simulación, blog)
+⏳ Autoridad (case study, clips de simulación, blog) — **el usuario pidió expresamente no abordar clips ni guiones hasta que él lo pida**
 
-**La frase que resume la sesión 8:** la web lleva semanas lista para convertir
-tráfico que no llega. Todo el trabajo técnico restante mejora una máquina que
-aún no tiene combustible. El siguiente euro de esfuerzo rinde más en LinkedIn y
-en una agenda de Cal.com que en optimizar Font Awesome.
+**La frase que resume la sesión 9:** ya no queda trabajo de código que bloquee la
+captación. La web recoge todo lo que entra —quiz, formulario, agenda, WhatsApp—
+y el correo con el que se responde ya no cae en spam. Lo que falta para que
+esto produzca leads no se escribe en un editor: es publicar y prospectar.
