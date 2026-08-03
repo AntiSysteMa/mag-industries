@@ -1,7 +1,7 @@
 # PROJECT_STATE — MAG INDUSTRIES
 
-**Última sesión:** 3 agosto 2026 (Sesión 9)
-**Estado:** En producción, infraestructura cerrada y **entrega de correo confirmada con envío real** (SPF/DKIM/DMARC pass). Captación reforzada: el quiz ya captura, la landing tiene agenda y la home calculadora de coste.
+**Última sesión:** 3 agosto 2026 (Sesión 10)
+**Estado:** En producción, infraestructura cerrada y **entrega de correo confirmada con envío real** (SPF/DKIM/DMARC pass). Captación reforzada: el quiz ya captura, la landing tiene agenda y la home calculadora de coste. `capacidades.html` reescrita por áreas, sin nombrar software, y con una séptima área de transformación digital.
 **Siguiente sesión esperada:** Guiones y clips de simulación + estrategia visual — **a petición del usuario, no antes de que él lo pida**. Antes, dos datos suyos: URL del calendario de citas y URL de LinkedIn / Google Business.
 
 ---
@@ -399,6 +399,40 @@ Apuntaban a `#` (hueco D-04). Ahora se ocultan solos si no tienen URL real, y ap
 - **`f.elements.name` y no `f.name`** en el formulario del quiz: `name` colisiona con la propiedad nativa `HTMLFormElement.name`.
 
 **Deuda saldada:** el bloque de ~20 líneas duplicado en `input.css` (foco, honeypot y `#wa-btn` declarados dos veces) estaba anotado desde la sesión 7. Eliminada la primera copia, que era la que quedaba sobrescrita; el resultado visual no cambia.
+
+### Sesión 10 (3 agosto 2026)
+**Objetivo:** Reescribir la narrativa de `capacidades.html` con enfoque general por áreas, sin nombrar software.
+
+**Commit:** `0cb88d7` · sin cambios en `app.js` ni CSS, así que no se toca la caché.
+
+**Motivo (del usuario):** enumerar herramientas concretas expone a discutir licencias y obliga a defender cada nombre en una llamada técnica. Es la misma preocupación que el reporte estratégico recoge en **A-04** («cada nombre que no puedas defender te resta credibilidad global») y **B-04**, marcada CRÍTICA («trabajar para terceros con licencias educativas o personales es un riesgo legal directo»). La página pasa a describir **qué se hace y para qué sirve**, no **con qué se hace** — que además no es lo que decide una compra.
+
+**Siete áreas** (antes seis más control dimensional):
+1. Ingeniería de producto y modelado paramétrico avanzado
+2. Programación CNC y mecanizado multieje
+3. Torneado CNC de alta precisión
+4. Electroerosión por hilo
+5. Electroerosión por penetración (EDM)
+6. Marcado y grabado láser industrial
+7. **Transformación digital y automatización de procesos** (nueva): automatización de procesos internos, documentación automática, agentes de IA, CRM y bases de datos, aplicaciones a medida e infraestructura digital.
+
+**Retirada la tarjeta de «Control dimensional».** No estaba en el alcance nuevo y además rozaba la metrología, que la FAQ de `auditoria-gratuita.html` dice expresamente que **no** se ofrece. Tenerla era una inconsistencia latente entre dos páginas.
+
+La tarjeta nueva lleva **SVG propio** (diagrama de flujo digitalizado con pulsos de datos) en lugar de foto de stock: quita de paso la única imagen remota de Unsplash que quedaba en esta página.
+
+**Verificado en producción:** 7 tarjetas con sus 7 títulos, **0 menciones** de software concreto, SVG nuevo renderizando con sus 3 pulsos animados, 0 imágenes remotas, y sin scroll horizontal ni títulos cortados en escritorio (1280) ni en móvil (375).
+
+⚠️ **Inconsistencia pendiente, no resuelta (decisión del usuario).** El resto del sitio **sigue nombrando software concreto** en 11 puntos. Conviene separar dos cosas distintas:
+
+- **Software CAM propio** — es lo que crea el riesgo de licencias que motivó este cambio:
+  - `index.html:506` «Plataformas CAM: Fusion 360, SolidWorks, Mastercam, ESPRIT y BobCAD»
+  - `index.html:8` (keywords) «programador de BobCAD-CAM»
+  - `index.html:155` «BobCAD-CAM»
+  - `index.html:190` «nativo de SolidWorks o Fusion»
+  - `auditoria-gratuita.html:247` (FAQ) la lista de las cinco plataformas
+- **Controles de máquina del cliente** (Heidenhain, Fanuc, Siemens) — `index.html` ×4, `servicios.html:221`, `blog.html:181`. **No implican licencia propia**: son el control de la máquina del cliente y decir que se posprocesa para ellos es información útil, no una afirmación de propiedad. El riesgo aquí es distinto y menor.
+
+Si se quiere coherencia total, el primer grupo es el que hay que revisar. No se ha tocado porque el encargo era la página de capacidades.
 
 ---
 
