@@ -39,9 +39,12 @@ trabaja en el entorno que ya tenga el cliente.
 **Sí se nombran los controles de máquina** —Heidenhain, Fanuc, Siemens,
 Mazak— porque son de la máquina *del cliente*: decir que se posprocesa para
 ellos es información útil de compatibilidad, no una afirmación de propiedad de
-licencia. Al añadir un control nuevo, hay que añadirlo en los **8 puntos** donde
-aparece la lista (`index.html` ×6, `servicios.html`, `blog.html`) o quedará
-incoherente.
+licencia. Al añadir un control nuevo hay que añadirlo en los **9 puntos** donde
+aparece la lista, o quedará incoherente entre páginas:
+
+```bash
+grep -c 'Heidenhain' *.html   # index 6 · servicios 1 · blog 1 · auditoria-gratuita 1
+```
 
 **Posicionamiento:** «No vendemos antigüedad. Vendemos compromisos.» Fundador
 único con 7 años de ingeniería CAD/CAM. **Nada de cifras, testimonios ni casos

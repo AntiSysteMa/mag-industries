@@ -440,9 +440,9 @@ Lo que se cambió, y por qué cada uno:
 - `index.html` · tarjeta «Plataformas CAM» → **«Independencia de plataforma»**, reescrita con la narrativa nueva. El contador pasa de `5` (plataformas CAM) a `4` (familias de control) con su etiqueta, porque el número anterior contaba justo lo que se ha dejado de nombrar.
 - `auditoria-gratuita.html` · FAQ «¿Con qué software trabajáis?»: reescrita entera. Ahora el énfasis está en programar **con la licencia del cliente** para que el archivo quede en su entorno, y en que el proceso no depende del software.
 
-**2. Mazak añadido a los controles, en los 8 puntos**
+**2. Mazak añadido a los controles, en los 9 puntos**
 
-`index.html` ×6, `servicios.html` y `blog.html`. Se usa «Mazak Mazatrol» donde hay detalle de modelos y «Mazak» en las listas cortas. Verificado que ningún punto quedó sin actualizar: una lista incoherente entre páginas es peor que no darla.
+`index.html` ×6, `servicios.html`, `blog.html` y `auditoria-gratuita.html`. Se usa «Mazak Mazatrol» donde hay detalle de modelos y «Mazak» en las listas cortas. Verificado que ningún punto quedó sin actualizar: una lista incoherente entre páginas es peor que no darla.
 
 **3. La narrativa que sustituye a la lista de productos**
 
