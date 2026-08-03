@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="tailwind.css?v=10">
+<link rel="stylesheet" href="tailwind.css?v=11">
 <script>
   (function(){ try{ var t=localStorage.getItem('mag-theme')||'dark'; document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark'); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
   /* La animacion de entrada es una MEJORA, no un requisito para ver la web.
@@ -89,7 +89,8 @@
     <div class="lg:col-span-5 reveal">
       <form id="contact-form" data-origen="Landing auditoría gratuita" class="bg-night-card border border-night-line clip-corner p-6 sm:p-8">
         <h2 class="text-xl font-bold mb-2">Reserva tu auditoría</h2>
-        <p class="text-sm text-steel-400 mb-7">Respondo el mismo día laborable con dos o tres huecos para que elijas.</p>
+        <p class="text-sm text-steel-400 mb-4">Cuéntame qué pieza quieres revisar y te respondo el mismo día laborable.</p>
+        <p class="cal-cta text-sm mb-7 pb-5 border-b border-night-line">¿Prefieres elegir hueco tú mismo? <a href="#agenda" class="font-bold text-cyber hover:brightness-110 transition"><i aria-hidden="true" class="fa-solid fa-calendar-days"></i> Ver mi calendario</a></p>
 
         <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" class="hp-field" aria-hidden="true">
 
@@ -115,6 +116,35 @@
         <p class="text-xs text-steel-500 text-center mt-4">Al enviar aceptas la <a href="privacidad.html" class="underline hover:text-safety transition">política de privacidad</a>. No compartimos tus datos con terceros ni te añadimos a ninguna lista de correo.</p>
         <p class="text-sm text-steel-300 text-center mt-5 pt-5 border-t border-night-line">¿Prefieres escribir directamente? <a href="https://wa.me/34635013953?text=Hola%2C%20quiero%20reservar%20la%20auditor%C3%ADa%20t%C3%A9cnica%20gratuita." target="_blank" rel="noopener" class="font-bold text-safety hover:brightness-110 transition"><i aria-hidden="true" class="fa-brands fa-whatsapp"></i> WhatsApp</a></p>
       </form>
+    </div>
+  </div>
+</section>
+
+<!-- AGENDA · reserva directa contra Google Calendar
+     Las dos URL salen de Google Calendar → Horario de citas → Compartir:
+       data-cal-embed  la larga (…/appointments/schedules/…?gv=true)
+       data-cal-link   la corta (https://calendar.app.google/…)
+     Con las dos vacías, app.js oculta la sección entera y el formulario sigue
+     siendo el único camino. Nunca se enseña un botón que no lleva a nada. -->
+<section id="agenda" class="border-b border-night-line bg-night-soft">
+  <div class="max-w-4xl mx-auto px-5 lg:px-10 py-20">
+    <div class="text-center max-w-2xl mx-auto mb-10">
+      <p class="tag text-xs text-cyber uppercase mb-3 reveal">Reserva directa</p>
+      <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight reveal">Elige tú el hueco y queda reservado</h2>
+      <p class="mt-4 text-steel-400 reveal">Sin ida y vuelta de correos. Los huecos que ves son los que tengo libres de verdad: salen de mi calendario en tiempo real. Al reservar recibes la invitación con el enlace de videollamada.</p>
+    </div>
+
+    <div id="cal-wrap" data-cal-embed="" data-cal-link="" class="bg-night-card border border-night-line clip-corner p-6 sm:p-8 reveal">
+      <div class="text-center">
+        <button id="cal-open" type="button" class="inline-flex items-center justify-center gap-3 bg-cyber text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition"><i aria-hidden="true" class="fa-solid fa-calendar-days"></i> Ver huecos disponibles</button>
+        <p class="text-xs text-steel-500 mt-4">El calendario se carga solo al pulsar, para no ralentizar la página.</p>
+      </div>
+      <div id="cal-slot" class="hidden"></div>
+      <p class="text-sm text-steel-400 text-center mt-6 pt-6 border-t border-night-line">
+        ¿No te encaja ningún hueco o prefieres contármelo antes?
+        <a href="#contact-form" class="font-bold text-safety hover:brightness-110 transition">Usa el formulario</a>
+        o escríbeme por <a href="https://wa.me/34635013953?text=Hola%2C%20quiero%20reservar%20la%20auditor%C3%ADa%20t%C3%A9cnica%20gratuita." target="_blank" rel="noopener" class="font-bold text-safety hover:brightness-110 transition">WhatsApp</a>.
+      </p>
     </div>
   </div>
 </section>
@@ -235,7 +265,8 @@
     <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-5 reveal">¿Qué pieza te está frenando ahora mismo?</h2>
     <p class="text-steel-400 mb-9 reveal">Reserva la auditoría, o escríbeme por WhatsApp si prefieres contármelo en dos líneas antes de decidir.</p>
     <div class="flex flex-col sm:flex-row gap-4 justify-center reveal">
-      <a href="#contact-form" class="inline-flex items-center justify-center gap-3 bg-cyber text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition"><i aria-hidden="true" class="fa-solid fa-calendar-check"></i> Reservar auditoría gratuita</a>
+      <a href="#agenda" class="cal-cta inline-flex items-center justify-center gap-3 bg-cyber text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition"><i aria-hidden="true" class="fa-solid fa-calendar-days"></i> Elegir hueco en el calendario</a>
+      <a href="#contact-form" class="inline-flex items-center justify-center gap-3 bg-safety text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition"><i aria-hidden="true" class="fa-solid fa-calendar-check"></i> Reservar por formulario</a>
       <a href="https://wa.me/34635013953?text=Hola%2C%20quiero%20reservar%20la%20auditor%C3%ADa%20t%C3%A9cnica%20gratuita." target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-3 border border-night-line text-steel-200 font-bold px-7 py-4 clip-tab hover:border-safety/60 hover:text-safety transition"><i aria-hidden="true" class="fa-brands fa-whatsapp"></i> Escribir por WhatsApp</a>
     </div>
   </div>
@@ -261,6 +292,6 @@
 </a>
 
 <script defer src="/_vercel/insights/script.js"></script>
-<script src="app.js?v=11" defer></script>
+<script src="app.js?v=12" defer></script>
 </body>
 </html>

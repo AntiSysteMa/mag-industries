@@ -43,7 +43,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="tailwind.css?v=10">
+<link rel="stylesheet" href="tailwind.css?v=11">
 <script>
   /* Tema: aplica antes de pintar para evitar parpadeo. Oscuro por defecto. */
   (function(){ try{ var t=localStorage.getItem('mag-theme')||'dark'; document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark'); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
@@ -422,6 +422,52 @@
         <span id="quiz-stage" class="tag text-xs text-steel-500 uppercase ml-auto">Etapa 1 / 3</span>
       </div>
     </div>
+
+    <!-- CALCULADORA · pone cifra al problema que el quiz acaba de nombrar -->
+    <div class="mt-12 reveal">
+      <div class="text-center mb-8">
+        <p class="tag text-xs text-cyber uppercase mb-3">Lo que cuesta esperar</p>
+        <h3 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Ponle una cifra a la máquina parada</h3>
+        <p class="mt-3 text-steel-400 max-w-xl mx-auto text-sm">Mueve las dos barras con tus datos reales. La cuenta es la que haría cualquiera; el valor está en verla escrita.</p>
+      </div>
+
+      <div class="bg-night-card border border-night-line clip-corner p-6 sm:p-10">
+        <div class="grid md:grid-cols-2 gap-8">
+          <label class="block">
+            <span class="flex items-baseline justify-between mb-3">
+              <span class="text-sm text-steel-300">Horas paradas a la semana</span>
+              <span id="calc-horas-val" class="tag text-sm text-safety font-bold">8 h</span>
+            </span>
+            <input id="calc-horas" type="range" min="1" max="40" step="1" value="8" class="mag-range w-full" aria-label="Horas de máquina parada a la semana">
+          </label>
+          <label class="block">
+            <span class="flex items-baseline justify-between mb-3">
+              <span class="text-sm text-steel-300">Coste de hora de máquina</span>
+              <span id="calc-coste-val" class="tag text-sm text-safety font-bold">60 €</span>
+            </span>
+            <input id="calc-coste" type="range" min="20" max="150" step="5" value="60" class="mag-range w-full" aria-label="Coste por hora de máquina en euros">
+          </label>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-px bg-night-line border border-night-line mt-9">
+          <div class="bg-night-soft p-6 text-center">
+            <span id="calc-semana" class="block font-titulo text-3xl sm:text-4xl text-steel-100" aria-live="polite">480 €</span>
+            <span class="tag text-[10px] text-steel-500 uppercase mt-2 block">Cada semana</span>
+          </div>
+          <div class="bg-night-soft p-6 text-center">
+            <span id="calc-anio" class="block font-titulo text-3xl sm:text-4xl text-cyber" aria-live="polite">22.080 €</span>
+            <span class="tag text-[10px] text-steel-500 uppercase mt-2 block">Cada año</span>
+          </div>
+        </div>
+
+        <p class="text-xs text-steel-500 mt-5 text-center max-w-lg mx-auto">Cálculo sobre <strong class="text-steel-400">46 semanas</strong>, no 52: descontadas vacaciones y paradas de planta. Es coste de oportunidad de capacidad no facturada, no una pérdida contable.</p>
+
+        <div class="text-center mt-8 pt-8 border-t border-night-line">
+          <p class="text-steel-300 mb-5 text-sm max-w-md mx-auto">Si una parte de esas horas es programación que no llega a tiempo, es exactamente lo que resuelvo.</p>
+          <a href="auditoria-gratuita.html" class="inline-flex items-center gap-3 bg-cyber text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition"><i aria-hidden="true" class="fa-solid fa-calendar-check"></i> Reservar auditoría gratuita</a>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -574,9 +620,11 @@
         <div class="flex items-center gap-3 mb-4"><span class="w-11 h-11 flex items-center justify-center flex-shrink-0"><img src="assets/logo-oscuro.png" alt="Logo MAG INDUSTRIES" width="44" height="44" decoding="async" class="logo-dark w-full h-full object-contain"><img src="assets/logo-claro.png" alt="Logo MAG INDUSTRIES" width="44" height="44" decoding="async" class="logo-light w-full h-full object-contain"></span><span class="font-titulo tracking-tight text-lg">MAG <span class="text-safety">INDUSTRIES</span></span></div>
         <p class="text-sm text-steel-500">Consultoría e ingeniería CAD/CAM, programación CNC externa, optimización de trayectorias y simulación de gemelo digital para el sector industrial. Conocimiento, no maquinaria.</p>
       </div>
+      <!-- Enlaces sociales: app.js oculta el que siga sin URL real. Un icono que
+           no lleva a ninguna parte da peor señal que no tener el icono. -->
       <div class="flex items-start gap-3">
-        <a href="#" class="w-10 h-10 border border-night-line flex items-center justify-center text-steel-400 hover:bg-safety hover:text-night hover:border-safety transition" aria-label="LinkedIn"><i aria-hidden="true" class="fa-brands fa-linkedin-in"></i></a>
-        <a href="#" class="w-10 h-10 border border-night-line flex items-center justify-center text-steel-400 hover:bg-safety hover:text-night hover:border-safety transition" aria-label="X"><i aria-hidden="true" class="fa-brands fa-x-twitter"></i></a>
+        <a href="" class="social-link w-10 h-10 border border-night-line flex items-center justify-center text-steel-400 hover:bg-safety hover:text-night hover:border-safety transition" target="_blank" rel="noopener" aria-label="MAG INDUSTRIES en LinkedIn"><i aria-hidden="true" class="fa-brands fa-linkedin-in"></i></a>
+        <a href="" class="social-link w-10 h-10 border border-night-line flex items-center justify-center text-steel-400 hover:bg-safety hover:text-night hover:border-safety transition" target="_blank" rel="noopener" aria-label="MAG INDUSTRIES en Google"><i aria-hidden="true" class="fa-brands fa-google"></i></a>
         <a href="#home" class="w-10 h-10 border border-night-line flex items-center justify-center text-steel-400 hover:bg-safety hover:text-night hover:border-safety transition" aria-label="Volver arriba"><i aria-hidden="true" class="fa-solid fa-arrow-up"></i></a>
       </div>
     </div>
@@ -595,6 +643,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js" defer></script>
-<script src="app.js?v=11" defer></script>
+<script src="app.js?v=12" defer></script>
 </body>
 </html>

@@ -27,6 +27,16 @@ function guardarLead(datos){
   });
 }
 
+/* Diagnóstico del quiz, si el visitante lo completó en esta sesión. Vive en
+   sessionStorage para sobrevivir al salto de la home a la landing. Devuelve
+   null en modo privado o si nunca lo hizo: quien lo llame debe contar con eso. */
+function leerQuiz(){
+  try{
+    const crudo=sessionStorage.getItem('mag-quiz');
+    return crudo?JSON.parse(crudo):null;
+  }catch(e){ return window.MAG_QUIZ||null; }
+}
+
 /* Todos los bloques comprueban que sus elementos existan: este mismo archivo se
    carga en index.html y en las landings, que no tienen todas las secciones.
    Un getElementById que devuelva null y no esté guardado aborta el script entero. */
@@ -475,8 +485,20 @@ if(contactForm) contactForm.addEventListener('submit',async(e)=>{
   msg.classList.remove('hidden','text-alert');msg.classList.add('text-cyber');
   msg.textContent='Enviando tu solicitud...';
   /* Origen del lead: para medir qué página trae cada contacto. */
-  const origen=f.dataset.origen||document.title||location.pathname;
-  const detalles=v('description');
+  let origen=f.dataset.origen||document.title||location.pathname;
+  let detalles=v('description');
+  /* Si antes pasó por el quiz, su diagnóstico viaja con el lead: llega un
+     contacto cualificado en vez de un nombre suelto. Se lee de sessionStorage
+     y no de la variable del quiz, para que sobreviva a un cambio de página. */
+  const quiz=leerQuiz();
+  if(quiz&&quiz.resumen){
+    detalles=(detalles?detalles+'\n\n':'')+quiz.resumen;
+    if(quiz.vip)origen=(origen+' · quiz VIP').slice(0,160);
+  }
+  /* El formulario manda sobre el quiz: si el visitante rellenó el desplegable,
+     esa respuesta es más reciente y más deliberada que la del test. */
+  const maquinas=v('machines')||(quiz&&quiz.machines)||'';
+  const inactividad=v('downtime')||(quiz&&quiz.hours)||'';
   try{
     /* El guardado en base de datos no bloquea el envío: si Supabase falla, el
        aviso por email sale igualmente y el contacto no se pierde. */
@@ -486,8 +508,8 @@ if(contactForm) contactForm.addEventListener('submit',async(e)=>{
       empresa:v('company'),
       email:v('email'),
       telefono:v('phone'),
-      maquinas:v('machines'),
-      inactividad:v('downtime'),
+      maquinas:maquinas,
+      inactividad:inactividad,
       detalles:detalles,
       origen:origen
     }).then(r=>{ if(!r.ok) console.warn('Supabase no registró el lead:', r.status); })
@@ -501,8 +523,8 @@ if(contactForm) contactForm.addEventListener('submit',async(e)=>{
         email:v('email'),
         telefono:v('phone'),
         detalles:detalles,
-        inactividad:v('downtime'),
-        maquinas:v('machines'),
+        inactividad:inactividad,
+        maquinas:maquinas,
         origen:origen,
         _subject:'Nuevo lead — '+origen,
         _template:'table'
@@ -519,6 +541,18 @@ if(contactForm) contactForm.addEventListener('submit',async(e)=>{
   }
 });
 
+/* ===== Quiz de diagnóstico =====
+   Antes, las respuestas morían aquí dentro: se pintaba el resultado y se perdían.
+   Quien se autocalificaba como VIP y no bajaba a rellenar el formulario era un
+   lead perdido en silencio — el que más nos interesaba, además.
+
+   Ahora hacen tres cosas:
+     1. Se publican en window.MAG_QUIZ y en sessionStorage, para que el
+        formulario de contacto las adjunte aunque el visitante navegue.
+     2. El resultado pide nombre y correo ahí mismo: dos campos, sin bajar.
+     3. Ese envío va por los dos caminos de siempre (Edge Function + FormSubmit),
+        con el diagnóstico ya redactado en `detalles`.
+   Ver PROJECT_STATE.md · hueco OP-030 «Seguimiento del quiz». */
 (function(){
   const questions=[
     {id:'machines',text:'¿Cuántos centros de mecanizado o tornos CNC avanzados tienes en planta?',options:['1-3 máquinas','4-10 máquinas','Más de 10 máquinas']},
@@ -528,18 +562,201 @@ if(contactForm) contactForm.addEventListener('submit',async(e)=>{
   const answers={};let step=0;
   const body=document.getElementById('quiz-body'),stage=document.getElementById('quiz-stage'),back=document.getElementById('quiz-back'),steps=document.querySelectorAll('.quiz-step');
   if(!body||!stage||!back)return;
+
+  /* Resumen en texto plano: es lo que se guarda en `detalles` y lo que se lee
+     en el aviso por email. Que se entienda sin abrir la base de datos. */
+  function resumen(){
+    return ['Diagnóstico del quiz:',
+      '· Máquinas en planta: '+(answers.machines||'sin responder'),
+      '· Cuello de botella: '+(answers.reason||'sin responder'),
+      '· Inactividad semanal: '+(answers.hours||'sin responder')].join('\n');
+  }
+  function publicar(){
+    const datos={machines:answers.machines||'',reason:answers.reason||'',hours:answers.hours||'',vip:esVip(),resumen:resumen()};
+    window.MAG_QUIZ=datos;
+    try{sessionStorage.setItem('mag-quiz',JSON.stringify(datos));}catch(e){/* modo privado: seguimos sin persistencia */}
+  }
+  function esVip(){return answers.machines==='Más de 10 máquinas'&&answers.hours==='Más de 20 horas';}
+
   function progress(){steps.forEach((el,i)=>{el.classList.toggle('bg-safety',i<=step);el.classList.toggle('bg-night-line',i>step);});}
   function render(){const q=questions[step];stage.textContent=`Etapa ${step+1} / ${questions.length}`;back.classList.toggle('hidden',step===0);progress();
     body.innerHTML=`<h3 class="text-xl sm:text-2xl font-bold mb-6">${q.text}</h3><div class="grid sm:grid-cols-3 gap-3" role="radiogroup">${q.options.map(o=>`<button type="button" data-v="${o}" class="quiz-opt text-left px-5 py-4 border border-night-line bg-night-soft text-steel-200 text-sm font-medium rounded-sm hover:border-safety/60">${o}</button>`).join('')}</div>`;
-    body.querySelectorAll('.quiz-opt').forEach(btn=>{btn.addEventListener('click',()=>{body.querySelectorAll('.quiz-opt').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');answers[q.id]=btn.dataset.v;setTimeout(()=>{if(step<questions.length-1){step++;render();}else{result();}},280);});});
+    body.querySelectorAll('.quiz-opt').forEach(btn=>{btn.addEventListener('click',()=>{body.querySelectorAll('.quiz-opt').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');answers[q.id]=btn.dataset.v;publicar();setTimeout(()=>{if(step<questions.length-1){step++;render();}else{result();}},280);});});
   }
+
+  /* Captura de dos campos dentro del propio resultado. El honeypot va aquí
+     también: la Edge Function lo valida en servidor y sin él este camino sería
+     el más fácil de automatizar de toda la web. */
+  /* Las clases van literales en las dos ramas y NO concatenadas (`bg-${x}`):
+     Tailwind compila escaneando texto, así que una clase construida en tiempo
+     de ejecución no llega nunca a la hoja de estilos y el botón saldría sin
+     color. Se duplica el markup a cambio de que esto no pueda romperse. */
+  function capturaHTML(vip){
+    const campo='w-full bg-night-soft border border-night-line px-3.5 py-2.5 text-sm rounded-sm focus:outline-none '+(vip?'focus:border-cyber':'focus:border-safety');
+    const boton='mt-4 w-full inline-flex items-center justify-center gap-3 text-night font-bold px-7 py-3.5 clip-tab hover:brightness-110 transition '+(vip?'bg-cyber':'bg-safety');
+    const enlace='font-bold hover:brightness-110 transition '+(vip?'text-cyber':'text-safety');
+    return `<form id="quiz-lead" class="mt-8 max-w-md mx-auto text-left" novalidate>
+      <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" class="hp-field" aria-hidden="true">
+      <div class="grid sm:grid-cols-2 gap-3">
+        <label class="block"><span class="text-xs text-steel-400 block mb-1.5">Tu nombre *</span><input name="name" required maxlength="120" autocomplete="name" class="${campo}"></label>
+        <label class="block"><span class="text-xs text-steel-400 block mb-1.5">Correo profesional *</span><input name="email" type="email" required maxlength="254" autocomplete="email" class="${campo}"></label>
+      </div>
+      <button type="submit" class="${boton}"><i aria-hidden="true" class="fa-solid fa-calendar-check"></i> ${vip?'Reservar mi auditoría prioritaria':'Recibir mi diagnóstico'}</button>
+      <p id="quiz-msg" role="status" aria-live="polite" class="text-sm text-center mt-3 hidden"></p>
+      <p class="text-xs text-steel-500 text-center mt-3">Te escribo yo, en persona. Sin listas de correo. <a href="privacidad.html" class="underline hover:text-safety transition">Privacidad</a>.</p>
+      <p class="text-sm text-steel-400 text-center mt-4 pt-4 border-t border-night-line">¿Prefieres darme más detalle? <a href="#contact" class="${enlace}">Formulario completo</a></p>
+    </form>`;
+  }
+
+  function conectarCaptura(vip){
+    const f=document.getElementById('quiz-lead');
+    if(!f)return;
+    f.addEventListener('submit',async(e)=>{
+      e.preventDefault();
+      /* f.elements.X y no f.X: `name` colisiona con la propiedad nativa
+         HTMLFormElement.name y la resolución depende de reglas heredadas que no
+         merece la pena tentar. */
+      const campos=f.elements;
+      if(campos._gotcha&&campos._gotcha.value)return;
+      const msg=document.getElementById('quiz-msg');
+      const nombre=campos.name.value.trim(),email=campos.email.value.trim();
+      if(!nombre||!email){f.reportValidity();return;}
+      const btn=f.querySelector('button[type="submit"]');
+      btn.disabled=true;
+      msg.classList.remove('hidden','text-alert');msg.classList.add('text-cyber');
+      msg.textContent='Enviando tu diagnóstico...';
+      const origen=vip?'Quiz home · perfil VIP':'Quiz home';
+      const carga={nombre:nombre,email:email,maquinas:answers.machines||'',inactividad:answers.hours||'',detalles:resumen(),origen:origen};
+      try{
+        /* Mismo patrón que el formulario grande: la base de datos no bloquea el
+           aviso por email, porque son dos caminos independientes a propósito. */
+        guardarLead(carga).then(r=>{if(!r.ok)console.warn('Supabase no registró el lead del quiz:',r.status);})
+          .catch(err=>console.warn('Supabase inaccesible; el lead del quiz va solo por email.',err));
+        const r=await fetch('https://formsubmit.co/ajax/info@magindustries.es',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Accept':'application/json'},
+          body:JSON.stringify({...carga,_subject:'Nuevo lead — '+origen,_template:'table'})
+        });
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        msg.classList.remove('text-cyber');msg.classList.add('text-safety');
+        msg.textContent=vip?'Recibido. Te escribo hoy mismo con dos o tres huecos.':'Recibido. Te escribo en menos de 24 h laborables.';
+        f.querySelectorAll('input,button').forEach(el=>el.disabled=true);
+      }catch(err){
+        msg.classList.remove('text-cyber');msg.classList.add('text-alert');
+        msg.innerHTML='No se pudo enviar. Escríbeme por <a class="underline font-bold" target="_blank" rel="noopener" href="https://wa.me/34635013953">WhatsApp</a> o al +34 635 013 953.';
+        btn.disabled=false;
+      }
+    });
+  }
+
   function result(){back.classList.add('hidden');stage.textContent='Resultado';steps.forEach(el=>el.classList.add('bg-safety'));
-    const vip=answers.machines==='Más de 10 máquinas'&&answers.hours==='Más de 20 horas';
-    if(vip){body.innerHTML=`<div class="text-center"><span class="inline-flex items-center gap-2 tag text-xs uppercase text-night bg-cyber px-3 py-1.5 mb-5 clip-tab"><i class="fa-solid fa-bolt"></i> Perfil de alta capacidad detectado</span><h3 class="text-2xl sm:text-3xl font-extrabold mb-4">Tu perfil califica para una Auditoría Prioritaria VIP</h3><p class="text-steel-400 max-w-md mx-auto mb-8">Con más de 10 máquinas y más de 20 h semanales de inactividad, el coste de oportunidad acumulado justifica una revisión técnica directa sobre una de tus piezas, no un presupuesto genérico.</p><a href="#contact" class="inline-flex items-center gap-3 bg-cyber text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition"><i class="fa-solid fa-calendar-check"></i> Reservar Auditoría VIP ahora</a></div>`;}
-    else{body.innerHTML=`<div class="text-center"><span class="inline-flex items-center gap-2 tag text-xs uppercase text-night bg-safety px-3 py-1.5 mb-5 clip-tab"><i class="fa-solid fa-circle-check"></i> Diagnóstico completado</span><h3 class="text-2xl sm:text-3xl font-extrabold mb-4">Tienes capacidad oculta recuperable</h3><p class="text-steel-400 max-w-md mx-auto mb-8">Con "${(answers.reason||'').toLowerCase()}" como cuello de botella y un rango de ${(answers.hours||'').toLowerCase()} de inactividad, una intervención de programación CNC externa puede recuperar horas de producción esta misma semana.</p><a href="#contact" class="inline-flex items-center gap-3 bg-safety text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition"><i class="fa-solid fa-user-gear"></i> Hablar con un ingeniero</a></div>`;}
+    publicar();
+    const vip=esVip();
+    if(vip){body.innerHTML=`<div class="text-center"><span class="inline-flex items-center gap-2 tag text-xs uppercase text-night bg-cyber px-3 py-1.5 mb-5 clip-tab"><i class="fa-solid fa-bolt"></i> Perfil de alta capacidad detectado</span><h3 class="text-2xl sm:text-3xl font-extrabold mb-4">Tu perfil califica para una Auditoría Prioritaria VIP</h3><p class="text-steel-400 max-w-md mx-auto">Con más de 10 máquinas y más de 20 h semanales de inactividad, el coste de oportunidad acumulado justifica una revisión técnica directa sobre una de tus piezas, no un presupuesto genérico.</p>${capturaHTML(true)}</div>`;}
+    else{body.innerHTML=`<div class="text-center"><span class="inline-flex items-center gap-2 tag text-xs uppercase text-night bg-safety px-3 py-1.5 mb-5 clip-tab"><i class="fa-solid fa-circle-check"></i> Diagnóstico completado</span><h3 class="text-2xl sm:text-3xl font-extrabold mb-4">Tienes capacidad oculta recuperable</h3><p class="text-steel-400 max-w-md mx-auto">Con "${(answers.reason||'').toLowerCase()}" como cuello de botella y un rango de ${(answers.hours||'').toLowerCase()} de inactividad, una intervención de programación CNC externa puede recuperar horas de producción esta misma semana.</p>${capturaHTML(false)}</div>`;}
+    conectarCaptura(vip);
   }
   back.addEventListener('click',()=>{if(step>0){step--;render();}});
   render();
+})();
+
+/* Enlaces sociales sin destino todavía: se retiran en vez de dejar un icono
+   que no lleva a ninguna parte. En cuanto el href tenga una URL real, aparecen
+   solos sin tocar este archivo. */
+document.querySelectorAll('.social-link').forEach(a=>{
+  const href=(a.getAttribute('href')||'').trim();
+  if(!href||href==='#')a.classList.add('hidden');
+});
+
+/* ===== Agenda de la auditoría (Google Calendar) =====
+   El calendario de citas de Google se carga BAJO DEMANDA, no al abrir la
+   página. El iframe pesa cientos de KB y esta landing se diseñó sin GSAP a
+   propósito para que cargue rápido: meterle a Google en el primer pintado
+   deshace justo eso. Hasta que alguien pulsa, la página no habla con Google.
+
+   Las dos URL salen del mismo sitio (Calendar → Horario de citas → Compartir):
+     data-cal-embed → la larga, .../appointments/schedules/...?gv=true
+     data-cal-link  → la corta, https://calendar.app.google/xxxx
+   Sin ninguna de las dos, el bloque se oculta entero y el formulario sigue
+   siendo el camino: nunca se muestra un botón que no lleva a ningún sitio. */
+(function(){
+  const wrap=document.getElementById('cal-wrap');
+  if(!wrap)return;
+  const urlEmbed=(wrap.dataset.calEmbed||'').trim();
+  const urlLink=(wrap.dataset.calLink||'').trim();
+  const seccion=document.getElementById('agenda');
+  const btn=document.getElementById('cal-open');
+  const slot=document.getElementById('cal-slot');
+
+  /* Sin calendario configurado se retira también todo lo que apunta a él: un
+     enlace «ver mi calendario» que baja a una sección oculta es peor que no
+     ofrecerlo. */
+  if(!urlEmbed&&!urlLink){
+    if(seccion)seccion.classList.add('hidden');
+    document.querySelectorAll('.cal-cta').forEach(el=>el.classList.add('hidden'));
+    return;
+  }
+  if(!btn||!slot)return;
+
+  /* Sin URL de incrustación pero con enlace: el botón abre pestaña nueva. */
+  if(!urlEmbed){
+    btn.textContent='Ver huecos disponibles';
+    btn.addEventListener('click',()=>window.open(urlLink,'_blank','noopener'));
+    return;
+  }
+
+  let cargado=false;
+  btn.addEventListener('click',()=>{
+    if(cargado)return;
+    cargado=true;
+    const marco=document.createElement('iframe');
+    marco.src=urlEmbed;
+    marco.title='Calendario de reserva de la auditoría técnica';
+    marco.loading='lazy';
+    marco.className='w-full border-0';
+    marco.style.height='640px';
+    slot.textContent='';
+    slot.appendChild(marco);
+    slot.classList.remove('hidden');
+    btn.parentElement.classList.add('hidden');
+    /* Red de seguridad: si Google se negara a incrustarse, el iframe queda en
+       blanco sin lanzar ningún error que podamos capturar desde aquí. El
+       enlace de escape de abajo está siempre visible por ese motivo. */
+    slot.scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+})();
+
+/* ===== Calculadora de coste de máquina parada =====
+   Convierte «pierdo horas» en una cifra en euros justo antes del CTA. El
+   cálculo es deliberadamente conservador y se explica debajo: una cifra que el
+   visitante no puede reproducir mentalmente no convence a un técnico. */
+(function(){
+  const horas=document.getElementById('calc-horas');
+  const coste=document.getElementById('calc-coste');
+  if(!horas||!coste)return;
+  const salSem=document.getElementById('calc-semana');
+  const salAnio=document.getElementById('calc-anio');
+  const salHoras=document.getElementById('calc-horas-val');
+  const salCoste=document.getElementById('calc-coste-val');
+  if(!salSem||!salAnio)return;
+
+  const eur=new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+  /* 46 semanas y no 52: descuenta vacaciones y paradas de planta. Inflar esto
+     haría la cifra más golosa y menos creíble, que es lo contrario de lo que
+     buscamos. */
+  const SEMANAS=46;
+
+  function pintar(){
+    const h=Number(horas.value)||0, c=Number(coste.value)||0;
+    const semana=h*c;
+    salSem.textContent=eur.format(semana);
+    salAnio.textContent=eur.format(semana*SEMANAS);
+    if(salHoras)salHoras.textContent=h+' h';
+    if(salCoste)salCoste.textContent=eur.format(c);
+  }
+  horas.addEventListener('input',pintar);
+  coste.addEventListener('input',pintar);
+  pintar();
 })();
 
 /* ===== Sistema de capas + animaciones GSAP ===== */
