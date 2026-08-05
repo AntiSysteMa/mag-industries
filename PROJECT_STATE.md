@@ -1,8 +1,8 @@
 # PROJECT_STATE — MAG INDUSTRIES
 
-**Última sesión:** 3 agosto 2026 (Sesión 11)
-**Estado:** En producción, infraestructura cerrada y **entrega de correo confirmada con envío real** (SPF/DKIM/DMARC pass). Captación reforzada: el quiz ya captura, la landing tiene agenda y la home calculadora de coste. **Sitio a cero menciones de software CAD/CAM**, con Mazak añadido a los controles y una séptima área de transformación digital.
-**Siguiente sesión esperada:** Guiones y clips de simulación + estrategia visual — **a petición del usuario, no antes de que él lo pida**. Antes, dos datos suyos: URL del calendario de citas y URL de LinkedIn / Google Business.
+**Última sesión:** 3 agosto 2026 (Sesión 12)
+**Estado:** En producción. Agenda de la auditoría **activa** con la URL corta del calendario (sesión 12) — funcional, mejorable con la URL larga de incrustar. Infraestructura cerrada, correo autenticado, sitio a cero menciones de software CAD/CAM.
+**Siguiente sesión esperada:** URL larga del calendario (opcional, mejora UX) · URL de LinkedIn / Google Business para el footer · guiones y clips de simulación, a petición del usuario.
 
 ---
 
@@ -14,7 +14,7 @@
 | 2 | **Referencia pendiente de permiso** | La web ofrece contacto con taller de matricería. | Pedir permiso a JPARENTE antes de que alguien lo solicite |
 | 3 | **Rendimiento pendiente** | Font Awesome full (~100 KB) para ~15 iconos, Google Fonts render-blocking. Afecta Core Web Vitals y SEO. | Sesión estratégica: prioridad vs. otros trabajos |
 | 4 | **Perfiles sociales sin personalizar y sin enlazar** | LinkedIn y Google Business Profile **ya creados** (sesión 9), pendientes de personalizar. La web no los enlaza todavía: el footer oculta los iconos hasta tener URL. | Personalizar ambos y **pasar las dos URL** para pegarlas en el footer |
-| 5 | **Falta la URL del calendario de citas** | La sección `#agenda` de la landing está construida y desplegada, pero `data-cal-embed` / `data-cal-link` están vacíos, así que se oculta entera. Es el último paso para que la auditoría se pueda agendar sola. | Crear el horario de citas en Google Calendar y **pasar las dos URL** (ver guía al final de la sesión 9) |
+| 5 | **Agenda con solo la URL corta** | `data-cal-link` recibió `https://calendar.app.google/wcU53eQWiF34L7jJ7` (sesión 12): la sección ya no está oculta, el botón abre la reserva en pestaña nueva. Falta la URL larga de incrustar para que cargue **dentro** de la página en vez de saltar a Google. | Calendar → tu horario → Compartir → «Insertar en tu sitio web», pasar esa URL para rellenar `data-cal-embed` |
 
 **Decisiones del usuario, no bloqueadores** (no las «arregles» en próximas sesiones):
 - **Razón social y NIF ocultos** en `privacidad.html`. **Criterio de salida fijado en la sesión 8:** se publicarán cuando haya **un cliente recurrente y 2.000 €/mes recurrentes**, no antes. Hasta entonces la frase queda completa y veraz, sin placeholder visible. Es una decisión consciente con umbral explícito, no un olvido.
@@ -708,8 +708,9 @@ retorno:
 
 0.3 ✅ **Calculadora de coste de máquina parada** en la home (sesión 9).
 
-0.4 🔶 **Agenda de la auditoría** — construida y desplegada, oculta hasta
-    recibir la URL del horario de citas de Google Calendar.
+0.4 🔶 **Agenda de la auditoría** — activa desde la sesión 12 con la URL corta
+    (botón que abre en pestaña nueva). Falta la URL larga para incrustarla en
+    la propia página.
 
 0.5 🔶 **Perfiles sociales** — creados; pendientes de personalizar y de que sus
     URL lleguen al footer.
