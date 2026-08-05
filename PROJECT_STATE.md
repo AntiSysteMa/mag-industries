@@ -1,8 +1,17 @@
 # PROJECT_STATE — MAG INDUSTRIES
 
-**Última sesión:** 3 agosto 2026 (Sesión 12)
-**Estado:** En producción. Agenda de la auditoría **completa**: el calendario de Google carga incrustado en `auditoria-gratuita.html`, verificado en producción. Infraestructura cerrada, correo autenticado, sitio a cero menciones de software CAD/CAM.
-**Siguiente sesión esperada:** URL de LinkedIn / Google Business para el footer (perfiles ya creados, resumen de LinkedIn redactado en sesión 12) · guiones y clips de simulación, a petición del usuario.
+**Última sesión:** 3 agosto 2026 (Sesión 12 · cierre de bloque)
+**Estado:** En producción y **sin bloqueadores técnicos de captación**. Agenda de la auditoría completa (calendario de Google incrustado), correo autenticado y verificado con envío real, sitio a cero menciones de software CAD/CAM, quiz que captura leads, calculadora de coste.
+
+🔴 **CONTEXTO COMERCIAL — leer antes que nada (dicho por el usuario, 3-ago-2026):**
+Queda **un solo cliente** y está de vacaciones. La prioridad no es mejorar la
+web: es **captar clientes nuevos**. Todo lo que no traiga atención o leads es
+secundario a partir de aquí. El usuario quiere además un **tono informal** en la
+captación, no corporativo.
+
+**Siguiente sesión: con Cowork.** Objetivo declarado: gestionar y configurar sus
+**redes sociales de forma automática**, y montar un plan de marketing y captación
+de leads apoyado en los funnels ya construidos.
 
 ---
 
@@ -470,6 +479,101 @@ Verificado en producción con el navegador, no solo por HTML servido: iframe pre
 **2. Resumen de LinkedIn**
 
 Redactado el texto para la sección «Acerca de» de la página de empresa (tagline, descripción y especialidades), coherente con el posicionamiento del sitio y sin nombrar software CAD/CAM, siguiendo la regla de la sesión 11. Entregado en el chat, no vive en el repo.
+
+**3. Contexto comercial que cambia las prioridades**
+
+El usuario informa de que le queda **un solo cliente y está de vacaciones**. A partir de aquí la prioridad es captar, no pulir. Pide además **tono informal** y anuncia que la siguiente sesión será con **Cowork**, para gestionar y configurar sus redes sociales de forma automática y montar el plan de marketing sobre los funnels ya construidos.
+
+**4. Forma de trabajo acordada**
+
+Petición explícita del usuario, guardada también en memoria persistente: **preguntar mucho cuando el contexto sea insuficiente y nunca dar por hecho** situaciones o pasos previstos; **retroalimentar sus avances** y acompañar cada entrega de recomendaciones y sugerencias de mejora, dejando que las decisiones las tome él.
+
+---
+
+## 🧭 CIERRE DE BLOQUE — análisis para la sesión con Cowork
+
+### Lo que existe y está verificado (no volver a construirlo)
+
+| Activo | Estado | Dónde |
+|---|---|---|
+| Landing de conversión con agenda | ✅ Calendario de Google incrustado | `auditoria-gratuita.html` |
+| Quiz que captura leads | ✅ Pide nombre+correo en el propio resultado | `index.html` capa 05 |
+| Calculadora de coste de máquina parada | ✅ | `index.html` capa 05 |
+| Formulario de proyecto | ✅ Doble camino: Edge Function + FormSubmit | home y landing |
+| WhatsApp | ✅ Botón flotante en todas las páginas | — |
+| Correo autenticado | ✅ SPF/DKIM/DMARC pass con envío real | Google Workspace |
+| Tarifas públicas | ✅ 280/190/60 € y planes 590/990/1.690 € | `servicios.html` |
+| 7 áreas de capacidad | ✅ Sin nombrar software | `capacidades.html` |
+| Blog | ✅ 2 artículos publicados | `blog.html` |
+
+**Traducción:** el embudo está entero salvo el tramo de arriba. Hay dónde
+aterrizar, con qué convertir y cómo responder. **No hay tráfico.**
+
+### Reglas de contenido que la sesión de marketing NO puede romper
+
+Estas no son preferencias de estilo: cada una nació de un error real o de una
+decisión consciente del usuario.
+
+1. **Nada de cifras, testimonios o casos inventados.** En la sesión 3 se retiró
+   de producción una tanda entera («15+ años», «500+ proyectos», 4 testimonios
+   con nombre y empresa ficticios, 3 casos con métricas falsas). No reintroducir
+   bajo ninguna forma, tampoco en un post de LinkedIn ni en un guion de vídeo.
+2. **No se nombra software CAD/CAM.** Ni en copy, ni en keywords, ni en JSON-LD,
+   ni en redes. Motivo: exposición a discusión de licencias e inspección por
+   sospecha de uso de múltiples suites. **Los controles de máquina sí** —
+   Heidenhain, Fanuc, Siemens, Mazak — porque son de la máquina del cliente.
+   Regla completa en `CLAUDE.md`.
+3. **No se publica razón social ni NIF** hasta tener un cliente recurrente y
+   2.000 €/mes recurrentes. Umbral fijado por el usuario.
+4. **No se nombra públicamente a JPARENTE ni a Gil-bo** sin permiso escrito. La
+   web dice «dos talleres en Cataluña» y ofrece el contacto bajo petición.
+5. **No se publican direcciones `@magindustries.com`** — ese dominio no es
+   nuestro.
+6. **Posicionamiento:** «no vendemos antigüedad, vendemos compromisos». La
+   juventud del proyecto se asume en voz alta, no se disimula.
+
+### Límite técnico que condiciona el marketing por correo
+
+⚠️ **El dominio no tiene reputación de envío.** SPF/DKIM/DMARC llevan activos
+desde el 2-ago. Un envío masivo desde `magindustries.es` quemaría justo lo que se
+acaba de construir, y el daño afecta al correo con el que se habla con clientes
+reales.
+
+- Calentar despacio: 5-10 correos/día las primeras semanas, subiendo gradual.
+- Cualquier envío masivo o newsletter, desde un **subdominio** (`mail.` o
+  `news.magindustries.es`), nunca desde el dominio principal.
+- Al añadir un emisor nuevo (Brevo, un CRM, una herramienta de secuencias):
+  **editar** el TXT `v=spf1` existente, jamás añadir un segundo.
+
+### Lo que el usuario pidió aplazar, y sigue aplazado
+
+- **Clips de simulación y guiones de contenido visual.** `docs/clips-spec.md`
+  está escrito desde la sesión 4 (formato, resolución, reglas de bucle, comandos
+  `ffmpeg` y el HTML exacto de sustitución) pero **no se ha producido ninguno**.
+  El usuario pidió expresamente no abordarlo hasta que él lo pida. Es su ventaja
+  competitiva declarada en los dos artefactos: nadie en su nicho lo hace.
+- **Portfolio de casos de transformación digital.** Anotado en la sesión 11. Hoy
+  esa capacidad se ofrece sin nada que enseñar.
+
+### Lo que sigue abierto y quién lo desbloquea
+
+| Pendiente | Quién | Nota |
+|---|---|---|
+| URL de LinkedIn y Google Business para el footer | Usuario | Perfiles creados; el código ya está listo, los iconos se ocultan solos hasta tener URL. Resumen de empresa redactado en la sesión 12 |
+| Permiso de JPARENTE como referencia | Usuario | La web ya ofrece ese contacto |
+| Panel de lectura de leads | Decisión del usuario | Hoy se leen abriendo Supabase. ¿Basta o se construye? |
+| Aviso instantáneo de lead | Técnico | Hoy llega por FormSubmit. Un lead B2B respondido en <1 h convierte mucho más |
+| Rendimiento (Font Awesome, fuentes, lazy load) | Técnico | Impacta Core Web Vitals y SEO. Relevante **si** va a llegar tráfico |
+| Lead magnet descargable (checklist PDF) | Contenido | Captura al que no está listo para comprar hoy |
+| NDA y seguro de RC profesional | Usuario | La web ya promete ambos. 150-350 €/año el seguro |
+| Alta censal / RETA | Usuario | Techo del negocio: sin factura no entran los clientes que quiere |
+
+### Deuda técnica menor, anotada y sin urgencia
+
+- `privacidad.html` no carga `app.js` ni versiona `tailwind.css`. No rompe nada.
+- Los controles de máquina aparecen en **9 puntos**; al añadir uno nuevo hay que
+  tocarlos todos (`grep -c 'Heidenhain' *.html`).
+- La Edge Function `submit-lead` **no se despliega con `git push`**: va aparte.
 
 ---
 

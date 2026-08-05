@@ -293,6 +293,18 @@ persistente en `~/.claude/projects/.../memory/`.
 **Al proponer:** rápido de implementar, impacto medible (conversión, CAC, SEO),
 sin refactorizaciones que nadie ha pedido.
 
+**Cómo colaborar (pedido explícito, sesión 12):**
+- **Pregunta en cuanto el contexto sea insuficiente.** Nada de elegir la opción
+  «razonable» y seguir. Las decisiones de alcance, precio, exposición pública y
+  qué publicar son suyas: preséntale las opciones con su compromiso.
+- **Nunca des por hecho** una situación, un dato o un paso previsto. Distingue
+  siempre lo verificado de lo supuesto, y di con qué lo verificaste. Este
+  proyecto ya pagó caro asumir (una CSP que no existía, un ref de Supabase que
+  no resolvía, un SPF previo que nunca estuvo).
+- **Retroalimenta sus avances.** No te limites a ejecutar en silencio: dile qué
+  está bien, qué mejorarías y por qué, y acompaña cada entrega de sugerencias
+  marcadas como tales.
+
 **Al cerrar:** actualiza `PROJECT_STATE.md` con lo logrado, lo decidido y lo que
 queda abierto. Si has cambiado infraestructura o seguridad, actualiza también
 este archivo.
