@@ -16,6 +16,259 @@
    insert ocasional. Un `fetch` hace lo mismo sin la dependencia. */
 const SUPA_URL = 'https://lryyubgldnrrxokkeeef.supabase.co';
 const SUPA_KEY = 'sb_publishable_LnAfjL6RQRdoPnOw5ZSEkA_jlCcbNBZ';
+
+/* ===== Atribución de origen =====================================================
+   Sin esto es imposible saber si un lead vino de LinkedIn, de Google o del boca
+   a boca, y sin saberlo no se puede decidir dónde invertir las horas.
+
+   Dos capas, porque ninguna funciona sola:
+     1. UTM automático. Se captura al aterrizar y se guarda en sessionStorage con
+        semántica de PRIMER contacto: si el visitante llega por LinkedIn, navega a
+        tarifas y vuelve, la fuente sigue siendo LinkedIn. Sobrevive al salto de
+        página, no a cerrar el navegador (que es justo lo que queremos: otra visita
+        es otra sesión de atribución).
+     2. Respuesta declarada en el formulario, para cuando la UTM se pierde: alguien
+        que teclea la URL, que la recibe por WhatsApp o que abre desde una app.
+
+   El resultado viaja en `origen`, que ya está en la lista blanca de la Edge
+   Function `submit-lead`. Añadir un campo nuevo exigiría migración de la tabla y
+   redespliegue de la función; esto funciona hoy sin tocar el backend. Ojo al
+   límite: la columna `origen` corta a 160 caracteres. */
+const ATRIB_CLAVE = 'mag-atribucion';
+
+/* Nombres compactos para no agotar los 160 caracteres de `origen`. */
+const FUENTES_CORTAS = { linkedin:'li', google:'goog', facebook:'fb', instagram:'ig', bing:'bing' };
+
+function capturarAtribucion(){
+  try{
+    if(sessionStorage.getItem(ATRIB_CLAVE)) return; // primer contacto manda
+    const p = new URLSearchParams(location.search);
+    const src = p.get('utm_source');
+    let valor = '';
+    if(src){
+      const s = FUENTES_CORTAS[src.toLowerCase()] || src.slice(0,16);
+      valor = [s, p.get('utm_medium')||'', p.get('utm_campaign')||''].filter(Boolean).join('/');
+    }else if(document.referrer){
+      /* Sin UTM, el dominio de procedencia ya distingue orgánico de directo. */
+      try{
+        const h = new URL(document.referrer).hostname.replace(/^www\./,'');
+        if(h && h !== location.hostname.replace(/^www\./,'')) valor = 'ref:' + h;
+      }catch(e){}
+    }
+    if(valor) sessionStorage.setItem(ATRIB_CLAVE, valor.slice(0,60));
+  }catch(e){ /* modo privado: se pierde la atribución, nunca el lead */ }
+}
+capturarAtribucion();
+
+function leerAtribucion(){
+  try{ return sessionStorage.getItem(ATRIB_CLAVE) || ''; }catch(e){ return ''; }
+}
+
+/* ===== LinkedIn Insight Tag =====================================================
+   INACTIVO hasta que se rellene LI_PARTNER_ID. Se obtiene en Campaign Manager →
+   Data → Signals manager → Insight Tag. No hace falta gastar un euro en anuncios
+   para tenerlo: el tag empieza a acumular audiencia de retargeting desde el primer
+   día, y esa audiencia tarda semanas en ser utilizable. Instalarlo tarde es el
+   error más caro y más silencioso de una campaña de LinkedIn.
+
+   AVISO LEGAL: el tag instala cookies publicitarias. En España y la UE eso exige
+   consentimiento previo e informado (RGPD y LSSI). Por eso se dispara solo si
+   `hayConsentimientoPublicidad()` devuelve true, lo que ocurre únicamente cuando
+   el visitante lo ha aceptado en el banner de cookies (ver más abajo). */
+const LI_PARTNER_ID = ''; // ← pegar aquí el Partner ID numérico de Campaign Manager
+
+function hayConsentimientoPublicidad(){
+  try{ return localStorage.getItem('mag-consent-ads') === 'si'; }catch(e){ return false; }
+}
+
+function cargarInsightTag(){
+  if(!LI_PARTNER_ID || !hayConsentimientoPublicidad()) return;
+  if(window.__magLiCargado) return;
+  window.__magLiCargado = true;
+  window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
+  window._linkedin_data_partner_ids.push(LI_PARTNER_ID);
+  const s = document.createElement('script');
+  s.type = 'text/javascript';
+  s.async = true;
+  s.src = 'https://snap.licdn.com/li_lms/js/li_lms_analytics.js';
+  document.head.appendChild(s);
+}
+cargarInsightTag();
+/* Permite activarlo en el momento en que el visitante acepte, sin recargar. */
+window.MAG_activarInsightTag = cargarInsightTag;
+
+/* ===== Banner de cookies =======================================================
+   Requisitos que condicionan el diseño, no son adorno:
+
+   · Nada no esencial antes del consentimiento. El Insight Tag ya está detrás de
+     `hayConsentimientoPublicidad()`, que solo devuelve true si se aceptó aquí.
+   · Aceptar y rechazar con el mismo peso visual. La AEPD considera que un
+     "rechazar" discreto junto a un "aceptar" destacado no es elección libre.
+     Por eso ambos botones comparten tamaño, tipografía y jerarquía.
+   · Sin muro. La barra es inferior y no bloquea: se puede seguir leyendo sin
+     decidir. Un cookie wall en un sitio comercial no es consentimiento libre.
+   · Granularidad. Se puede aceptar la medición y rechazar la publicidad.
+   · Revocable en cualquier momento, desde el enlace "Cookies" del pie.
+   · Caducidad. El consentimiento expira a los 12 meses y se vuelve a preguntar.
+   · Sin casillas premarcadas para publicidad.
+
+   Nota sobre el calendario de Google de la landing de auditoría: no se carga
+   hasta que el visitante pulsa el botón. Ese clic explícito es la consentimiento
+   granular para ese contenido concreto, que es el patrón habitual de
+   "clic para cargar" en incrustaciones de terceros. No se toca aquí.
+
+   Esto es una implementación técnica razonable de los criterios publicados por la
+   AEPD; no es asesoramiento jurídico. Si la exposición legal preocupa, conviene
+   que lo revise un abogado. */
+(function(){
+  const CLAVE = 'mag-cookies-v1';
+  const MESES_VALIDEZ = 12;
+
+  function leerConsentimiento(){
+    try{
+      const c = JSON.parse(localStorage.getItem(CLAVE) || 'null');
+      if(!c || !c.fecha) return null;
+      const meses = (Date.now() - c.fecha) / (1000 * 60 * 60 * 24 * 30.44);
+      return meses > MESES_VALIDEZ ? null : c;   // caducado: se vuelve a preguntar
+    }catch(e){ return null; }
+  }
+
+  function guardarConsentimiento(medicion, publicidad){
+    const c = { medicion: !!medicion, publicidad: !!publicidad, fecha: Date.now() };
+    try{
+      localStorage.setItem(CLAVE, JSON.stringify(c));
+      /* Clave espejo que lee `hayConsentimientoPublicidad()`. */
+      localStorage.setItem('mag-consent-ads', c.publicidad ? 'si' : 'no');
+    }catch(e){ /* modo privado: la decisión vale para esta visita */ }
+    aplicar(c);
+  }
+
+  function aplicar(c){
+    if(c.publicidad && typeof window.MAG_activarInsightTag === 'function'){
+      window.MAG_activarInsightTag();
+    }
+    /* La medición de audiencia de Vercel es sin cookies y agregada, así que no
+       hay nada que desactivar en el navegador; el interruptor queda registrado
+       para poder honrarlo si algún día se añade analítica que sí identifique. */
+  }
+
+  const guardado = leerConsentimiento();
+  if(guardado){ aplicar(guardado); }
+
+  let barra = null;
+
+  function construir(previo){
+    const med = previo ? previo.medicion : true;    // preseleccionada: sin cookies
+    const pub = previo ? previo.publicidad : false; // nunca preseleccionada
+
+    const el = document.createElement('div');
+    el.id = 'mag-cookies';
+    el.setAttribute('role', 'dialog');
+    el.setAttribute('aria-labelledby', 'mag-ck-t');
+    el.setAttribute('aria-describedby', 'mag-ck-d');
+    el.innerHTML =
+      '<div class="mag-ck-inner">' +
+        '<div class="mag-ck-fila">' +
+          '<div>' +
+            '<p class="mag-ck-titulo" id="mag-ck-t">Cookies y medición</p>' +
+            '<p class="mag-ck-texto" id="mag-ck-d">Usamos almacenamiento propio para que la web funcione y medición de audiencia agregada, que no te identifica. Si lo aceptas, activaremos también cookies de LinkedIn para medir nuestras campañas. Puedes rechazarlas sin perder ninguna funcionalidad y cambiar de opinión cuando quieras. Más detalle en la <a href="privacidad.html">política de privacidad</a>.</p>' +
+          '</div>' +
+          '<div class="mag-ck-botones">' +
+            '<button type="button" class="mag-ck-btn mag-ck-btn-cfg" data-ck="config" aria-expanded="false" aria-controls="mag-ck-panel">Configurar</button>' +
+            '<button type="button" class="mag-ck-btn mag-ck-btn-no" data-ck="rechazar">Rechazar</button>' +
+            '<button type="button" class="mag-ck-btn mag-ck-btn-si" data-ck="aceptar">Aceptar</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="mag-ck-panel" id="mag-ck-panel" hidden>' +
+          cat('Necesarias', 'Preferencia de tema claro u oscuro y protección del formulario frente a envíos automáticos. Sin ellas la web no funciona correctamente, así que no se pueden desactivar.', 'nec', true, true) +
+          cat('Medición de audiencia', 'Analítica propia y agregada para saber qué páginas se visitan y desde dónde se llega. No usa cookies ni identifica a personas concretas.', 'med', med, false) +
+          cat('Publicidad y remarketing', 'LinkedIn Insight Tag. Permite medir si nuestras publicaciones traen visitas y mostrar anuncios a quien ya nos conoce. Instala cookies de LinkedIn.', 'pub', pub, false) +
+          '<div class="mag-ck-botones" style="margin-top:18px">' +
+            '<button type="button" class="mag-ck-btn mag-ck-btn-si" data-ck="guardar">Guardar mi elección</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    return el;
+  }
+
+  function cat(titulo, texto, id, activa, fija){
+    return '<div class="mag-ck-cat">' +
+        '<div class="mag-ck-cat-txt"><h4>' + titulo + '</h4><p>' + texto + '</p></div>' +
+        '<label class="mag-ck-sw">' +
+          '<input type="checkbox" id="mag-ck-' + id + '"' + (activa ? ' checked' : '') +
+            (fija ? ' disabled' : '') + ' aria-label="' + titulo + '">' +
+          '<span></span>' +
+        '</label>' +
+      '</div>';
+  }
+
+  function abrir(){
+    const previo = leerConsentimiento();
+    if(barra) barra.remove();
+    barra = construir(previo);
+    document.body.appendChild(barra);
+    requestAnimationFrame(() => barra.classList.add('visible'));
+
+    barra.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-ck]');
+      if(!b) return;
+      const accion = b.dataset.ck;
+      if(accion === 'config'){
+        const panel = barra.querySelector('#mag-ck-panel');
+        const abierto = !panel.hidden;
+        panel.hidden = abierto;
+        b.setAttribute('aria-expanded', String(!abierto));
+        if(!abierto) panel.querySelector('input:not(:disabled)').focus();
+        return;
+      }
+      if(accion === 'aceptar')  return cerrar(true,  true);
+      if(accion === 'rechazar') return cerrar(false, false);
+      if(accion === 'guardar'){
+        return cerrar(barra.querySelector('#mag-ck-med').checked,
+                      barra.querySelector('#mag-ck-pub').checked);
+      }
+    });
+  }
+
+  function cerrar(medicion, publicidad){
+    guardarConsentimiento(medicion, publicidad);
+    if(!barra) return;
+    barra.classList.remove('visible');
+    const ref = barra;
+    barra = null;
+    setTimeout(() => ref.remove(), 420);
+  }
+
+  /* Enlace permanente en el pie para revocar o cambiar la decisión. Se inyecta
+     junto al de privacidad, que existe en todas las páginas: así no hay que
+     tocar los siete HTML ni recordar añadirlo en la próxima landing. */
+  function enlacePie(){
+    const ref = document.querySelector('footer a[href*="privacidad"]');
+    if(!ref || document.getElementById('mag-ck-link')) return;
+    const sep = document.createTextNode(' · ');
+    const a = document.createElement('button');
+    a.type = 'button';
+    a.id = 'mag-ck-link';
+    a.className = 'mag-ck-enlace';
+    a.textContent = 'Cookies';
+    a.addEventListener('click', abrir);
+    ref.parentNode.insertBefore(sep, ref.nextSibling);
+    ref.parentNode.insertBefore(a, sep.nextSibling);
+  }
+
+  const arrancar = () => {
+    enlacePie();
+    if(!leerConsentimiento()) abrir();
+  };
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', arrancar);
+  }else{
+    arrancar();
+  }
+
+  window.MAG_abrirCookies = abrir;
+})();
+
 function guardarLead(datos){
   return fetch(SUPA_URL + '/functions/v1/submit-lead', {
     method: 'POST',
@@ -487,6 +740,16 @@ if(contactForm) contactForm.addEventListener('submit',async(e)=>{
   /* Origen del lead: para medir qué página trae cada contacto. */
   let origen=f.dataset.origen||document.title||location.pathname;
   let detalles=v('description');
+  /* Atribución de canal. Prioridad al dato automático (UTM o referente), que no
+     depende de que el visitante recuerde ni acierte; el desplegable es el
+     respaldo para cuando ese dato no existe. */
+  const canal=leerAtribucion()||v('conocimiento');
+  /* La columna `origen` corta a 160. Se recorta la parte de página, no el canal:
+     saber de dónde vino importa más que el título exacto de la landing. */
+  if(canal) origen=origen.slice(0,100)+' · '+canal.slice(0,50);
+  /* Si además lo declaró, se guarda literal en detalles: el desplegable dice
+     "recomendación de un cliente", cosa que ninguna UTM puede saber. */
+  if(v('conocimiento')) detalles=(detalles?detalles+'\n\n':'')+'Cómo nos conoció: '+v('conocimiento');
   /* Si antes pasó por el quiz, su diagnóstico viaja con el lead: llega un
      contacto cualificado en vez de un nombre suelto. Se lee de sessionStorage
      y no de la variable del quiz, para que sobreviva a un cambio de página. */
