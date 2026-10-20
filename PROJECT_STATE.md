@@ -1,6 +1,6 @@
 # PROJECT_STATE — MAG INDUSTRIES
 
-**Última sesión:** 20 octubre 2026 (Sesión 13 · capa de movimiento v2, en rama sin publicar)
+**Última sesión:** 20 octubre 2026 (Sesión 13 · capa de movimiento v2, en producción)
 **Estado:** En producción y **sin bloqueadores técnicos de captación**. Agenda de la auditoría completa (calendario de Google incrustado), correo autenticado y verificado con envío real, sitio a cero menciones de software CAD/CAM, quiz que captura leads, calculadora de coste.
 
 🔴 **CONTEXTO COMERCIAL — leer antes que nada (dicho por el usuario, 3-ago-2026):**
@@ -491,7 +491,11 @@ Petición explícita del usuario, guardada también en memoria persistente: **pr
 ### Sesión 13 (20 octubre 2026)
 **Objetivo:** Instalar skills de diseño y modernizar la experiencia visual y las animaciones **sin cambiar el contenido**.
 
-**Rama:** `claude/amazing-lovelace-98ninv`, con PR abierta contra `main`. No está en producción hasta que se fusione.
+**En producción** desde el 20-oct-2026: PR #1 fusionada en `main` (`50bffb8`), despliegue de Vercel `READY`. Verificado contra `www.magindustries.es` con el fetch autenticado de Vercel, porque el contenedor no tiene salida directa:
+- la home sirve `app.js?v=14`, `tailwind.css?v=13`, el `#boot` y la placa `.spec-row`;
+- `tailwind.css` lleva las reglas nuevas;
+- `app.js` responde 200;
+- la CSP y las 6 cabeceras siguen iguales.
 
 **1. Skills en el repo** (`.claude/skills/`, no se despliegan)
 - Pack de Emil Kowalski.
@@ -528,7 +532,7 @@ Petición explícita del usuario, guardada también en memoria persistente: **pr
 - Movimiento reducido.
 - CDN abortado, con el contenido visible.
 - Las 9 páginas sin errores de consola y sin `.reveal` ocultos en vista.
-- **Pendiente:** verificar en el preview real de Vercel, con la CSP de verdad.
+- **Pendiente:** comprobar en un navegador real que la consola no muestra violaciones de CSP (`curl` no las ve). Las cabeceras están verificadas; la ejecución en el navegador, no.
 
 **5. Retirada de las tres «huellas de web hecha con IA»** (el usuario aceptó la recomendación)
 - **Etiquetas sobre titulares:** 24 rótulos que solo decoraban, borrados. Los que llevaban datos siguen con el texto exacto, pero como línea bajo el titular: «Programación CNC externa · CAD/CAM · Oficina técnica de apoyo» en la home, «Auditoría técnica · 45 minutos · sin coste» en la landing y los «Ahorro aproximado del X %» de los planes. En el blog, «Último artículo» y «Anteriores» pasan a ser `<h2>`.
