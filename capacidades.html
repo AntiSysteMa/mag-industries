@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="tailwind.css?v=11">
+<link rel="stylesheet" href="tailwind.css?v=13">
 <script>
   (function(){ try{ var t=localStorage.getItem('mag-theme')||'dark'; document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark'); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
   /* La animacion de entrada es una MEJORA, no un requisito para ver la web.
@@ -33,8 +33,10 @@
     h.classList.add("anim-ready");
     window.__magFailsafe=setTimeout(function(){ h.classList.remove("anim-ready"); },1800);
   })();
-  /* Segunda red: al terminar la carga, revela cualquier .reveal que siga oculto. */
-  window.addEventListener("load",function(){ setTimeout(function(){ try{ document.querySelectorAll(".reveal").forEach(function(el){ if(parseFloat(getComputedStyle(el).opacity)<0.05){ el.style.opacity="1"; el.style.transform="none"; el.classList.add("in"); } }); }catch(e){} },1200); });
+  /* Segunda red: al terminar la carga, revela cualquier .reveal que siga oculto,
+     salvo que app.js ya controle el revelado (pone __magFailsafe a null): si no,
+     esta red destapaba todo y los revelados al hacer scroll no llegaban a verse. */
+  window.addEventListener("load",function(){ setTimeout(function(){ if(window.__magFailsafe===null)return; try{ document.querySelectorAll(".reveal").forEach(function(el){ if(parseFloat(getComputedStyle(el).opacity)<0.05){ el.style.opacity="1"; el.style.transform="none"; el.classList.add("in"); } }); }catch(e){} },1200); });
 </script>
 </head>
 <body class="font-sans text-steel-100 antialiased selection:bg-safety selection:text-night">
@@ -82,7 +84,6 @@
 
 <section class="relative overflow-hidden bg-grid bg-glow-top border-b border-night-line pt-[72px]">
   <div class="relative max-w-4xl mx-auto px-5 lg:px-10 py-16 lg:py-20 text-center">
-    <p class="tag text-xs text-safety uppercase mb-4 reveal">Áreas de trabajo</p>
     <h1 class="font-titulo text-3xl sm:text-4xl lg:text-5xl leading-[1.1] tracking-tight mb-6 reveal">Capacidades técnicas</h1>
     <p class="text-lg text-steel-300 max-w-2xl mx-auto reveal">Ingeniería de producto, programación de fabricación y transformación digital. Cada entrega se valida antes de llegar a máquina y se documenta para que tu equipo pueda ejecutarla sin depender de nosotros.</p>
   </div>
@@ -90,7 +91,6 @@
 <section id="capacidades" class="border-b border-night-line relative overflow-hidden">
   <div class="absolute inset-0 bg-grid opacity-40 pointer-events-none"></div>  <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20">
     <div class="text-center max-w-2xl mx-auto mb-12">
-      <p class="tag text-xs text-cyber uppercase mb-3 reveal">Cobertura de proceso</p>
       <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight">Del concepto al proceso productivo</h2>
       <p class="mt-3 text-steel-400 reveal">Siete áreas que cubren la cadena completa: desde la definición geométrica del producto hasta la digitalización del proceso que lo fabrica. Se trabaja sobre el entorno de software que ya tiene el cliente o sobre el nuestro, según convenga al proyecto.</p>
     </div>
@@ -349,6 +349,6 @@
 </a>
 
 <script defer src="/_vercel/insights/script.js"></script>
-<script src="app.js?v=12" defer></script>
+<script src="app.js?v=14" defer></script>
 </body>
 </html>

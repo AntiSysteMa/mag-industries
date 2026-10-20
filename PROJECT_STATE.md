@@ -1,6 +1,6 @@
 # PROJECT_STATE — MAG INDUSTRIES
 
-**Última sesión:** 3 agosto 2026 (Sesión 12 · cierre de bloque)
+**Última sesión:** 20 octubre 2026 (Sesión 13 · capa de movimiento v2, en rama sin publicar)
 **Estado:** En producción y **sin bloqueadores técnicos de captación**. Agenda de la auditoría completa (calendario de Google incrustado), correo autenticado y verificado con envío real, sitio a cero menciones de software CAD/CAM, quiz que captura leads, calculadora de coste.
 
 🔴 **CONTEXTO COMERCIAL — leer antes que nada (dicho por el usuario, 3-ago-2026):**
@@ -487,6 +487,66 @@ El usuario informa de que le queda **un solo cliente y está de vacaciones**. A 
 **4. Forma de trabajo acordada**
 
 Petición explícita del usuario, guardada también en memoria persistente: **preguntar mucho cuando el contexto sea insuficiente y nunca dar por hecho** situaciones o pasos previstos; **retroalimentar sus avances** y acompañar cada entrega de recomendaciones y sugerencias de mejora, dejando que las decisiones las tome él.
+
+### Sesión 13 (20 octubre 2026)
+**Objetivo:** Instalar skills de diseño y modernizar la experiencia visual y las animaciones **sin cambiar el contenido**.
+
+**Rama:** `claude/amazing-lovelace-98ninv`, con PR abierta contra `main`. No está en producción hasta que se fusione.
+
+**1. Skills en el repo** (`.claude/skills/`, no se despliegan)
+- Pack de Emil Kowalski.
+- Impeccable 4.7. Sus hooks **no** se activan: descargan y ejecutan un binario en cada edición.
+- Taste v2, descargada de `Leonxlnx/taste-skill` y renombrada a `taste`.
+
+**2. Capa de movimiento v2.** Concepto: la web se comporta como un centro de mecanizado. El detalle y las reglas están en `DESIGN.md`.
+- Arranque «Cycle Start» en la home: código G que se teclea y puertas de cabina que se abren, unos 1,8 s.
+  - Una vez por sesión y solo con CSS.
+  - Se salta con tecla, clic, rueda o toque.
+  - No aparece con movimiento reducido ni al llegar con `#ancla`.
+  - Decisión del usuario: incluirlo en su versión completa.
+- Retícula de palpador con lectura X/Y que se engancha a botones y enlaces. Solo escritorio y sin quitar el cursor nativo. Decisión del usuario: con lectura X/Y.
+- En el hero:
+  - luz de sonda sobre la rejilla;
+  - coreografía sincronizada con el arranque;
+  - panel de simulación que entra «mecanizado».
+- Revelados por tipo: etiquetas que se decodifican con el texto accesible intacto, párrafos con enfoque y tarjetas que se apoyan.
+- Números de capa que se vacían como una cajera, con el scroll.
+- CTA magnéticos, `:active` con escala, foco de luz en tarjetas, subrayado del menú y cabecera que se retira al bajar.
+- Transiciones nativas: entre páginas (`@view-transition`), cambio de tema en círculo desde el botón y FAQ con altura animada.
+- Superficies del navegador: `caret-color`, `accent-color`, `text-wrap` y números tabulares.
+
+**3. Dos bugs encontrados y corregidos**
+- **Los revelados al hacer scroll nunca se veían en producción.** La «segunda red» del `<head>` destapaba todos los `.reveal` 1,2 s después de `load`, también los que estaban bajo el pliegue. Verificado con Playwright contra la versión anterior: la FAQ estaba a opacidad 1 sin haber hecho scroll. Ahora la red solo actúa si `app.js` no tomó el control. Cambio en las 8 páginas que la llevan.
+- **El hover que eleva las tarjetas no funcionaba.** GSAP dejaba `transform` en línea tras el revelado. Ahora la elevación usa `translate` y el revelado limpia sus estilos.
+
+**4. Verificación** (Playwright con el Chromium del contenedor; GSAP y Font Awesome servidos desde npm en la versión exacta, porque cdnjs está bloqueado en el contenedor)
+- Arranque fotograma a fotograma a 1440 y 390 px.
+- Salto con clic.
+- Sin arranque al recargar.
+- Cambio de tema en círculo.
+- FAQ animada.
+- Movimiento reducido.
+- CDN abortado, con el contenido visible.
+- Las 9 páginas sin errores de consola y sin `.reveal` ocultos en vista.
+- **Pendiente:** verificar en el preview real de Vercel, con la CSP de verdad.
+
+**5. Retirada de las tres «huellas de web hecha con IA»** (el usuario aceptó la recomendación)
+- **Etiquetas sobre titulares:** 24 rótulos que solo decoraban, borrados. Los que llevaban datos siguen con el texto exacto, pero como línea bajo el titular: «Programación CNC externa · CAD/CAM · Oficina técnica de apoyo» en la home, «Auditoría técnica · 45 minutos · sin coste» en la landing y los «Ahorro aproximado del X %» de los planes. En el blog, «Último artículo» y «Anteriores» pasan a ser `<h2>`.
+- **Numeración:**
+  - fuera los 01–09 gigantes de cada capa, y con ellos su relleno animado;
+  - fuera el 01/02/03 de los pasos de la home y de la landing: el papel de cada paso entra en el titular («Tú envías el fichero y los datos de tu máquina») y la lista es `<ol>`;
+  - fuera los «01 ·» de las tarjetas de evidencia (el nombre de la estrategia pasa al titular) y de las etiquetas de sectores.
+  - El contador lateral de navegación se mantiene.
+- **Tarjetas con icono:**
+  - Servicios de la home: lista editorial en un panel.
+  - Compromisos: placa de características (cifra y significado).
+  - «Qué incluye siempre la entrega» (servicios) y «Qué te llevas» (landing): albarán sin iconos.
+  - Referencias: sin iconos decorativos.
+- Ninguna cifra ni afirmación nueva. La lista de controles sigue en sus 9 puntos (`grep -c Heidenhain`: index 6 · servicios 1 · blog 1 · auditoría 1).
+- La barra de progreso superior pasa de degradado a dorado sólido.
+- **Sin cambios:** la entrada «Cycle Start» sigue en 1,8 s, que fue la opción que eligió el usuario. Acortarla a 0,9 s era una sugerencia condicionada a que pareciera larga en el móvil.
+
+Cache-busting: `app.js?v=14` y `tailwind.css?v=13`.
 
 ---
 

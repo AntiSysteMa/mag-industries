@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="tailwind.css?v=11">
+<link rel="stylesheet" href="tailwind.css?v=13">
 <script>
   (function(){ try{ var t=localStorage.getItem('mag-theme')||'dark'; document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark'); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
   /* La animacion de entrada es una MEJORA, no un requisito para ver la web.
@@ -33,8 +33,10 @@
     h.classList.add("anim-ready");
     window.__magFailsafe=setTimeout(function(){ h.classList.remove("anim-ready"); },1800);
   })();
-  /* Segunda red: al terminar la carga, revela cualquier .reveal que siga oculto. */
-  window.addEventListener("load",function(){ setTimeout(function(){ try{ document.querySelectorAll(".reveal").forEach(function(el){ if(parseFloat(getComputedStyle(el).opacity)<0.05){ el.style.opacity="1"; el.style.transform="none"; el.classList.add("in"); } }); }catch(e){} },1200); });
+  /* Segunda red: al terminar la carga, revela cualquier .reveal que siga oculto,
+     salvo que app.js ya controle el revelado (pone __magFailsafe a null): si no,
+     esta red destapaba todo y los revelados al hacer scroll no llegaban a verse. */
+  window.addEventListener("load",function(){ setTimeout(function(){ if(window.__magFailsafe===null)return; try{ document.querySelectorAll(".reveal").forEach(function(el){ if(parseFloat(getComputedStyle(el).opacity)<0.05){ el.style.opacity="1"; el.style.transform="none"; el.classList.add("in"); } }); }catch(e){} },1200); });
 </script>
 </head>
 <body class="font-sans text-steel-100 antialiased selection:bg-safety selection:text-night">
@@ -82,7 +84,6 @@
 
 <section class="relative overflow-hidden bg-grid bg-glow-top border-b border-night-line pt-[72px]">
   <div class="relative max-w-4xl mx-auto px-5 lg:px-10 py-16 lg:py-20 text-center">
-    <p class="tag text-xs text-safety uppercase mb-4 reveal">Dónde aportamos valor</p>
     <h1 class="font-titulo text-3xl sm:text-4xl lg:text-5xl leading-[1.1] tracking-tight mb-6 reveal">Sectores: matricería, moldes, automoción y aeronáutica</h1>
     <p class="text-lg text-steel-300 max-w-2xl mx-auto reveal">Cada sector impone sus tolerancias, sus materiales y su normativa. Estos son los entornos en los que trabajamos habitualmente y los que conocemos por dentro, no de oídas.</p>
   </div>
@@ -96,7 +97,7 @@
           <img src="https://images.unsplash.com/photo-1540962351504-03099e0a754b?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1540962351504-03099e0a754b?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1540962351504-03099e0a754b?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1540962351504-03099e0a754b?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Turbina de motor a reacción, componente aeronáutico de precisión" class="w-full h-full object-cover" loading="lazy">
           <div class="veil absolute inset-0 bg-night/45"></div>
           <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">01 · Ti-6Al-4V · Inconel</span>
+          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">Ti-6Al-4V · Inconel</span>
         </div>
         <div class="p-6">
           <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-jet-fighter-up text-safety"></i> Aeronáutica</h3>
@@ -109,7 +110,7 @@
           <img src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Vehículo deportivo, sector de automoción de alto rendimiento" class="w-full h-full object-cover" loading="lazy">
           <div class="veil absolute inset-0 bg-night/45"></div>
           <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">02 · Series · Prototipos</span>
+          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">Series · Prototipos</span>
         </div>
         <div class="p-6">
           <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-car-side text-safety"></i> Automoción</h3>
@@ -122,7 +123,7 @@
           <img src="https://images.unsplash.com/photo-1508444845599-5c89863b1c44?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1508444845599-5c89863b1c44?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1508444845599-5c89863b1c44?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1508444845599-5c89863b1c44?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Dron de vigilancia sobrevolando montañas, tecnología del sector defensa" class="w-full h-full object-cover" loading="lazy">
           <div class="veil absolute inset-0 bg-night/45"></div>
           <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">03 · Confidencialidad · NDA</span>
+          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">Confidencialidad · NDA</span>
         </div>
         <div class="p-6">
           <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-shield-halved text-safety"></i> Defensa</h3>
@@ -135,7 +136,7 @@
           <img src="https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Equipamiento médico de precisión en quirófano" class="w-full h-full object-cover" loading="lazy">
           <div class="veil absolute inset-0 bg-night/45"></div>
           <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">04 · Inox 316L · PEEK</span>
+          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">Inox 316L · PEEK</span>
         </div>
         <div class="p-6">
           <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-heart-pulse text-safety"></i> Médico</h3>
@@ -148,7 +149,7 @@
           <img src="https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Aerogeneradores, sector de bioenergía y energías renovables" class="w-full h-full object-cover" loading="lazy">
           <div class="veil absolute inset-0 bg-night/45"></div>
           <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">05 · Energía · Turbinas</span>
+          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">Energía · Turbinas</span>
         </div>
         <div class="p-6">
           <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-bolt-lightning text-safety"></i> Bioenergía</h3>
@@ -161,7 +162,7 @@
           <img src="https://images.unsplash.com/photo-1717386255773-1e3037c81788?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1717386255773-1e3037c81788?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1717386255773-1e3037c81788?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1717386255773-1e3037c81788?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Línea de producción automatizada para envasado industrial" class="w-full h-full object-cover" loading="lazy">
           <div class="veil absolute inset-0 bg-night/45"></div>
           <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">06 · Líneas de envasado</span>
+          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">Líneas de envasado</span>
         </div>
         <div class="p-6">
           <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-box-open text-safety"></i> Packaging</h3>
@@ -174,7 +175,7 @@
           <img src="https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Componentes mecánicos de precisión para moldes de inyección" class="w-full h-full object-cover" loading="lazy">
           <div class="veil absolute inset-0 bg-night/45"></div>
           <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">07 · Cavidad · Corredera</span>
+          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">Cavidad · Corredera</span>
         </div>
         <div class="p-6">
           <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-cube text-safety"></i> Moldes de Inyección</h3>
@@ -187,7 +188,7 @@
           <img src="https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Soldadura y conformado de metal con chispas, matricería industrial" class="w-full h-full object-cover" loading="lazy">
           <div class="veil absolute inset-0 bg-night/45"></div>
           <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">08 · Corte · Embutición</span>
+          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">Corte · Embutición</span>
         </div>
         <div class="p-6">
           <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-cubes-stacked text-safety"></i> Matricería</h3>
@@ -200,7 +201,7 @@
           <img src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=800&q=70" srcset="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=400&q=70 400w, https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=800&q=70 800w, https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1200&q=70 1200w" sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" decoding="async" alt="Obra de infraestructura y construcción industrial" class="w-full h-full object-cover" loading="lazy">
           <div class="veil absolute inset-0 bg-night/45"></div>
           <div class="absolute inset-0 bg-gradient-to-t from-night-card via-night-card/20 to-transparent"></div>
-          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">09 · Obra civil · Ferroviario</span>
+          <span class="absolute top-4 left-4 tag text-[10px] uppercase bg-night/85 border border-night-line px-2.5 py-1 text-steel-200">Obra civil · Ferroviario</span>
         </div>
         <div class="p-6">
           <h3 class="font-bold text-lg mb-2 flex items-center gap-3"><i aria-hidden="true" class="fa-solid fa-city text-safety"></i> Infraestructura y otros sectores</h3>
@@ -244,6 +245,6 @@
 </a>
 
 <script defer src="/_vercel/insights/script.js"></script>
-<script src="app.js?v=12" defer></script>
+<script src="app.js?v=14" defer></script>
 </body>
 </html>

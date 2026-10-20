@@ -312,9 +312,24 @@ if(menuBtn&&mobileMenu){
   const root=document.documentElement;
   btn.addEventListener('click',()=>{
     const next=root.getAttribute('data-theme')==='light'?'dark':'light';
-    root.setAttribute('data-theme',next);
-    try{localStorage.setItem('mag-theme',next);}catch(e){}
-    if(window.ScrollTrigger)setTimeout(()=>ScrollTrigger.refresh(),120);
+    const aplicar=()=>{
+      root.setAttribute('data-theme',next);
+      try{localStorage.setItem('mag-theme',next);}catch(e){}
+      if(window.ScrollTrigger)setTimeout(()=>ScrollTrigger.refresh(),120);
+    };
+    if(!document.startViewTransition||window.matchMedia('(prefers-reduced-motion: reduce)').matches){aplicar();return;}
+    /* El tema nuevo se abre en círculo desde el botón. Las transiciones CSS se
+       anulan durante el cambio: si no, la captura del estado nuevo sale a medio
+       fundido y el círculo descubre colores intermedios. */
+    const r=btn.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
+    const rad=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));
+    root.classList.add('theme-vt','theme-switching');
+    const vt=document.startViewTransition(aplicar);
+    vt.ready.then(()=>root.animate(
+      {clipPath:[`circle(0px at ${x}px ${y}px)`,`circle(${rad}px at ${x}px ${y}px)`]},
+      {duration:650,easing:'cubic-bezier(.77,0,.175,1)',pseudoElement:'::view-transition-new(root)'}
+    )).catch(()=>{});
+    vt.finished.finally(()=>root.classList.remove('theme-vt','theme-switching'));
   });
 })();
 
@@ -1022,6 +1037,120 @@ document.querySelectorAll('.social-link').forEach(a=>{
   pintar();
 })();
 
+/* ===== Movimiento v2 · puntero y cabecera (sin GSAP) =====
+   Va aparte del bloque GSAP para que también funcione en la landing de la
+   auditoría, que no carga GSAP a propósito. Solo transform, translate,
+   opacity y variables CSS: nada que obligue a recalcular el layout. */
+(function(){
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fino=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+
+  /* Cabecera: se retira al bajar y vuelve en cuanto el visitante sube */
+  const hdr=document.getElementById('site-header'),menu=document.getElementById('mobile-menu');
+  if(hdr&&!reduced){
+    let lastY=window.scrollY;
+    window.addEventListener('scroll',()=>{
+      const y=window.scrollY,d=y-lastY;
+      if(Math.abs(d)<8)return;
+      const abierto=menu&&!menu.classList.contains('hidden');
+      if(y<400||d<0||abierto||hdr.contains(document.activeElement)) hdr.classList.remove('hdr-hidden');
+      else hdr.classList.add('hdr-hidden');
+      lastY=y;
+    },{passive:true});
+  }
+
+  if(!fino||reduced)return;
+
+  /* Foco de luz en las tarjetas, siguiendo el puntero */
+  let cardPend=null;
+  document.addEventListener('pointermove',(e)=>{
+    const c=e.target.closest&&e.target.closest('.card-hover');
+    if(!c)return;
+    if(cardPend)return;
+    cardPend=requestAnimationFrame(()=>{
+      cardPend=null;
+      const r=c.getBoundingClientRect();
+      c.style.setProperty('--mx',(e.clientX-r.left)+'px');
+      c.style.setProperty('--my',(e.clientY-r.top)+'px');
+    });
+  },{passive:true});
+
+  /* Luz de sonda: la rejilla del hero se enciende alrededor del puntero */
+  const home=document.getElementById('home'),probe=home&&home.querySelector('.probe');
+  if(probe){
+    let pend=null;
+    home.addEventListener('pointermove',(e)=>{
+      if(pend)return;
+      pend=requestAnimationFrame(()=>{
+        pend=null;
+        const r=home.getBoundingClientRect();
+        probe.style.setProperty('--px',(e.clientX-r.left)+'px');
+        probe.style.setProperty('--py',(e.clientY-r.top)+'px');
+        probe.classList.add('on');
+      });
+    },{passive:true});
+    home.addEventListener('pointerleave',()=>probe.classList.remove('on'));
+  }
+
+  /* CTA principales magnéticos. Se mueven con `translate` para no pisar el
+     `transform:scale` del :active, y la transición CSS pone la suavidad. */
+  document.querySelectorAll('a.bg-safety.clip-tab, a.bg-cyber.clip-tab, button[type="submit"]').forEach(b=>{
+    b.addEventListener('pointermove',(e)=>{
+      const r=b.getBoundingClientRect();
+      const dx=(e.clientX-r.left-r.width/2)/(r.width/2),dy=(e.clientY-r.top-r.height/2)/(r.height/2);
+      b.style.translate=`${(dx*7).toFixed(1)}px ${(dy*4).toFixed(1)}px`;
+    });
+    b.addEventListener('pointerleave',()=>{b.style.translate='';});
+  });
+
+  /* Retícula de palpador: sigue al ratón con inercia y, sobre algo pulsable,
+     sus cuatro esquinas se enganchan al contorno («lock-on»). El cursor nativo
+     se mantiene: la retícula acompaña, no sustituye. */
+  const ret=document.createElement('div');
+  ret.id='reticle'; ret.setAttribute('aria-hidden','true');
+  ret.innerHTML='<span class="r-ring"></span><span class="r-b tl"></span><span class="r-b tr"></span><span class="r-b bl"></span><span class="r-b br"></span><span class="r-dro"></span>';
+  document.body.appendChild(ret);
+  const bs=Array.from(ret.querySelectorAll('.r-b')),dro=ret.querySelector('.r-dro');
+  const SEL='a,button,summary,select,.quiz-opt,[role="button"]';
+  let mx=-100,my=-100,cx=-100,cy=-100,objetivo=null,corriendo=false;
+  const esq=[[-17,-17],[7,-17],[-17,7],[7,7]].map(p=>({x:p[0],y:p[1]}));
+  function destino(){
+    if(objetivo&&objetivo.isConnected){
+      const r=objetivo.getBoundingClientRect(),p=6;
+      const L=r.left-p-cx,T=r.top-p-cy,R=r.right+p-10-cx,B=r.bottom+p-10-cy;
+      return [[L,T],[R,T],[L,B],[R,B]];
+    }
+    return [[-17,-17],[7,-17],[-17,7],[7,7]];
+  }
+  function tick(){
+    cx+=(mx-cx)*0.24; cy+=(my-cy)*0.24;
+    ret.style.transform=`translate3d(${cx.toFixed(2)}px,${cy.toFixed(2)}px,0)`;
+    const d=destino(); let quieto=Math.abs(mx-cx)<0.1&&Math.abs(my-cy)<0.1;
+    esq.forEach((c,i)=>{
+      c.x+=(d[i][0]-c.x)*0.3; c.y+=(d[i][1]-c.y)*0.3;
+      if(Math.abs(d[i][0]-c.x)>0.1||Math.abs(d[i][1]-c.y)>0.1)quieto=false;
+      bs[i].style.transform=`translate3d(${c.x.toFixed(2)}px,${c.y.toFixed(2)}px,0)`;
+    });
+    dro.textContent=`X${Math.round(mx)} Y${Math.round(my+window.scrollY)}`;
+    if(quieto){corriendo=false;return;}
+    requestAnimationFrame(tick);
+  }
+  function arrancar(){ if(!corriendo){corriendo=true;requestAnimationFrame(tick);} }
+  document.addEventListener('pointermove',(e)=>{
+    if(e.pointerType!=='mouse')return;
+    if(cx<0){cx=e.clientX;cy=e.clientY;}
+    mx=e.clientX; my=e.clientY; ret.classList.add('on'); arrancar();
+  },{passive:true});
+  document.addEventListener('mouseover',(e)=>{
+    const t=e.target.closest&&e.target.closest(SEL);
+    objetivo=t||null; ret.classList.toggle('lock',!!t); arrancar();
+  });
+  document.documentElement.addEventListener('mouseleave',()=>ret.classList.remove('on'));
+  document.addEventListener('pointerdown',()=>ret.classList.add('press'));
+  document.addEventListener('pointerup',()=>ret.classList.remove('press'));
+  window.addEventListener('scroll',arrancar,{passive:true});
+})();
+
 /* ===== Sistema de capas + animaciones GSAP ===== */
 (function(){
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1091,24 +1220,86 @@ document.querySelectorAll('.social-link').forEach(a=>{
   gsap.registerPlugin(ScrollTrigger);
   if(window.MotionPathPlugin) gsap.registerPlugin(MotionPathPlugin);
 
-  /* Revelado por lotes */
-  ScrollTrigger.batch('.reveal',{
+  const home=document.getElementById('home');
+  /* El hero espera a que se abran las puertas del arranque (si lo hay). */
+  const bootDelay=Math.max(0,((window.__magBootEnd||0)-performance.now())/1000);
+
+  /* Al terminar un revelado se limpian los estilos en línea y queda la clase
+     .in: así el :hover de las tarjetas vuelve a mandar sobre su posición. */
+  const fijar=els=>els.forEach(el=>{el.classList.add('in');gsap.set(el,{clearProps:'transform,filter,opacity'});});
+
+  /* Revelado por tipo de pieza: las tarjetas suben con una leve inclinación,
+     como una pieza que se apoya en la mesa; el texto sube y se enfoca. */
+  const esTarjeta=el=>el.matches('article,details,.clip-corner,.card-hover,.spec-row,.manifest > li');
+  const revs=gsap.utils.toArray('.reveal').filter(el=>!(home&&home.contains(el)));
+  gsap.set(revs.filter(esTarjeta),{y:44,rotateX:9,transformPerspective:1000,transformOrigin:'50% 100%'});
+  ScrollTrigger.batch(revs,{
     start:'top 88%',
     once:true,
-    onEnter:batch=>gsap.to(batch,{opacity:1,y:0,duration:1,stagger:0.1,ease:'power3.out',overwrite:true})
+    onEnter:batch=>gsap.to(batch,{opacity:1,y:0,rotateX:0,filter:'blur(0px)',duration:1,stagger:0.08,ease:'expo.out',overwrite:true,onComplete:()=>fijar(batch)})
+  });
+
+  /* Las líneas .decode se «decodifican» como la lectura de un control numérico.
+     El texto real va en un span solo para lectores de pantalla; lo que baila
+     es una copia aria-hidden, así nadie oye caracteres al azar. */
+  const GLIFOS='XYZGMFST0123456789.-';
+  function decodificar(el,retraso){
+    const vis=[];
+    Array.from(el.childNodes).forEach(n=>{
+      if(n.nodeType!==3||n.textContent.trim().length<2)return;
+      const txt=n.textContent.replace(/\s+/g,' ').trim();
+      const sr=document.createElement('span'); sr.className='sr-only'; sr.textContent=txt;
+      const v=document.createElement('span'); v.className='scr'; v.setAttribute('aria-hidden','true'); v.textContent=txt;
+      n.replaceWith(sr,v); vis.push({v,txt:sr.textContent});
+    });
+    if(!vis.length)return;
+    const dur=700; let t0=null;
+    function paso(ts){
+      if(t0===null)t0=ts+retraso*1000;
+      const p=(ts-t0)/dur;
+      if(p<0){requestAnimationFrame(paso);return;}
+      vis.forEach(({v,txt})=>{
+        v.textContent=p>=1?txt:txt.split('').map((c,i)=>c===' '||i/txt.length<p*1.15-0.15?c:GLIFOS[(Math.random()*GLIFOS.length)|0]).join('');
+      });
+      if(p<1)requestAnimationFrame(paso);
+    }
+    requestAnimationFrame(paso);
+  }
+  gsap.utils.toArray('.decode').forEach(el=>{
+    if(home&&home.contains(el))return;
+    ScrollTrigger.create({trigger:el,start:'top 88%',once:true,onEnter:()=>decodificar(el,0)});
   });
 
   /* Titulares con revelado palabra a palabra */
   document.querySelectorAll('.split-h').forEach(h=>{
     const words=h.textContent.trim().split(/\s+/);
     h.innerHTML=words.map(w=>`<span class="w-mask"><span class="w-in">${w}</span></span>`).join(' ');
+    if(home&&home.contains(h))return;
+    gsap.set(h.querySelectorAll('.w-in'),{rotate:5,transformOrigin:'0% 100%'});
     gsap.to(h.querySelectorAll('.w-in'),{
-      y:0,duration:0.9,stagger:0.045,ease:'power4.out',
+      y:0,rotate:0,duration:1,stagger:0.045,ease:'expo.out',
       scrollTrigger:{trigger:h,start:'top 88%',once:true}
     });
   });
 
-  /* Parallax de fondos y números de capa */
+  /* Coreografía del hero: etiqueta → titular → texto → CTA → garantías, y el
+     panel de simulación entra «mecanizado» con un barrido de arriba abajo. */
+  if(home){
+    const tl=gsap.timeline({delay:bootDelay});
+    const tag=home.querySelector('.decode'),h1=home.querySelector('h1');
+    const panelWrap=document.getElementById('hero-panel')&&document.getElementById('hero-panel').parentElement;
+    const resto=gsap.utils.toArray(home.querySelectorAll('.reveal')).filter(el=>el!==tag&&el!==panelWrap);
+    if(tag){ tl.to(tag,{opacity:1,y:0,duration:0.7,ease:'expo.out',onStart:()=>decodificar(tag,0),onComplete:()=>fijar([tag])},0); }
+    if(h1){ const ws=h1.querySelectorAll('.w-in'); gsap.set(ws,{rotate:6,transformOrigin:'0% 100%'}); tl.to(ws,{y:0,rotate:0,duration:1.1,stagger:0.06,ease:'expo.out'},0.08); }
+    tl.to(resto,{opacity:1,y:0,filter:'blur(0px)',duration:1,stagger:0.09,ease:'expo.out',onComplete:()=>fijar(resto)},0.35);
+    if(panelWrap){
+      tl.fromTo(panelWrap,{opacity:1,y:0,clipPath:'inset(0% 0% 100% 0%)'},{clipPath:'inset(0% 0% 0% 0%)',duration:1.2,ease:'expo.inOut',onComplete:()=>{fijar([panelWrap]);gsap.set(panelWrap,{clearProps:'clipPath'});}},0.2);
+    }
+    const franja=home.querySelectorAll(':scope > .border-t span');
+    if(franja.length) tl.from(franja,{opacity:0,y:12,duration:0.7,stagger:0.06,ease:'expo.out'},0.7);
+  }
+
+  /* Parallax de fondos */
   gsap.utils.toArray('[data-speed]').forEach(el=>{
     gsap.to(el,{
       yPercent:parseFloat(el.dataset.speed),ease:'none',
