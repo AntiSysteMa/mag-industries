@@ -51,15 +51,9 @@ h1{ line-height:1.12; }
   html{ scroll-snap-type:y proximity; }
   .layer{ scroll-snap-align:start; }
 }
-.layer-num{
-  position:absolute; right:2%; top:6%; z-index:0; pointer-events:none;
-  font-family:'Saira Stencil One',sans-serif; font-weight:400;
-  font-size:clamp(6rem,18vw,15rem); line-height:1; color:transparent;
-  -webkit-text-stroke:1px rgb(var(--c-line) / .9);
-}
 /* Barra de progreso global */
 #progress{ position:fixed; top:0; left:0; right:0; height:3px; z-index:80;
-  background:linear-gradient(90deg,var(--safety),var(--cyber)); transform:scaleX(0); transform-origin:left center; }
+  background:var(--safety); transform:scaleX(0); transform-origin:left center; }
 /* Navegación por puntos (capas) */
 #layer-nav{ position:fixed; right:26px; top:50%; transform:translateY(-50%); z-index:70; display:none; flex-direction:column; gap:6px; }
 @media (min-width:1024px){ #layer-nav{ display:flex; } }
@@ -364,12 +358,26 @@ a.clip-tab:active, button.clip-tab:active, .quiz-opt:active, button[type="submit
 /* ----- Revelados por tipo (los aplica app.js; aquí solo el estado de partida) ----- */
 html.anim-ready.gsap-on p.reveal:not(.in){ filter:blur(6px); }
 
-/* ----- Números de capa que se vacían como una cajera ----- */
-.layer-num[data-n]::after{
-  content:attr(data-n); position:absolute; inset:0;
-  color:rgb(var(--c-gold) / .13); -webkit-text-stroke:1px rgb(var(--c-gold) / .55);
-  clip-path:inset(calc(100% - var(--fill, 0%)) 0 0 0);
-}
+/* ----- Placas: listas en un solo panel en vez de filas de tarjetas iguales -----
+   Las filas se separan por un escalón de tono, no por líneas. */
+.plate > *:nth-child(even){ background:rgb(var(--c-panel)); }
+.svc-row{ display:grid; gap:.75rem; padding:1.75rem 1.5rem; }
+.svc-title{ font-family:'Saira Stencil One','Barlow',sans-serif; font-weight:400; font-size:clamp(1.5rem,2.4vw,2rem); line-height:1.1; color:rgb(var(--c-text)); transition:color .25s ease; }
+@media (min-width:768px){ .svc-row{ grid-template-columns:5fr 7fr; gap:3rem; padding:2.25rem 2.5rem; align-items:baseline; } }
+@media (hover:hover) and (pointer:fine){ .svc-row:hover .svc-title{ color:var(--safety); } }
+/* Placa de características: la cifra manda, el texto la justifica */
+.spec-row{ display:grid; gap:.5rem 2rem; padding:1.75rem 1.5rem; }
+.spec-fig{ font-family:'Saira Stencil One','Barlow',sans-serif; font-size:clamp(2.75rem,5vw,3.5rem); line-height:1; font-variant-numeric:tabular-nums; }
+.spec-unit{ font-size:.45em; margin-left:.15em; }
+@media (min-width:640px){ .spec-row{ grid-template-columns:9.5rem 1fr; align-items:center; padding:2rem 2.5rem; } }
+/* Albarán: lo que va siempre en la entrega */
+.manifest{ display:grid; }
+.manifest > li{ padding:1.5rem; }
+.manifest h3::before{ content:''; display:inline-block; width:7px; height:7px; margin-right:.6rem; vertical-align:.15em; background:var(--safety); transform:rotate(45deg); }
+.manifest-3 > li:nth-child(even), .manifest-2 > li:nth-child(4n+2), .manifest-2 > li:nth-child(4n+3){ background:rgb(var(--c-panel)); }
+@media (min-width:640px){ .manifest-2, .manifest-3{ grid-template-columns:repeat(2,1fr); } .manifest-3 > li:nth-child(even){ background:none; } .manifest-3 > li:nth-child(4n+2), .manifest-3 > li:nth-child(4n+3){ background:rgb(var(--c-panel)); } }
+@media (min-width:1024px){ .manifest-3{ grid-template-columns:repeat(3,1fr); } .manifest-3 > li:nth-child(n){ background:none; } .manifest-3 > li:nth-child(even){ background:rgb(var(--c-panel)); } }
+@media (max-width:639px){ .manifest-2 > li:nth-child(n){ background:none; } .manifest-2 > li:nth-child(even){ background:rgb(var(--c-panel)); } }
 
 /* ----- Luz de sonda sobre la rejilla del hero ----- */
 .probe{

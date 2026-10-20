@@ -1230,7 +1230,7 @@ document.querySelectorAll('.social-link').forEach(a=>{
 
   /* Revelado por tipo de pieza: las tarjetas suben con una leve inclinación,
      como una pieza que se apoya en la mesa; el texto sube y se enfoca. */
-  const esTarjeta=el=>el.matches('article,details,.clip-corner,.card-hover');
+  const esTarjeta=el=>el.matches('article,details,.clip-corner,.card-hover,.spec-row,.manifest > li');
   const revs=gsap.utils.toArray('.reveal').filter(el=>!(home&&home.contains(el)));
   gsap.set(revs.filter(esTarjeta),{y:44,rotateX:9,transformPerspective:1000,transformOrigin:'50% 100%'});
   ScrollTrigger.batch(revs,{
@@ -1239,7 +1239,7 @@ document.querySelectorAll('.social-link').forEach(a=>{
     onEnter:batch=>gsap.to(batch,{opacity:1,y:0,rotateX:0,filter:'blur(0px)',duration:1,stagger:0.08,ease:'expo.out',overwrite:true,onComplete:()=>fijar(batch)})
   });
 
-  /* Etiquetas que se «decodifican» como la lectura de un control numérico.
+  /* Las líneas .decode se «decodifican» como la lectura de un control numérico.
      El texto real va en un span solo para lectores de pantalla; lo que baila
      es una copia aria-hidden, así nadie oye caracteres al azar. */
   const GLIFOS='XYZGMFST0123456789.-';
@@ -1265,7 +1265,7 @@ document.querySelectorAll('.social-link').forEach(a=>{
     }
     requestAnimationFrame(paso);
   }
-  gsap.utils.toArray('p.tag').forEach(el=>{
+  gsap.utils.toArray('.decode').forEach(el=>{
     if(home&&home.contains(el))return;
     ScrollTrigger.create({trigger:el,start:'top 88%',once:true,onEnter:()=>decodificar(el,0)});
   });
@@ -1286,7 +1286,7 @@ document.querySelectorAll('.social-link').forEach(a=>{
      panel de simulación entra «mecanizado» con un barrido de arriba abajo. */
   if(home){
     const tl=gsap.timeline({delay:bootDelay});
-    const tag=home.querySelector('p.tag'),h1=home.querySelector('h1');
+    const tag=home.querySelector('.decode'),h1=home.querySelector('h1');
     const panelWrap=document.getElementById('hero-panel')&&document.getElementById('hero-panel').parentElement;
     const resto=gsap.utils.toArray(home.querySelectorAll('.reveal')).filter(el=>el!==tag&&el!==panelWrap);
     if(tag){ tl.to(tag,{opacity:1,y:0,duration:0.7,ease:'expo.out',onStart:()=>decodificar(tag,0),onComplete:()=>fijar([tag])},0); }
@@ -1299,14 +1299,7 @@ document.querySelectorAll('.social-link').forEach(a=>{
     if(franja.length) tl.from(franja,{opacity:0,y:12,duration:0.7,stagger:0.06,ease:'expo.out'},0.7);
   }
 
-  /* Números de capa: el contorno se «vacía» de abajo arriba al recorrer la capa */
-  gsap.utils.toArray('.layer-num').forEach(el=>{
-    el.dataset.n=el.textContent.trim();
-    gsap.fromTo(el,{'--fill':'0%'},{'--fill':'100%',ease:'none',
-      scrollTrigger:{trigger:el.closest('.layer')||el,start:'top 75%',end:'bottom 55%',scrub:0.6}});
-  });
-
-  /* Parallax de fondos y números de capa */
+  /* Parallax de fondos */
   gsap.utils.toArray('[data-speed]').forEach(el=>{
     gsap.to(el,{
       yPercent:parseFloat(el.dataset.speed),ease:'none',

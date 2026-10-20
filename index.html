@@ -43,7 +43,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="tailwind.css?v=12">
+<link rel="stylesheet" href="tailwind.css?v=13">
 <script>
   /* Tema: aplica antes de pintar para evitar parpadeo. Oscuro por defecto. */
   (function(){ try{ var t=localStorage.getItem('mag-theme')||'dark'; document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark'); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
@@ -139,17 +139,13 @@
 <section id="home" data-label="Inicio" class="layer relative overflow-hidden bg-grid bg-glow-top border-b border-night-line pt-[72px]">
   <div class="absolute inset-0 bg-glow-cy pointer-events-none" data-speed="-8"></div>
   <div class="probe" aria-hidden="true"></div>
-  <span class="layer-num" data-speed="10">01</span>
   <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-16 lg:py-20 grid lg:grid-cols-2 gap-14 items-center w-full">
     <div>
-      <p class="tag inline-flex items-center gap-2 text-xs text-cyber uppercase mb-6 border border-cyber/30 bg-cyber/5 px-3 py-1.5 clip-tab reveal">
-        <span class="w-1.5 h-1.5 rounded-full bg-cyber status-dot"></span>
-        Programación CNC externa · CAD/CAM · Oficina técnica de apoyo
-      </p>
       <h1 class="split-h text-4xl sm:text-5xl xl:text-[3.35rem] font-extrabold leading-[1.08] tracking-tight">
         Cero horas de máquina parada esperando programa
       </h1>
-      <p class="mt-6 text-lg text-steel-300 leading-relaxed max-w-xl reveal">
+      <p class="decode mt-5 text-base sm:text-lg font-semibold text-cyber reveal">Programación CNC externa · CAD/CAM · Oficina técnica de apoyo</p>
+      <p class="mt-4 text-lg text-steel-300 leading-relaxed max-w-xl reveal">
         Absorbemos los picos de tu oficina técnica <strong class="text-steel-100">sin que amplíes plantilla fija</strong>. Recibes el código G posprocesado para tu control, validado contra colisiones y con la documentación de taller lista para pulsar <span class="text-cyber font-semibold">Cycle Start</span>.
       </p>
       <div class="mt-8 flex flex-col sm:flex-row gap-4 reveal">
@@ -200,49 +196,35 @@
 <!-- CAPA 02 · CÓMO EMPEZAMOS -->
 <section id="proceso" data-label="Cómo empezamos" class="layer border-b border-night-line bg-night-soft relative overflow-hidden">
   <div class="absolute inset-0 bg-grid opacity-30 pointer-events-none"></div>
-  <span class="layer-num" data-speed="12">02</span>
   <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20 w-full">
     <div class="max-w-2xl mb-14">
-      <p class="tag text-xs text-cyber uppercase mb-3 reveal">Sin fricción</p>
       <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight">Cómo empezamos a trabajar</h2>
       <p class="mt-4 text-steel-400 reveal">Tres pasos desde que nos mandas el fichero hasta que tu operario pulsa Cycle Start. Sin reuniones de tanteo, sin proceso de alta y sin compromiso hasta que apruebas el presupuesto.</p>
     </div>
 
-    <div class="grid lg:grid-cols-3 gap-6">
-      <article class="card-hover bg-night-card border border-night-line clip-corner p-8 reveal">
-        <div class="flex items-baseline gap-4 mb-5">
-          <span class="font-titulo text-5xl text-safety leading-none">01</span>
-          <span class="tag text-[10px] text-steel-500 uppercase">Tú envías</span>
-        </div>
-        <h3 class="font-bold text-lg mb-4">El fichero y los datos de tu máquina</h3>
+    <ol class="grid lg:grid-cols-3 gap-6">
+      <li class="card-hover bg-night-card border border-night-line clip-corner p-8 reveal">
+        <h3 class="font-bold text-xl leading-snug mb-4">Tú envías el fichero y los datos de tu máquina</h3>
         <p class="text-steel-400 text-sm leading-relaxed mb-6">Un STEP, un IGES, el fichero nativo de tu CAD, o un plano en PDF si todavía no hay 3D. Con él necesitamos tres datos: máquina y número de ejes, control y el amarre del que dispones.</p>
         <div class="border-t border-night-line pt-5 space-y-2.5">
           <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-microchip text-cyber text-xs mt-1"></i><span class="text-steel-300">Heidenhain TNC · Fanuc 0i / 30i · Siemens 840D · Mazak Mazatrol</span></div>
           <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-file-code text-cyber text-xs mt-1"></i><span class="text-steel-300">Si tienes un programa que ya funcione bien en esa máquina, mándalo: de ahí sacamos tu postprocesador real en vez de uno genérico.</span></div>
           <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-file-shield text-cyber text-xs mt-1"></i><span class="text-steel-300">El NDA se firma antes de que salga el primer archivo de tu servidor.</span></div>
         </div>
-      </article>
+      </li>
 
-      <article class="card-hover bg-night-card border border-night-line clip-corner p-8 reveal">
-        <div class="flex items-baseline gap-4 mb-5">
-          <span class="font-titulo text-5xl text-safety leading-none">02</span>
-          <span class="tag text-[10px] text-steel-500 uppercase">Nosotros cerramos</span>
-        </div>
-        <h3 class="font-bold text-lg mb-4">Presupuesto y plazo, antes de tocar nada</h3>
+      <li class="card-hover bg-night-card border border-night-line clip-corner p-8 reveal">
+        <h3 class="font-bold text-xl leading-snug mb-4">Nosotros cerramos presupuesto y plazo, antes de tocar nada</h3>
         <p class="text-steel-400 text-sm leading-relaxed mb-6">En cuestión de horas tienes precio fijo y fecha de entrega comprometida por escrito. No trabajamos con horas abiertas: si la pieza se complica más de lo previsto, el sobrecoste es nuestro, no tuyo.</p>
         <div class="border-t border-night-line pt-5 space-y-2.5">
           <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-lock text-cyber text-xs mt-1"></i><span class="text-steel-300">Lo que apruebas es exactamente lo que se factura.</span></div>
           <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-ban text-cyber text-xs mt-1"></i><span class="text-steel-300">Sin extras a mitad de proyecto ni revisiones cobradas aparte.</span></div>
           <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-percent text-cyber text-xs mt-1"></i><span class="text-steel-300">Primera pieza al 50 % para clientes nuevos: probar apenas cuesta.</span></div>
         </div>
-      </article>
+      </li>
 
-      <article class="card-hover bg-night-card border border-safety/40 clip-corner p-8 reveal">
-        <div class="flex items-baseline gap-4 mb-5">
-          <span class="font-titulo text-5xl text-safety leading-none">03</span>
-          <span class="tag text-[10px] text-safety uppercase">Recibes</span>
-        </div>
-        <h3 class="font-bold text-lg mb-4">El paquete listo para Cycle Start</h3>
+      <li class="card-hover bg-night-card border border-safety/40 clip-corner p-8 reveal">
+        <h3 class="font-bold text-xl leading-snug mb-4">Recibes el paquete listo para Cycle Start</h3>
         <p class="text-steel-400 text-sm leading-relaxed mb-6">No recibes «un CAM» que alguien tenga que interpretar en el taller. Recibes todo lo necesario para que la máquina arranque sin que nadie tenga que adivinar nada.</p>
         <div class="border-t border-night-line pt-5 space-y-2.5">
           <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-check text-safety text-xs mt-1"></i><span class="text-steel-300">Código G posprocesado para tu control concreto</span></div>
@@ -251,8 +233,8 @@
           <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-check text-safety text-xs mt-1"></i><span class="text-steel-300">Parámetros F y S por operación</span></div>
           <div class="flex items-start gap-3 text-sm"><i aria-hidden="true" class="fa-solid fa-check text-safety text-xs mt-1"></i><span class="text-steel-300">Vídeo de la simulación de colisiones, para que tu operario vea lo que va a pasar antes de que pase</span></div>
         </div>
-      </article>
-    </div>
+      </li>
+    </ol>
 
     <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 reveal">
       <a href="auditoria-gratuita.html" class="inline-flex items-center justify-center gap-3 bg-safety text-night font-bold px-7 py-4 clip-tab hover:brightness-110 transition text-base"><i aria-hidden="true" class="fa-solid fa-paper-plane"></i> Manda tu plano y te digo la viabilidad en minutos</a>
@@ -264,10 +246,8 @@
 
 <!-- CAPA 03 · EVIDENCIA -->
 <section id="cases" data-label="Evidencia" class="layer border-b border-night-line overflow-hidden">
-  <span class="layer-num" data-speed="12">03</span>
   <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20 w-full">
     <div class="max-w-2xl mb-14">
-      <p class="tag text-xs text-safety uppercase mb-3 reveal">Evidencia, no adjetivos</p>
       <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight">Mira la estrategia antes de confiar en el proveedor</h2>
       <p class="mt-4 text-steel-400 reveal">Todo el mundo en este sector dice que «optimiza trayectorias». Esto es lo que significa en la práctica: la estrategia concreta, por qué se elige y qué te ahorra en máquina.</p>
     </div>
@@ -303,8 +283,7 @@
           </svg>
         </div>
         <div class="p-7">
-          <span class="tag text-[10px] text-cyber uppercase block mb-3">01 · Desbaste HSM</span>
-          <h3 class="font-bold text-lg mb-3">Carga de viruta constante</h3>
+          <h3 class="font-bold text-lg leading-snug mb-3">Desbaste HSM: carga de viruta constante</h3>
           <p class="text-steel-400 text-sm leading-relaxed mb-5">El desbaste convencional entra y sale del material con ángulos de compromiso variables: la herramienta sufre picos de carga, vibra y rompe antes de tiempo. Con HSM el ángulo se mantiene controlado durante toda la pasada, lo que permite subir avance y profundidad axial sin castigar el filo.</p>
           <p class="text-xs text-steel-500 border-t border-night-line pt-4">Se nota en vida de herramienta y en acabado, sobre todo en acero de herramienta templado.</p>
         </div>
@@ -338,8 +317,7 @@
           </svg>
         </div>
         <div class="p-7">
-          <span class="tag text-[10px] text-cyber uppercase block mb-3">02 · Trocoidal</span>
-          <h3 class="font-bold text-lg mb-3">Ranurado agresivo sin romper filos</h3>
+          <h3 class="font-bold text-lg leading-snug mb-3">Trocoidal: ranurado agresivo sin romper filos</h3>
           <p class="text-steel-400 text-sm leading-relaxed mb-5">En ranuras y cajeras profundas, fresar a pleno ancho es donde mueren las herramientas. El trocoidal ataca con poca inmersión radial y mucha profundidad axial, describiendo bucles que reparten el desgaste por toda la longitud de corte.</p>
           <p class="text-xs text-steel-500 border-t border-night-line pt-4">Permite desbastar D2, H13 o Ti-6Al-4V con fresas más pequeñas y máquinas menos potentes de lo que parecería necesario.</p>
         </div>
@@ -370,8 +348,7 @@
           </svg>
         </div>
         <div class="p-7">
-          <span class="tag text-[10px] text-cyber uppercase block mb-3">03 · 5 ejes continuos</span>
-          <h3 class="font-bold text-lg mb-3">Control de vector y colisiones</h3>
+          <h3 class="font-bold text-lg leading-snug mb-3">5 ejes continuos: control de vector y colisiones</h3>
           <p class="text-steel-400 text-sm leading-relaxed mb-5">En 5 ejes el riesgo no está en la punta de la herramienta: está en el portaherramientas, en el cabezal y en las bridas. Verificamos límites de recorrido y singularidades, y ajustamos el vector para evitar cambios bruscos de orientación que dejan marca en la superficie.</p>
           <p class="text-xs text-steel-500 border-t border-night-line pt-4">Cuando disponemos del modelo cinemático de tu máquina, la simulación se hace contra ella y no contra una genérica.</p>
         </div>
@@ -397,33 +374,27 @@
 
 <!-- CAPA 04 · SERVICIOS -->
 <section id="servicios" data-label="Servicios" class="layer border-b border-night-line overflow-hidden bg-night-soft">
-  <span class="layer-num" data-speed="12">04</span>
   <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20 w-full">
     <div class="max-w-2xl mb-14">
-      <p class="tag text-xs text-safety uppercase mb-3 reveal">Nuestras soluciones</p>
       <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight">Ingeniería orientada a resultados</h2>
       <p class="mt-4 text-steel-400 reveal">Un departamento técnico externo con la profundidad de uno propio, sin el coste fijo de mantenerlo todo el año. Diseñamos, programamos y validamos; tú produces.</p>
     </div>
-    <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
-      <article class="card-hover group bg-night-card border border-night-line clip-corner p-7 reveal">
-        <span class="w-[52px] h-[52px] bg-safety/10 border border-safety/30 flex items-center justify-center mb-5"><i aria-hidden="true" class="fa-solid fa-layer-group text-safety text-lg"></i></span>
-        <h3 class="text-lg font-bold mb-3 group-hover:text-safety transition">Diseño CAD avanzado</h3>
-        <p class="text-steel-400 text-sm leading-relaxed">Modelado 3D de piezas, conjuntos y utillajes. Creación desde cero o modificación de diseños existentes: matrices y moldes para inyección, estampado y forja. Planos con tolerancias, ensambles y despieces listos para producción en sectores aeronáutico, automotriz, médico y energético.</p>
+    <div class="plate bg-night-card border border-night-line clip-corner overflow-hidden">
+      <article class="svc-row reveal">
+        <h3 class="svc-title">Diseño CAD avanzado</h3>
+        <p class="text-steel-300 leading-relaxed">Modelado 3D de piezas, conjuntos y utillajes. Creación desde cero o modificación de diseños existentes: matrices y moldes para inyección, estampado y forja. Planos con tolerancias, ensambles y despieces listos para producción en sectores aeronáutico, automotriz, médico y energético.</p>
       </article>
-      <article class="card-hover group bg-night-card border border-night-line clip-corner p-7 reveal">
-        <span class="w-[52px] h-[52px] bg-cyber/10 border border-cyber/30 flex items-center justify-center mb-5"><i aria-hidden="true" class="fa-solid fa-route text-cyber text-lg"></i></span>
-        <h3 class="text-lg font-bold mb-3 group-hover:text-safety transition">Programación CAM</h3>
-        <p class="text-steel-400 text-sm leading-relaxed">Trayectorias de alta velocidad optimizadas con independencia del software. Programación para centros de mecanizado, tornos CNC y máquinas especiales, maximizando velocidad de corte y minimizando tiempos de ciclo — Heidenhain, Fanuc, Siemens, Mazak u otros.</p>
+      <article class="svc-row reveal">
+        <h3 class="svc-title">Programación CAM</h3>
+        <p class="text-steel-300 leading-relaxed">Trayectorias de alta velocidad optimizadas con independencia del software. Programación para centros de mecanizado, tornos CNC y máquinas especiales, maximizando velocidad de corte y minimizando tiempos de ciclo — Heidenhain, Fanuc, Siemens, Mazak u otros.</p>
       </article>
-      <article class="card-hover group bg-night-card border border-night-line clip-corner p-7 reveal">
-        <span class="w-[52px] h-[52px] bg-safety/10 border border-safety/30 flex items-center justify-center mb-5"><i aria-hidden="true" class="fa-solid fa-file-invoice text-safety text-lg"></i></span>
-        <h3 class="text-lg font-bold mb-3 group-hover:text-safety transition">Kit de preparación de taller</h3>
-        <p class="text-steel-400 text-sm leading-relaxed">Documentación completa para manufactura: hojas de ruta, parámetros de corte F y S, orígenes G54–G59, voladizos y hojas de tolerancias. Incluye planos para procesos externos: soldadura, corte láser, grabados, pintura y tratamientos. Tu taller ejecuta sin dudas.</p>
+      <article class="svc-row reveal">
+        <h3 class="svc-title">Kit de preparación de taller</h3>
+        <p class="text-steel-300 leading-relaxed">Documentación completa para manufactura: hojas de ruta, parámetros de corte F y S, orígenes G54–G59, voladizos y hojas de tolerancias. Incluye planos para procesos externos: soldadura, corte láser, grabados, pintura y tratamientos. Tu taller ejecuta sin dudas.</p>
       </article>
-      <article class="card-hover group bg-night-card border border-night-line clip-corner p-7 reveal">
-        <span class="w-[52px] h-[52px] bg-cyber/10 border border-cyber/30 flex items-center justify-center mb-5"><i aria-hidden="true" class="fa-solid fa-cube text-cyber text-lg"></i></span>
-        <h3 class="text-lg font-bold mb-3 group-hover:text-safety transition">Simulación de gemelo digital</h3>
-        <p class="text-steel-400 text-sm leading-relaxed">Simulación del código G en entorno virtual antes de mecanizar. Validación de trayectorias y detección de colisiones máquina-pieza-utillaje, con ajustes virtuales de configuración y posicionamiento. Cero colisiones garantizadas antes de tocar el entorno físico.</p>
+      <article class="svc-row reveal">
+        <h3 class="svc-title">Simulación de gemelo digital</h3>
+        <p class="text-steel-300 leading-relaxed">Simulación del código G en entorno virtual antes de mecanizar. Validación de trayectorias y detección de colisiones máquina-pieza-utillaje, con ajustes virtuales de configuración y posicionamiento. Cero colisiones garantizadas antes de tocar el entorno físico.</p>
       </article>
     </div>
   </div>
@@ -431,10 +402,8 @@
 
 <!-- CAPA 05 · AUDITORÍA -->
 <section id="auditoria" data-label="Auditoría" class="layer border-b border-night-line overflow-hidden">
-  <span class="layer-num" data-speed="12">05</span>
   <div class="relative max-w-4xl mx-auto px-5 lg:px-10 py-20 w-full">
     <div class="text-center mb-10">
-      <p class="tag text-xs text-safety uppercase mb-3 reveal">Análisis de rendimiento operativo</p>
       <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight">¿Cuántas horas de mecanizado pierdes cada semana?</h2>
       <p class="mt-3 text-steel-400 max-w-xl mx-auto reveal">Tres preguntas. Tres minutos. Un diagnóstico real de las fugas de rentabilidad en tu planta.</p>
     </div>
@@ -454,7 +423,6 @@
     <!-- CALCULADORA · pone cifra al problema que el quiz acaba de nombrar -->
     <div class="mt-12 reveal">
       <div class="text-center mb-8">
-        <p class="tag text-xs text-cyber uppercase mb-3">Lo que cuesta esperar</p>
         <h3 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Ponle una cifra a la máquina parada</h3>
         <p class="mt-3 text-steel-400 max-w-xl mx-auto text-sm">Mueve las dos barras con tus datos reales. La cuenta es la que haría cualquiera; el valor está en verla escrita.</p>
       </div>
@@ -501,39 +469,47 @@
 
 <!-- CAPA 06 · COMPROMISOS -->
 <section id="why-mag" data-label="Compromisos" class="layer border-b border-night-line overflow-hidden bg-night-soft">
-  <span class="layer-num" data-speed="12">06</span>
   <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20 w-full">
     <div class="text-center max-w-2xl mx-auto mb-14">
-      <p class="tag text-xs text-safety uppercase mb-3 reveal">Compromisos verificables</p>
       <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight">No vendemos antigüedad. Vendemos compromisos.</h2>
       <p class="mt-3 text-steel-400 reveal">Este sector está lleno de eslóganes de «40 años de experiencia». Preferimos decirte exactamente qué recibes en cada entrega y responder por ello por escrito.</p>
     </div>
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div class="card-hover bg-night-card border border-night-line clip-corner p-8 reveal">
-        <span class="w-[52px] h-[52px] bg-cyber/10 border border-cyber/30 flex items-center justify-center mb-6"><i aria-hidden="true" class="fa-solid fa-shield-halved text-cyber text-lg"></i></span>
-        <h3 class="font-bold text-lg mb-2">Colisiones registradas</h3><p class="text-steel-400 text-sm mb-6">Cada programa se valida en simulación antes de salir. Si uno colisiona por un error nuestro, lo rehacemos gratis y devolvemos el importe.</p>
-        <div class="text-4xl font-extrabold text-cyber tracking-tight">0</div>
+    <div class="plate max-w-4xl mx-auto bg-night-card border border-night-line clip-corner overflow-hidden">
+      <div class="spec-row reveal">
+        <div class="spec-fig text-cyber">0</div>
+        <div>
+          <h3 class="font-bold text-lg mb-1.5">Colisiones registradas</h3>
+          <p class="text-steel-400 text-sm leading-relaxed">Cada programa se valida en simulación antes de salir. Si uno colisiona por un error nuestro, lo rehacemos gratis y devolvemos el importe.</p>
+        </div>
       </div>
-      <div class="card-hover bg-night-card border border-night-line clip-corner p-8 reveal">
-        <span class="w-[52px] h-[52px] bg-safety/10 border border-safety/30 flex items-center justify-center mb-6"><i aria-hidden="true" class="fa-solid fa-clock text-safety text-lg"></i></span>
-        <h3 class="font-bold text-lg mb-2">Plazo de entrega</h3><p class="text-steel-400 text-sm mb-6">Horas comprometidas para una pieza estándar desde que recibimos el modelo. Urgencias en 24 h con recargo.</p>
-        <div class="text-4xl font-extrabold text-safety tracking-tight counter" data-target="48" data-suffix=" h">0</div>
+      <div class="spec-row reveal">
+        <div class="spec-fig text-safety counter" data-target="48" data-suffix=" h">0</div>
+        <div>
+          <h3 class="font-bold text-lg mb-1.5">Plazo de entrega</h3>
+          <p class="text-steel-400 text-sm leading-relaxed">Horas comprometidas para una pieza estándar desde que recibimos el modelo. Urgencias en 24 h con recargo.</p>
+        </div>
       </div>
-      <div class="card-hover bg-night-card border border-night-line clip-corner p-8 reveal">
-        <span class="w-[52px] h-[52px] bg-safety/10 border border-safety/30 flex items-center justify-center mb-6"><i aria-hidden="true" class="fa-solid fa-award text-safety text-lg"></i></span>
-        <h3 class="font-bold text-lg mb-2">Años de ingeniería CAD/CAM</h3><p class="text-steel-400 text-sm mb-6">Ingeniería de proyecto en energía, automoción y matricería. En taller y en oficina técnica, no solo en oficina técnica.</p>
-        <div class="text-4xl font-extrabold text-safety tracking-tight counter" data-target="7" data-suffix="">0</div>
+      <div class="spec-row reveal">
+        <div class="spec-fig text-safety counter" data-target="7" data-suffix="">0</div>
+        <div>
+          <h3 class="font-bold text-lg mb-1.5">Años de ingeniería CAD/CAM</h3>
+          <p class="text-steel-400 text-sm leading-relaxed">Ingeniería de proyecto en energía, automoción y matricería. En taller y en oficina técnica, no solo en oficina técnica.</p>
+        </div>
       </div>
-      <div class="card-hover bg-night-card border border-night-line clip-corner p-8 reveal lg:col-span-2">
-        <span class="w-[52px] h-[52px] bg-safety/10 border border-safety/30 flex items-center justify-center mb-6"><i aria-hidden="true" class="fa-solid fa-file-invoice text-safety text-lg"></i></span>
-        <h3 class="font-bold text-lg mb-2">Precio cerrado por pieza</h3><p class="text-steel-400 text-sm mb-6">Presupuesto fijo antes de empezar, con la documentación de taller incluida en el precio. Sin horas abiertas, sin extras a mitad de proyecto y sin facturas sorpresa.</p>
-        <div class="text-4xl font-extrabold text-safety tracking-tight">0 <span class="text-2xl">extras</span></div>
+      <div class="spec-row reveal">
+        <div class="spec-fig text-safety">0 <span class="spec-unit">extras</span></div>
+        <div>
+          <h3 class="font-bold text-lg mb-1.5">Precio cerrado por pieza</h3>
+          <p class="text-steel-400 text-sm leading-relaxed">Presupuesto fijo antes de empezar, con la documentación de taller incluida en el precio. Sin horas abiertas, sin extras a mitad de proyecto y sin facturas sorpresa.</p>
+        </div>
       </div>
-      <div class="card-hover bg-night-card border border-night-line clip-corner p-8 reveal">
-        <span class="w-[52px] h-[52px] bg-cyber/10 border border-cyber/30 flex items-center justify-center mb-6"><i aria-hidden="true" class="fa-solid fa-globe text-cyber text-lg"></i></span>
-        <h3 class="font-bold text-lg mb-2">Independencia de plataforma</h3><p class="text-steel-400 text-sm mb-6">El proceso no cambia con el software: cambia la interfaz. Lo que decide el resultado es la planificación de ingeniería, no el menú donde se pulsa. Trabajamos en el entorno CAD/CAM que ya tiene el cliente y entregamos el código posprocesado para su control.</p>
-        <div class="text-4xl font-extrabold text-cyber tracking-tight counter" data-target="4" data-suffix="">0</div>
-        <div class="tag text-[10px] text-steel-500 uppercase mt-2">Familias de control · Heidenhain · Fanuc · Siemens · Mazak</div>
+      <div class="spec-row reveal">
+        <div class="spec-fig text-cyber counter" data-target="4" data-suffix="">0</div>
+        <div>
+          <h3 class="font-bold text-lg mb-1.5">Independencia de plataforma</h3>
+          <p class="text-steel-400 text-sm leading-relaxed">El proceso no cambia con el software: cambia la interfaz. Lo que decide el resultado es la planificación de ingeniería, no el menú donde se pulsa. Trabajamos en el entorno CAD/CAM que ya tiene el cliente y entregamos el código posprocesado para su control.</p>
+          <p class="text-xs text-steel-500 mt-2">Familias de control · Heidenhain · Fanuc · Siemens · Mazak</p>
+        </div>
       </div>
     </div>
   </div>
@@ -541,16 +517,13 @@
 
 <!-- CAPA 07 · REFERENCIAS -->
 <section id="testimonials" data-label="Referencias" class="layer border-b border-night-line overflow-hidden">
-  <span class="layer-num" data-speed="12">07</span>
   <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20 w-full">
     <div class="max-w-2xl mb-14">
-      <p class="tag text-xs text-safety uppercase mb-3 reveal">Referencias</p>
       <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight">Prefiero que se lo preguntes a mis clientes</h2>
       <p class="mt-4 text-steel-400 reveal">MAG INDUSTRIES es un proyecto joven y no vamos a fingir lo contrario. No encontrarás aquí testimonios anónimos ni cifras redondas sin origen: encontrarás una forma directa de comprobar si trabajamos bien.</p>
     </div>
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
       <article class="lg:col-span-2 bg-night-card border border-night-line clip-corner p-8 reveal">
-        <i aria-hidden="true" class="fa-solid fa-phone-volume text-safety/25 text-3xl mb-5"></i>
         <h3 class="text-xl md:text-2xl font-bold leading-snug mb-5 text-steel-100">Habla directamente con el taller para el que programo</h3>
         <p class="text-steel-400 mb-7 leading-relaxed">Trabajo cada semana para un taller mecánico de matricería en Cataluña, programando sobre todo postizos y piezas 3D. Si estás valorando externalizar tu programación y quieres una opinión que no venga de mí, se lo consulto y te paso su contacto para que le preguntes lo que quieras: plazos, calidad del código, documentación y si volvería a contar conmigo. Sin intermediarios y sin guion.</p>
         <div class="bg-night-soft border border-night-line p-4 clip-tab"><span class="tag text-[10px] text-safety uppercase block mb-1">Cómo pedirlo</span><span class="text-sm text-steel-300">Pídemelo por WhatsApp o en la auditoría gratuita. Consulto con él primero y, si le va bien, os pongo en contacto.</span></div>
@@ -559,14 +532,12 @@
       <!-- Cuando JPARENTE envíe su testimonio por escrito, sustituir esta
            tarjeta por una <blockquote> con nombre, cargo y empresa reales. -->
       <article class="bg-night-card border border-night-line clip-corner p-8 reveal">
-        <i aria-hidden="true" class="fa-solid fa-shield-halved text-cyber/25 text-3xl mb-5"></i>
         <h3 class="text-lg font-bold mb-4 text-steel-100">Garantía por escrito</h3>
         <p class="text-steel-400 text-sm leading-relaxed mb-6">Si un programa mío colisiona en tu máquina por un error de programación verificable, lo rehago sin coste y te devuelvo el importe de la pieza. Puedo ofrecerlo porque valido absolutamente todas las entregas en simulación.</p>
         <div class="bg-night-soft border border-night-line p-4 clip-tab"><span class="tag text-[10px] text-cyber uppercase block mb-1">Cobertura</span><span class="font-bold text-sm">Rehacemos el trabajo y devolvemos el importe</span></div>
       </article>
 
       <article class="bg-night-card border border-night-line clip-corner p-8 reveal">
-        <i aria-hidden="true" class="fa-solid fa-handshake-angle text-safety/25 text-3xl mb-5"></i>
         <h3 class="text-lg font-bold mb-4 text-steel-100">La primera pieza, sin riesgo</h3>
         <p class="text-steel-400 text-sm leading-relaxed mb-6">Sé que el problema no es el precio: es confiar tu máquina a alguien que no conoces. Por eso la primera pieza de cada cliente nuevo va a mitad de precio, y si el resultado no te convence, no la pagas.</p>
         <div class="bg-night-soft border border-night-line p-4 clip-tab"><span class="tag text-[10px] text-safety uppercase block mb-1">Primera colaboración</span><span class="font-bold text-sm">50 % de descuento · sin compromiso</span></div>
@@ -577,10 +548,8 @@
 
 <!-- CAPA 08 · FAQ -->
 <section id="faq" data-label="FAQ" class="layer border-b border-night-line bg-night-soft overflow-hidden">
-  <span class="layer-num" data-speed="12">08</span>
   <div class="relative max-w-4xl mx-auto px-5 lg:px-10 py-20 w-full">
     <div class="text-center max-w-2xl mx-auto mb-12">
-      <p class="tag text-xs text-safety uppercase mb-3 reveal">Matriz de confianza</p>
       <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight">Despejamos tus dudas técnicas</h2>
       <p class="mt-3 text-steel-400 reveal">Sin discursos comerciales. Así abordamos los desafíos reales de externalizar la programación.</p>
     </div>
@@ -608,10 +577,8 @@
 <!-- CAPA 09 · CONTACTO -->
 <section id="contact" data-label="Contacto" class="layer border-b border-night-line relative overflow-hidden">
   <div class="absolute inset-0 bg-grid opacity-30 pointer-events-none"></div>
-  <span class="layer-num" data-speed="12">09</span>
   <div class="relative max-w-7xl mx-auto px-5 lg:px-10 py-20 grid lg:grid-cols-12 gap-12 w-full">
     <div class="lg:col-span-5">
-      <p class="tag text-xs text-safety uppercase mb-3 reveal">Contacto directo</p>
       <h2 class="split-h text-3xl sm:text-4xl font-extrabold tracking-tight mb-5">Inicia tu auditoría técnica hoy</h2>
       <p class="text-steel-400 mb-10 reveal">Cuéntame qué pieza te está frenando y te digo cómo la programaría. Hablas directamente con el ingeniero que va a hacer el trabajo, no con un comercial.</p>
       <div class="space-y-6 reveal">
@@ -673,6 +640,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js" defer></script>
-<script src="app.js?v=13" defer></script>
+<script src="app.js?v=14" defer></script>
 </body>
 </html>

@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="tailwind.css?v=12">
+<link rel="stylesheet" href="tailwind.css?v=13">
 <script>
   (function(){ try{ var t=localStorage.getItem('mag-theme')||'dark'; document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark'); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
   /* La animacion de entrada es una MEJORA, no un requisito para ver la web.
@@ -83,7 +83,6 @@
 <!-- HERO -->
 <section class="relative overflow-hidden bg-grid bg-glow-top border-b border-night-line pt-[72px]">
   <div class="relative max-w-4xl mx-auto px-5 lg:px-10 py-16 lg:py-20 text-center">
-    <p class="tag text-xs text-safety uppercase mb-4 reveal">Blog técnico</p>
     <h1 class="font-titulo text-3xl sm:text-4xl lg:text-5xl leading-[1.1] tracking-tight mb-6 reveal">Criterio técnico, no folletos</h1>
     <p class="text-lg text-steel-300 max-w-2xl mx-auto reveal">Estrategias de mecanizado, costes de oficina técnica y decisiones que se toman en el taller. Escrito para gente que sabe leer un plano, con las cifras a la vista y diciendo también cuándo <em>no</em> nos necesitas.</p>
   </div>
@@ -92,7 +91,7 @@
 <!-- ARTÍCULO DESTACADO -->
 <section class="border-b border-night-line">
   <div class="max-w-5xl mx-auto px-5 lg:px-10 py-16">
-    <p class="tag text-xs text-cyber uppercase mb-6 reveal">Último artículo</p>
+    <h2 class="text-xl font-bold text-steel-100 mb-6 reveal">Último artículo</h2>
 
     <a href="blog-trocoidal-acero-herramienta.html" class="group block bg-night-card border border-night-line clip-corner overflow-hidden card-hover reveal mb-6">
       <div class="grid md:grid-cols-5">
@@ -126,7 +125,7 @@
       </div>
     </a>
 
-    <p class="tag text-xs text-steel-500 uppercase mb-6 mt-12 reveal">Anteriores</p>
+    <h2 class="text-xl font-bold text-steel-100 mb-6 mt-14 reveal">Anteriores</h2>
 
     <a href="blog-plantilla-o-externalizar.html" class="group block bg-night-card border border-night-line clip-corner overflow-hidden card-hover reveal">
       <div class="grid md:grid-cols-5">
@@ -163,7 +162,6 @@
 <section class="border-b border-night-line bg-night-soft">
   <div class="max-w-5xl mx-auto px-5 lg:px-10 py-16">
     <div class="max-w-2xl mb-10">
-      <p class="tag text-xs text-safety uppercase mb-3 reveal">En preparación</p>
       <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-4 reveal">Lo que viene</h2>
       <p class="text-steel-400 reveal">El blog acaba de arrancar. Estos son los temas ya en el tintero, uno cada dos semanas. Si hay alguno que te interesa especialmente, dímelo y lo adelanto.</p>
     </div>
@@ -220,6 +218,6 @@
 </a>
 
 <script defer src="/_vercel/insights/script.js"></script>
-<script src="app.js?v=13" defer></script>
+<script src="app.js?v=14" defer></script>
 </body>
 </html>

@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="tailwind.css?v=12">
+<link rel="stylesheet" href="tailwind.css?v=13">
 <script>
   (function(){ try{ var t=localStorage.getItem('mag-theme')||'dark'; document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark'); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
   /* La animacion de entrada es una MEJORA, no un requisito para ver la web.
@@ -68,10 +68,10 @@
   <div class="relative max-w-6xl mx-auto px-5 lg:px-10 py-16 lg:py-20 grid lg:grid-cols-12 gap-12 items-start">
 
     <div class="lg:col-span-7">
-      <p class="tag text-xs text-cyber uppercase mb-4 reveal">Auditoría técnica · 45 minutos · sin coste</p>
       <h1 class="font-titulo text-3xl sm:text-4xl lg:text-[2.9rem] leading-[1.1] tracking-tight mb-6 reveal">
         Mándame una pieza que te esté dando guerra y te enseño cómo la programaría
       </h1>
+      <p class="-mt-2 mb-6 text-base sm:text-lg font-semibold text-cyber reveal">Auditoría técnica · 45 minutos · sin coste</p>
       <p class="text-lg text-steel-300 mb-8 max-w-xl reveal">
         Nada de presentación comercial. Abrimos tu pieza en pantalla compartida, te enseño la estrategia de mecanizado que usaría, la simulación sin colisiones y el tiempo de ciclo estimado. Te llevas la grabación y un informe de una página, contrates o no.
       </p>
@@ -142,7 +142,6 @@
 <section id="agenda" class="border-b border-night-line bg-night-soft">
   <div class="max-w-4xl mx-auto px-5 lg:px-10 py-20">
     <div class="text-center max-w-2xl mx-auto mb-10">
-      <p class="tag text-xs text-cyber uppercase mb-3 reveal">Reserva directa</p>
       <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight reveal">Elige tú el hueco y queda reservado</h2>
       <p class="mt-4 text-steel-400 reveal">Sin ida y vuelta de correos. Los huecos que ves son los que tengo libres de verdad: salen de mi calendario en tiempo real. Al reservar recibes la invitación con el enlace de videollamada.</p>
     </div>
@@ -166,26 +165,22 @@
 <section class="border-b border-night-line bg-night-soft">
   <div class="max-w-6xl mx-auto px-5 lg:px-10 py-20">
     <div class="max-w-2xl mb-14">
-      <p class="tag text-xs text-safety uppercase mb-3 reveal">Cómo funciona</p>
       <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight reveal">Qué pasa exactamente en esos 45 minutos</h2>
     </div>
-    <div class="grid md:grid-cols-3 gap-6">
-      <article class="card-hover bg-night-card border border-night-line clip-corner p-7 reveal">
-        <div class="font-titulo text-5xl text-safety mb-4">01</div>
+    <ol class="grid md:grid-cols-3 gap-6">
+      <li class="card-hover bg-night-card border border-night-line clip-corner p-7 reveal">
         <h3 class="font-bold text-lg mb-3">Firmamos el NDA y nos mandas la pieza</h3>
         <p class="text-steel-400 text-sm leading-relaxed">Un modelo 3D, un plano o incluso una foto con las cotas. Antes de abrir nada, firmamos el acuerdo de confidencialidad. Si tu pieza está bajo NDA con tu cliente, trabajamos igualmente sobre ella.</p>
-      </article>
-      <article class="card-hover bg-night-card border border-night-line clip-corner p-7 reveal">
-        <div class="font-titulo text-5xl text-safety mb-4">02</div>
+      </li>
+      <li class="card-hover bg-night-card border border-night-line clip-corner p-7 reveal">
         <h3 class="font-bold text-lg mb-3">La programo antes de la reunión</h3>
         <p class="text-steel-400 text-sm leading-relaxed">Dedico un rato a preparar la estrategia de mecanizado real: operaciones, herramientas, entradas y simulación de colisiones. Llego a la videollamada con el trabajo hecho, no a improvisar delante de ti.</p>
-      </article>
-      <article class="card-hover bg-night-card border border-night-line clip-corner p-7 reveal">
-        <div class="font-titulo text-5xl text-safety mb-4">03</div>
+      </li>
+      <li class="card-hover bg-night-card border border-night-line clip-corner p-7 reveal">
         <h3 class="font-bold text-lg mb-3">Te lo enseño y te lo llevas</h3>
         <p class="text-steel-400 text-sm leading-relaxed">Compartimos pantalla, ves la simulación y comentamos dónde se te está yendo el tiempo. Al terminar recibes la grabación y un informe de una página con las recomendaciones concretas.</p>
-      </article>
-    </div>
+      </li>
+    </ol>
   </div>
 </section>
 
@@ -193,16 +188,15 @@
 <section class="border-b border-night-line">
   <div class="max-w-6xl mx-auto px-5 lg:px-10 py-20 grid lg:grid-cols-12 gap-12">
     <div class="lg:col-span-5">
-      <p class="tag text-xs text-cyber uppercase mb-3 reveal">Sin contrapartida</p>
       <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-5 reveal">Qué te llevas aunque no trabajemos juntos</h2>
       <p class="text-steel-400 reveal">Esto no es una demo con la información recortada para obligarte a contratar. Si decides hacerlo tú por dentro con lo que has visto, me parece perfectamente bien: habrás resuelto tu problema y sabrás a quién llamar la próxima vez.</p>
     </div>
-    <div class="lg:col-span-7 grid sm:grid-cols-2 gap-5 reveal">
-      <div class="bg-night-card border border-night-line clip-corner p-6"><i aria-hidden="true" class="fa-solid fa-video text-safety text-xl mb-4"></i><h3 class="font-bold mb-2">Grabación completa</h3><p class="text-steel-400 text-sm">La sesión entera, para que la vea tu jefe de taller o tu programador.</p></div>
-      <div class="bg-night-card border border-night-line clip-corner p-6"><i aria-hidden="true" class="fa-solid fa-file-lines text-safety text-xl mb-4"></i><h3 class="font-bold mb-2">Informe de una página</h3><p class="text-steel-400 text-sm">Qué cambiaría, en qué orden y qué impacto tendría en el tiempo de ciclo.</p></div>
-      <div class="bg-night-card border border-night-line clip-corner p-6"><i aria-hidden="true" class="fa-solid fa-gauge-high text-cyber text-xl mb-4"></i><h3 class="font-bold mb-2">Tiempo de ciclo estimado</h3><p class="text-steel-400 text-sm">Cifra concreta con la estrategia propuesta, para que la compares con la tuya.</p></div>
-      <div class="bg-night-card border border-night-line clip-corner p-6"><i aria-hidden="true" class="fa-solid fa-tag text-cyber text-xl mb-4"></i><h3 class="font-bold mb-2">Precio cerrado, si lo quieres</h3><p class="text-steel-400 text-sm">Presupuesto fijo para esa pieza y para las de su familia. Sin horas abiertas.</p></div>
-    </div>
+    <ul class="lg:col-span-7 manifest manifest-2 bg-night-card border border-night-line clip-corner overflow-hidden reveal">
+      <li><h3 class="font-bold mb-2">Grabación completa</h3><p class="text-steel-400 text-sm">La sesión entera, para que la vea tu jefe de taller o tu programador.</p></li>
+      <li><h3 class="font-bold mb-2">Informe de una página</h3><p class="text-steel-400 text-sm">Qué cambiaría, en qué orden y qué impacto tendría en el tiempo de ciclo.</p></li>
+      <li><h3 class="font-bold mb-2">Tiempo de ciclo estimado</h3><p class="text-steel-400 text-sm">Cifra concreta con la estrategia propuesta, para que la compares con la tuya.</p></li>
+      <li><h3 class="font-bold mb-2">Precio cerrado, si lo quieres</h3><p class="text-steel-400 text-sm">Presupuesto fijo para esa pieza y para las de su familia. Sin horas abiertas.</p></li>
+    </ul>
   </div>
 </section>
 
@@ -210,7 +204,6 @@
 <section class="border-b border-night-line bg-night-soft">
   <div class="max-w-6xl mx-auto px-5 lg:px-10 py-20">
     <div class="max-w-2xl mb-12">
-      <p class="tag text-xs text-safety uppercase mb-3 reveal">Seamos claros</p>
       <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight reveal">Para quién es esto y para quién no</h2>
       <p class="mt-4 text-steel-400 reveal">Prefiero decírtelo antes de que reserves y perdamos los dos una tarde.</p>
     </div>
@@ -243,7 +236,6 @@
 <section class="border-b border-night-line">
   <div class="max-w-4xl mx-auto px-5 lg:px-10 py-20">
     <div class="text-center max-w-2xl mx-auto mb-12">
-      <p class="tag text-xs text-cyber uppercase mb-3 reveal">Lo que sueles preguntarte</p>
       <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight reveal">Las dudas razonables</h2>
     </div>
     <div class="space-y-4">
@@ -305,6 +297,6 @@
 </a>
 
 <script defer src="/_vercel/insights/script.js"></script>
-<script src="app.js?v=13" defer></script>
+<script src="app.js?v=14" defer></script>
 </body>
 </html>
