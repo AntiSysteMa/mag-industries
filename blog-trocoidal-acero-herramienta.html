@@ -42,7 +42,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="tailwind.css?v=11">
+<link rel="stylesheet" href="tailwind.css?v=12">
 <script>
   (function(){ try{ var t=localStorage.getItem('mag-theme')||'dark'; document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark'); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
   /* La animacion de entrada es una MEJORA, no un requisito para ver la web.
@@ -54,8 +54,10 @@
     h.classList.add("anim-ready");
     window.__magFailsafe=setTimeout(function(){ h.classList.remove("anim-ready"); },1800);
   })();
-  /* Segunda red: al terminar la carga, revela cualquier .reveal que siga oculto. */
-  window.addEventListener("load",function(){ setTimeout(function(){ try{ document.querySelectorAll(".reveal").forEach(function(el){ if(parseFloat(getComputedStyle(el).opacity)<0.05){ el.style.opacity="1"; el.style.transform="none"; el.classList.add("in"); } }); }catch(e){} },1200); });
+  /* Segunda red: al terminar la carga, revela cualquier .reveal que siga oculto,
+     salvo que app.js ya controle el revelado (pone __magFailsafe a null): si no,
+     esta red destapaba todo y los revelados al hacer scroll no llegaban a verse. */
+  window.addEventListener("load",function(){ setTimeout(function(){ if(window.__magFailsafe===null)return; try{ document.querySelectorAll(".reveal").forEach(function(el){ if(parseFloat(getComputedStyle(el).opacity)<0.05){ el.style.opacity="1"; el.style.transform="none"; el.classList.add("in"); } }); }catch(e){} },1200); });
 </script>
 </head>
 <body class="font-sans text-steel-100 antialiased selection:bg-safety selection:text-night">
@@ -292,6 +294,6 @@
 </a>
 
 <script defer src="/_vercel/insights/script.js"></script>
-<script src="app.js?v=12" defer></script>
+<script src="app.js?v=13" defer></script>
 </body>
 </html>
