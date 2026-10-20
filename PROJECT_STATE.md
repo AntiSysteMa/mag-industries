@@ -491,7 +491,7 @@ Petición explícita del usuario, guardada también en memoria persistente: **pr
 ### Sesión 13 (20 octubre 2026)
 **Objetivo:** Instalar skills de diseño y modernizar la experiencia visual y las animaciones **sin cambiar el contenido**.
 
-**Rama:** `claude/amazing-lovelace-98ninv`, **sin fusionar en `main`**. No está en producción. Se revisa en el preview de Vercel antes de fusionar.
+**Rama:** `claude/amazing-lovelace-98ninv`, con PR abierta contra `main`. No está en producción hasta que se fusione.
 
 **1. Skills en el repo** (`.claude/skills/`, no se despliegan)
 - Pack de Emil Kowalski.
@@ -530,7 +530,23 @@ Petición explícita del usuario, guardada también en memoria persistente: **pr
 - Las 9 páginas sin errores de consola y sin `.reveal` ocultos en vista.
 - **Pendiente:** verificar en el preview real de Vercel, con la CSP de verdad.
 
-Cache-busting: `app.js?v=13` y `tailwind.css?v=12`.
+**5. Retirada de las tres «huellas de web hecha con IA»** (el usuario aceptó la recomendación)
+- **Etiquetas sobre titulares:** 24 rótulos que solo decoraban, borrados. Los que llevaban datos siguen con el texto exacto, pero como línea bajo el titular: «Programación CNC externa · CAD/CAM · Oficina técnica de apoyo» en la home, «Auditoría técnica · 45 minutos · sin coste» en la landing y los «Ahorro aproximado del X %» de los planes. En el blog, «Último artículo» y «Anteriores» pasan a ser `<h2>`.
+- **Numeración:**
+  - fuera los 01–09 gigantes de cada capa, y con ellos su relleno animado;
+  - fuera el 01/02/03 de los pasos de la home y de la landing: el papel de cada paso entra en el titular («Tú envías el fichero y los datos de tu máquina») y la lista es `<ol>`;
+  - fuera los «01 ·» de las tarjetas de evidencia (el nombre de la estrategia pasa al titular) y de las etiquetas de sectores.
+  - El contador lateral de navegación se mantiene.
+- **Tarjetas con icono:**
+  - Servicios de la home: lista editorial en un panel.
+  - Compromisos: placa de características (cifra y significado).
+  - «Qué incluye siempre la entrega» (servicios) y «Qué te llevas» (landing): albarán sin iconos.
+  - Referencias: sin iconos decorativos.
+- Ninguna cifra ni afirmación nueva. La lista de controles sigue en sus 9 puntos (`grep -c Heidenhain`: index 6 · servicios 1 · blog 1 · auditoría 1).
+- La barra de progreso superior pasa de degradado a dorado sólido.
+- **Sin cambios:** la entrada «Cycle Start» sigue en 1,8 s, que fue la opción que eligió el usuario. Acortarla a 0,9 s era una sugerencia condicionada a que pareciera larga en el móvil.
+
+Cache-busting: `app.js?v=14` y `tailwind.css?v=13`.
 
 ---
 

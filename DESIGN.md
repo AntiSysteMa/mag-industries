@@ -14,10 +14,11 @@ oficio, no de la categoría «web de consultoría»:
 | Arranque «Cycle Start» | El programa se carga y se abren las puertas de la cabina | `#boot` en `index.html`, CSS en `input.css` |
 | Retícula de palpador | El palpador busca el origen y se engancha a la pieza | `#reticle`, creado por `app.js` |
 | Luz de sonda | La rejilla de la mesa iluminada donde apunta el palpador | `.probe` en el hero |
-| Números de capa que se vacían | Una cajera que se desbasta de abajo arriba | `.layer-num[data-n]::after` + scrub |
-| Etiquetas que se decodifican | La lectura de un DRO estabilizándose | `decodificar()` en `app.js` |
+| Línea del hero que se decodifica | La lectura de un DRO estabilizándose | `.decode` + `decodificar()` en `app.js` |
 | Panel del hero «mecanizado» | Barrido de arriba abajo, como una pasada | timeline del hero |
 | Tarjetas que se apoyan | Una pieza que se deja sobre la mesa | revelado con `rotateX` |
+| Placa de características | La placa remachada de una máquina: cifra y significado | `.plate` + `.spec-row` (Compromisos) |
+| Albarán de entrega | Lo que va siempre dentro de la caja | `.manifest` (servicios, auditoría) |
 
 Si se añade movimiento nuevo, debe poder rellenar esta tabla. Si no tiene
 equivalente en el taller, probablemente sobra.
@@ -71,6 +72,22 @@ Paleta y tipografía no cambian: oro `--safety`, verde `--cyber` y fondo
 12. **Accesibilidad del texto animado.** El decodificado deja el texto real en un
     `span.sr-only` y anima una copia `aria-hidden`. Los titulares partidos en
     palabras conservan su texto en el DOM.
+
+## Estilo de la casa (sesión 13)
+
+Tres hábitos de «web hecha con IA» que se retiraron y no deben volver:
+
+1. **Sin etiquetas encima de los titulares.** Nada de rótulos en mayúsculas
+   pequeñas sobre un h1 o un h2. Si el rótulo llevaba un dato («45 minutos · sin
+   coste», «Programación CNC externa»), el dato se conserva como línea bajo el
+   titular, en tamaño legible. Si solo decoraba, se borra.
+2. **Sin numeración decorativa** (01 / 02 / 03, números gigantes de capa). Donde
+   el orden importa, lo dicen el texto («Tú envías…», «Recibes…») y la
+   semántica `<ol>`. El contador de navegación lateral sí se queda, porque
+   indica dónde estás.
+3. **Sin filas de tarjetas iguales con icono encima.** Una lista va en un solo
+   panel, con filas separadas por un escalón de tono (`.plate`, `.manifest`),
+   no por líneas.
 
 ## Cómo comprobarlo
 

@@ -252,8 +252,8 @@ curl -sI https://www.magindustries.es/ | grep -i content-security-policy
 ```
 
 **Cache busting:** `app.js?v=N` en las 8 páginas que lo cargan. Incrementa N en
-todas a la vez tras un cambio importante de `app.js`. Va por **v=13**
-(y `tailwind.css?v=12`).
+todas a la vez tras un cambio importante de `app.js`. Va por **v=14**
+(y `tailwind.css?v=13`).
 
 ---
 
@@ -285,7 +285,9 @@ todas a la vez tras un cambio importante de `app.js`. Va por **v=13**
     tabla de `DESIGN.md`), usa los tokens de easing, tiene salida con
     `prefers-reduced-motion` y no oculta nada que no se destape solo si el JS o
     el CDN fallan. Hover y retícula, solo con puntero fino. Antes de tocar
-    movimiento, lee `DESIGN.md`; las skills `taste`, `impeccable` y
+    movimiento, lee `DESIGN.md` (incluye el «estilo de la casa»: sin etiquetas
+    sobre titulares, sin numeración decorativa, sin filas de tarjetas con
+    icono); las skills `taste`, `impeccable` y
     `review-animations` están en `.claude/skills/`.
 
 ---
