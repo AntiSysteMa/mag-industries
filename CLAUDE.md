@@ -1,6 +1,6 @@
 # MAG INDUSTRIES — Contexto de Proyecto
 
-**Última actualización:** 3 agosto 2026 | **Sesiones:** 11
+**Última actualización:** 20 octubre 2026 | **Sesiones:** 13
 
 > Este archivo describe **cómo es el proyecto**. El estado sesión-a-sesión vive
 > en `PROJECT_STATE.md`. Lee los dos antes de tocar nada.
@@ -212,6 +212,8 @@ contenido se repartió en páginas temáticas.
 mag-industries/
 ├── CLAUDE.md                       ← este archivo
 ├── PROJECT_STATE.md                ← estado sesión-a-sesión
+├── DESIGN.md                       ← sistema de movimiento: idea, tokens, reglas
+├── .claude/skills/                 ← skills de diseño (Taste, Impeccable, Emil Kowalski)
 ├── docs/clips-spec.md              ← spec de los micro-clips de evidencia
 ├── index.html · auditoria-gratuita.html · servicios.html
 ├── capacidades.html · sectores.html · privacidad.html
@@ -250,7 +252,8 @@ curl -sI https://www.magindustries.es/ | grep -i content-security-policy
 ```
 
 **Cache busting:** `app.js?v=N` en las 8 páginas que lo cargan. Incrementa N en
-todas a la vez tras un cambio importante de `app.js`. Va por **v=11**.
+todas a la vez tras un cambio importante de `app.js`. Va por **v=13**
+(y `tailwind.css?v=12`).
 
 ---
 
@@ -278,6 +281,12 @@ todas a la vez tras un cambio importante de `app.js`. Va por **v=11**.
    keywords, ni en JSON-LD. Los controles de máquina sí. Ver la regla completa
    en «Visión»; el sitio quedó a cero menciones en la sesión 10 y volver a
    introducir una lo rompe.
+10. **Movimiento con red y con sentido.** Toda animación sale del oficio (ver la
+    tabla de `DESIGN.md`), usa los tokens de easing, tiene salida con
+    `prefers-reduced-motion` y no oculta nada que no se destape solo si el JS o
+    el CDN fallan. Hover y retícula, solo con puntero fino. Antes de tocar
+    movimiento, lee `DESIGN.md`; las skills `taste`, `impeccable` y
+    `review-animations` están en `.claude/skills/`.
 
 ---
 
