@@ -142,7 +142,9 @@
   /* Programa completo (sin DOM): lo usan la escena y las pruebas de Node */
   async function build(nx, ny, idle) {
     idle = idle || (() => Promise.resolve());
-    const zm = PK.zmap(nx, ny), model = PK.model(zm);
+    const zm = PK.zmap(nx, ny);
+    await idle();
+    const model = PK.model(zm);
     await idle();
     const P1 = await PK.roughT1({ idle });
     await idle();
