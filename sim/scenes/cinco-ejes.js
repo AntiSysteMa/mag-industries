@@ -1,11 +1,13 @@
 /* Escena cinco-ejes (§4.4, Evidencia 3): acabado con bola Ø10 de una banda del núcleo de molde en 1.2343 templado, en
    una máquina de cabezal B/C. El eje se inclina 10° respecto a la normal hacia el lado del flanco y, cerca de cada brida,
-   hasta 14° más hacia el centro para apartar el portaherramientas del espárrago. GL sobre Z-map; respaldo en planta 2D. */
+   hasta 14° más hacia el centro para apartar el portaherramientas del espárrago. GL sobre Z-map; respaldo en planta 2D.
+   Cámara desde −X+Y pero más de lado que a lo largo de X: mirando por X el espárrago cercano tapa el contacto y no se
+   ve el hueco entre porta y espárrago; a 118° la inclinación lateral sigue viéndose (≥ 7° en pantalla lejos de bridas). */
 (function (G) {
   'use strict';
   const C = G.CamSim;
   if (!C || !C.define || !C.Shapes || !C.Shapes.nucleo || !C.Strat) return;
-  const NU = C.Shapes.nucleo, PI = Math.PI, RAD = PI / 180, DEG = 180 / PI, hypot = Math.hypot, abs = Math.abs, sqrt = Math.sqrt;
+  const NU = C.Shapes.nucleo, PI = Math.PI, RAD = PI / 180, DEG = 180 / PI, hypot = Math.hypot, abs = Math.abs;
 
   const SIM = 4, HOLD = 1.5;
   const TOOL = { id: 'T4', num: 4, kind: 'ball', D: 10, z: 2, lc: 10, oal: 80, helix: 30, neck: { d: 9.7, l: 25 }, shank: 10, stick: 40,
@@ -31,7 +33,7 @@
   const nn = [0, 0, 0];
   function pose(x, yc, R, noTilt, o) {
     let px = x;
-    for (let it = 0; it < 6; it++) { NU.normal(px, yc, nn); px = x - R * nn[0]; }
+    for (let it = 0; it < 8; it++) { NU.normal(px, yc, nn); const q = x - R * nn[0]; if (abs(q - px) < 1e-7) break; px = q; }
     const e = NU.eval(px, yc), pz = e[0];
     NU.normal(px, yc, nn);
     const n0 = nn[0], n1 = nn[1], n2 = nn[2], gx = e[1], tl = hypot(1, gx), tx = 1 / tl, tz = gx / tl;
@@ -103,60 +105,79 @@
   }
 
   /* ---------- programa completo (sin DOM): lo usan la escena y las pruebas de Node ---------- */
-  function build(nx, ny) {
+  async function build(nx, ny, idle) {
+    idle = idle || (() => Promise.resolve());
+    const now = () => G.performance ? G.performance.now() : Date.now(), ms = {};
+    let tm = now();
+    const lap = k => { const t1 = now(); ms[k] = +(t1 - tm).toFixed(1); tm = t1; return idle().then(() => { tm = now(); }); };
     const T = new C.Tool(TOOL), R = T.R, band = NU.band();
-    const zm = NU.zmap(nx, ny), model = NU.model(zm);
+    await lap('band');
+    const zm = NU.zmap(nx, ny), model = NU.model(zm), fp = NU.footprint;
+    await lap('model');
     /* semiacabado previo: la piel parte de un bruto ligeramente por encima, así las celdas del borde de la huella (donde
        el gradiente de rejilla no vale) quedan a la misma piel calculada sobre la normal analítica */
-    const base = new Float32Array(model.length), fp = NU.footprint;
+    const base = new Float32Array(model.length), E = [0, 0, 0], cx = 2 * zm.cx, cy = 2 * zm.cy, inner = -2 * Math.max(zm.cx, zm.cy);
     for (let j = 0, q = 0; j < ny; j++) for (let i = 0; i < nx; i++, q++) {
-      const x = zm.xc(i), y = zm.yc(j);
-      base[q] = fp(x, y) <= 0 ? model[q] + (SKIN + 0.02) * hypot(...NU.eval(x, y).slice(1), 1) : model[q];
+      const x = zm.xc(i), y = zm.yc(j), d = fp(x, y);
+      if (d > 0) { base[q] = model[q]; continue; }
+      /* pendiente por diferencias centrales del modelo (superficie C2); junto al borde, la analítica */
+      let gx, gy;
+      if (d < inner) { gx = (model[q + 1] - model[q - 1]) / cx; gy = (model[q + nx] - model[q - nx]) / cy; } else { NU.eval(x, y, E); gx = E[1]; gy = E[2]; }
+      base[q] = model[q] + (SKIN + 0.02) * hypot(gx, gy, 1);
     }
     zm.setBase(base);
+    await lap('base');
     C.Strat.skin({ zmap: zm, model, stock: SKIN, tool: T, ae: SKIN_AE, axis: 'x', region: fp, toolId: ID_SEMI, save: false });
     for (let j = 0, q = 0; j < ny; j++) for (let i = 0; i < nx; i++, q++) {
       if (fp(zm.xc(i), zm.yc(j)) > 0 || zm.at[4 * q] === ID_SEMI) continue;
       zm.at[4 * q] = ID_SEMI; zm.at[4 * q + 3] |= C.ZMap.FLAG.CUT;
     }
     zm.saveBase();
+    await lap('skin');
 
     /* pasadas en el centro de la franja de acabado */
     const yc0 = (band.y0 + band.y1) / 2 - (PASSES - 1) * AE / 2, nX = Math.round(2 * XC / DS);
     const pb = new C.PathBuilder({ ds: DS, safeZ: ZTOP }), ps = mkPose();
-    const CP = [], NR = [], AX = [], PASS = [], XS = [];
-    const rec = (k, x) => { CP.push(ps.p[0], ps.p[1], ps.p[2]); NR.push(ps.n[0], ps.n[1], ps.n[2]); AX.push(ps.a[0], ps.a[1], ps.a[2]); PASS.push(k); XS.push(x); };
-    const ax = () => ({ i: ps.a[0], j: ps.a[1], k: ps.a[2] });
+    const cap = PASSES * (nX + 1) + 3, CP = new Float32Array(3 * cap), NR = new Float32Array(3 * cap), AX = new Float32Array(3 * cap);
+    const PASS = new Int16Array(cap), XS = new Float32Array(cap);
+    let m = 0;
+    const rec = (k, x) => { for (let e = 0; e < 3; e++) { CP[3 * m + e] = ps.p[e]; NR[3 * m + e] = ps.n[e]; AX[3 * m + e] = ps.a[e]; } PASS[m] = k; XS[m++] = x; };
+    const ax = { i: 0, j: 0, k: 1 }, oax = () => { ax.i = ps.a[0]; ax.j = ps.a[1]; ax.k = ps.a[2]; return ax; };
     for (let k = 0; k < PASSES; k++) {
+      if (k === PASSES >> 1) await lap('path1');
       const yc = yc0 + k * AE, dir = k % 2 ? -1 : 1;
       for (let q = 0; q <= nX; q++) {
         const x = dir * (-XC + q * DS);
         pose(x, yc, R, false, ps);
         if (!pb.n) {
+          /* aproximación a lo largo del eje: G0 a 25 mm de la punta y entrada en avance */
           const t = ps.tip, a = ps.a;
-          pb.rapid(t[0] + APPR * a[0], t[1] + APPR * a[1], t[2] + APPR * a[2], ax()); rec(-1, x);
-          pb.feed(t[0], t[1], t[2], 2, T.cut.Fentry, ax()); rec(k, x);
+          pb.rapid(t[0] + APPR * a[0], t[1] + APPR * a[1], t[2] + APPR * a[2], oax()); rec(-1, x);
+          pb.feed(t[0], t[1], t[2], 2, T.cut.Fentry, oax()); rec(k, x);
           continue;
         }
-        pb.feed(ps.tip[0], ps.tip[1], ps.tip[2], 1, 0, ax()); rec(k, x);
+        pb.feed(ps.tip[0], ps.tip[1], ps.tip[2], 1, 0, oax()); rec(k, x);
       }
     }
     const kLast = pb.n - 1, t = ps.tip, a = ps.a;
-    pb.feed(t[0] + LIFT * a[0], t[1] + LIFT * a[1], t[2] + LIFT * a[2], 3, T.cut.Fentry, ax()); rec(-2, XS[kLast]);
-    pb.rapid(pb.x, pb.y, ZTOP, ax()); rec(-2, XS[kLast]);
+    pb.feed(t[0] + LIFT * a[0], t[1] + LIFT * a[1], t[2] + LIFT * a[2], 3, T.cut.Fentry, oax()); rec(-2, XS[kLast]);
+    pb.rapid(pb.x, pb.y, ZTOP, oax()); rec(-2, XS[kLast]);
     const path = pb.build();
+    /* PathBuilder.rapid() no guarda el eje que recibe: el G0 de aproximación ya va orientado como la entrada */
+    for (let e = 0; e < 3; e++) path.axis[e] = path.axis[3 + e];
+    await lap('path');
 
     /* bridas a partir de la postura sin componente de brida al final de la pasada central (§4.4, revisión de oficio) */
-    const RG = rings(T, 48), mid = PASSES >> 1, ycm = yc0 + mid * AE, obs = [], fixtures = [];
+    const RG = rings(T, 48), RGs = rings(T, 24), mid = PASSES >> 1, ycm = yc0 + mid * AE, obs = [], fixtures = [];
     for (const sgn of [1, -1]) {
       pose(sgn * XC, ycm, R, true, ps);
       const nose = [ps.tip[0] + T.stick * ps.a[0], ps.tip[1] + T.stick * ps.a[1], ps.tip[2] + T.stick * ps.a[2]];
       const top = nose[2] + CLAMP.over, y = nose[1], hw = CLAMP.w / 2;
       /* el espárrago se acerca hasta que la holgura sin componente de brida es GAP */
       let lo = 0, hi = 40;
-      for (let it = 0; it < 30; it++) {
-        const m = (lo + hi) / 2, st = [obstacle('cyl', { x: nose[0] + sgn * m, y, r: CLAMP.stud, z0: 0, z1: top })];
-        if (clearance(RG, st, ps.tip, ps.a, true) < GAP) lo = m; else hi = m;
+      for (let it = 0; it < 16; it++) {
+        const md = (lo + hi) / 2, st = [obstacle('cyl', { x: nose[0] + sgn * md, y, r: CLAMP.stud, z0: 0, z1: top })];
+        if (clearance(RGs, st, ps.tip, ps.a, true) < GAP) lo = md; else hi = md;
       }
       const xs = nose[0] + sgn * hi, xa = sgn * CLAMP.x0, xb = sgn * CLAMP.x1;
       const f = {
@@ -171,34 +192,22 @@
     }
     const plate = NU.plate;
     obs.push(obstacle('box', { x0: plate.x0, x1: plate.x1, y0: plate.y0, y1: plate.y1, z0: plate.z0, z1: plate.z1 }));
+    await lap('fixtures');
 
-    const prog = new C.Program({ zmap: zm, ops: [{ tool: T, toolId: ID_FIN, path, S: T.cut.S, label: 'acabado 5 ejes' }], machine: MACHINE, sim: SIM, nc: NC });
-    const f32 = a => new Float32Array(a);
-    return { zm, model, T, path, prog, band, yc0, fixtures, obs, RG, kLast,
-      CP: f32(CP), NR: f32(NR), AX: f32(AX), PASS: Int16Array.from(PASS), XS: f32(XS) };
-  }
-
-  /* Recorrido de holguras sobre la trayectoria (solo donde el porta puede acercarse a una brida) */
-  function survey(B, noTilt, na) {
-    const RG = na ? rings(B.T, na) : B.RG, ps = mkPose(), R = B.T.R, P = B.path, out = { holder: 1e9, tool: 1e9, kHolder: -1 };
-    for (let k = 0; k < P.n; k++) {
-      if (B.PASS[k] < 0 && k > 0 && k < P.n - 2) continue;
-      const x = B.XS[k];
-      let tip, a;
-      if (B.PASS[k] >= 0) { pose(x, B.CP[3 * k + 1], R, noTilt, ps); tip = ps.tip; a = ps.a; }
-      else { tip = [P.pts[4 * k], P.pts[4 * k + 1], P.pts[4 * k + 2]]; a = [B.AX[3 * k], B.AX[3 * k + 1], B.AX[3 * k + 2]]; }
-      if (abs(x) < 18 && B.PASS[k] >= 0) continue;
-      const h = clearance(RG, B.obs, tip, a, true, out.holder), tl = clearance(RG, B.obs, tip, a, false, out.tool);
-      if (h < out.holder) { out.holder = h; out.kHolder = k; }
-      if (tl < out.tool) out.tool = tl;
-    }
-    return out;
+    /* el posicionado inicial ya orienta el cabezal: B y C de la entrada en la misma línea (antes de M128) */
+    const bc0 = C.kin.bc([path.axis[0], path.axis[1], path.axis[2]]);
+    const nc = Object.assign({}, NC, { map: b => b.g === 'G0' && b.m === 'M3' ? Object.assign({}, b, { b: bc0.B, c: bc0.C }) : b });
+    const prog = new C.Program({ zmap: zm, ops: [{ tool: T, toolId: ID_FIN, path, S: T.cut.S, label: 'acabado 5 ejes' }], machine: MACHINE, sim: SIM, nc });
+    await lap('program');
+    const n = m;
+    return { zm, model, T, path, prog, band, yc0, fixtures, obs, RG, kLast, ms,
+      CP: CP.subarray(0, 3 * n), NR: NR.subarray(0, 3 * n), AX: AX.subarray(0, 3 * n), PASS: PASS.subarray(0, n), XS: XS.subarray(0, n) };
   }
 
   C.define('cinco-ejes', async function (env) {
     const V = C.V2D, PAL = C.PAL, g = GRIDS[env.tier] || GRIDS.A, gl = env.gl, fs = C.fmt.sign;
     await env.idle();
-    const B = build(g[0], g[1]), prog = B.prog, zm = B.zm, T = B.T, path = B.path;
+    const B = await build(g[0], g[1], env.idle), prog = B.prog, zm = B.zm, T = B.T, path = B.path;
     await env.idle();
     const VD = prog.visualDuration, D = VD + HOLD, tEnd = prog.pointTime(0, B.kLast);
     /* inicio de cada pasada en distancia (backplot y erizo solo de la pasada actual) */
@@ -225,12 +234,13 @@
       await env.idle();
     }
     const items = [{ h: ter }].concat(meshes.map(h => ({ h }))), iLn = items.push({ h: ln, upTo: 0, from: 0, width: 1 }) - 1;
-    const iVec = items.push({ h: vec }) - 1, iTool = items.push({ h: tm, pos: null, axis: null, spin: 1 }) - 1;
+    items.push({ h: vec });
+    const iTool = items.push({ h: tm, pos: null, axis: null, spin: 1 }) - 1;
     const shadow = { h: tm, pos: null, axis: null };
-    const cam = { type: 'ortho', az: 158, el: 24, fit: { bbox: [-58, -27, 0, 58, 27, 58], safe: { top: 6, right: 0, bottom: env.safe.bottom, left: 0 } } };
+    const cam = { type: 'ortho', az: 118, el: 26, fit: { bbox: [-62, -27, 0, 62, 27, 30], safe: { top: 44, right: 0, bottom: env.safe.bottom, left: 30 } } };
 
     /* estado en el punto de contacto, interpolado entre los puntos k−1 y k de la trayectoria */
-    const cur = { p: [0, 0, 0], n: [0, 0, 1], a: [0, 0, 1], pass: -1, ang: 0, clr: 0 };
+    const cur = { p: [0, 0, 0], n: [0, 0, 1], a: [0, 0, 1], pass: -1, ang: 0 };
     function contact() {
       const st = prog.state(), k = Math.min(st.k, path.n - 1), k0 = Math.max(0, k - 1);
       const d0 = path.dist[k0], d1 = path.dist[k], u = d1 > d0 ? Math.min(1, Math.max(0, (st.dist - d0) / (d1 - d0))) : 1;
@@ -242,28 +252,34 @@
       cur.n[0] /= nl; cur.n[1] /= nl; cur.n[2] /= nl;
       const a = st.axis || cur.a;
       cur.a[0] = a[0]; cur.a[1] = a[1]; cur.a[2] = a[2];
-      cur.pass = st.phase === 'cut' || st.phase === 'approach' ? Math.max(B.PASS[k0], B.PASS[k]) : -1;
+      cur.pass = st.phase === 'cut' ? Math.max(B.PASS[k0], B.PASS[k]) : -1;
       cur.ang = Math.acos(Math.min(1, cur.n[0] * cur.a[0] + cur.n[1] * cur.a[1] + cur.n[2] * cur.a[2])) * DEG;
       return cur;
     }
 
     let t = 0, held = false, hudT = -1, clrMin = 1e9;
-    const HUD = [{ text: '', color: PAL.hud.value }, { text: '', color: PAL.hud.value }, { text: '', color: PAL.hud.text }, { text: '', color: PAL.hud.text }, { text: 'SIM ×' + SIM, color: PAL.hud.sim }];
+    /* HUD de lienzo en tres líneas: el bloque en curso partido en la palabra B, y la medida del ángulo y de la holgura */
+    const VAL = PAL.hud.value, TXT = PAL.hud.text;
+    const L3 = [{ text: '', color: TXT }, { text: '', color: VAL }, { text: ' · holgura porta ', color: TXT }, { text: '', color: VAL }];
+    const HUD = [{ text: '', color: VAL }, { parts: [{ text: '', color: VAL }, { text: '', color: PAL.hud.sim }] }, { parts: L3 }];
+    const SIMTXT = '  SIM ×' + SIM;
     function texts(force) {
       if (!force && abs(t - hudT) < 0.066) return;
       hudT = t;
-      const st = prog.state(), r = st.rot || {}, c = contact();
-      if (c.pass < 0 && st.phase !== 'end') {
-        /* aproximación y retirada: la línea NC del programa (cabecera con M128 incluida) */
-        HUD[0].text = prog.line(st.block); HUD[1].text = 'B' + fs(r.B || 0) + ' C' + fs(r.C || 0) + ' F' + Math.round(st.feed);
+      const st = prog.state(), r = st.rot || {}, c = contact(), P2 = HUD[1].parts;
+      if (c.pass < 0) {
+        /* aproximación y retirada: la línea NC del programa (cabecera, M128, posicionado orientado) */
+        const l = prog.line(st.block), k = l.length > 30 ? l.lastIndexOf(' B', 30) : -1;
+        HUD[0].text = k > 0 ? l.slice(0, k) : l; P2[0].text = k > 0 ? l.slice(k + 1) : 'B' + fs(r.B || 0) + ' C' + fs(r.C || 0);
       } else {
         HUD[0].text = 'L X' + fs(st.pos[0]) + ' Y' + fs(st.pos[1]) + ' Z' + fs(st.pos[2]);
-        HUD[1].text = 'B' + fs(r.B || 0) + ' C' + fs(r.C || 0) + ' F' + Math.round(st.feed);
+        P2[0].text = 'B' + fs(r.B || 0) + ' C' + fs(r.C || 0) + ' F' + Math.round(st.feed);
       }
+      P2[1].text = SIMTXT;
       const h = clearance(B.RG, B.obs, st.pos, st.axis || c.a, true, 99.9);
       if (h < clrMin) clrMin = h;
-      HUD[2].text = 'holgura porta ' + Math.min(99.9, h).toFixed(1) + ' mm';
-      HUD[3].text = c.pass >= 0 ? 'eje–normal ' + c.ang.toFixed(1) + '°' : 'eje–normal –';
+      L3[0].text = 'eje–normal '; L3[1].text = c.pass >= 0 ? c.ang.toFixed(1) + '°' : '–';
+      L3[3].text = h < 99.9 ? h.toFixed(1) + ' mm' : '–';
     }
     const hudDraw = c => V.draw.hudText(c, 10, 8, HUD, { lh: 13 });
 
@@ -335,17 +351,30 @@
         hudDraw(ctx);
       },
       final() {
-        if (prog.t > tEnd) prog.reset();
-        prog.advanceTo(tEnd);
-        t = tEnd / SIM; held = true; texts(true);
+        /* un instante antes del final de la última pasada: aún en avance, con el vector y el erizo */
+        const tf = tEnd - 0.02;
+        if (prog.t > tf) prog.reset();
+        prog.advanceTo(tf);
+        t = tf / SIM; held = true; texts(true);
       },
       hud() { return null; },
       resize() { hudT = -1; texts(true); },
       fallback(e2) { return plan(e2); },
       stats() {
         const c = contact(), r = prog.state().rot || {};
+        /* inclinación eje–normal tal como se ve en pantalla (criterio de encuadre: ≥ 6°) */
+        let scr = 0;
+        if (gl && c.pass >= 0) {
+          const v = [0, 0], w = [0, 0];
+          gl.project(c.p, q0);
+          for (let e = 0; e < 3; e++) P3[e] = c.p[e] + c.n[e] * 12;
+          gl.project(P3, q1); v[0] = q1[0] - q0[0]; v[1] = q1[1] - q0[1];
+          for (let e = 0; e < 3; e++) P3[e] = c.p[e] + c.a[e] * 12;
+          gl.project(P3, q1); w[0] = q1[0] - q0[0]; w[1] = q1[1] - q0[1];
+          scr = Math.acos(Math.min(1, (v[0] * w[0] + v[1] * w[1]) / (hypot(v[0], v[1]) * hypot(w[0], w[1])))) * DEG;
+        }
         return { simFactor: SIM, collisions: prog.collisions + zm.collisions, removedMm3: +zm.removed.toFixed(1), machineS: +prog.duration.toFixed(2),
-          passes: PASSES, angleNow: +c.ang.toFixed(2), B: +(r.B || 0).toFixed(3), C: +(r.C || 0).toFixed(3), clearHolderSeen: +clrMin.toFixed(2) };
+          passes: PASSES, angleNow: +c.ang.toFixed(2), B: +(r.B || 0).toFixed(3), C: +(r.C || 0).toFixed(3), clearHolderSeen: +clrMin.toFixed(2), tiltScreenDeg: +scr.toFixed(2), initPhases: B.ms };
       },
       dispose() { if (gl) gl.dispose(); }
     };
@@ -354,7 +383,8 @@
     function plan(e2) {
       let v = null;
       const c = e2.ctx2d, VIEW = { x0: -70, y0: -27, x1: 70, y1: 27 };
-      const rect = () => { const F = e2.frame, sf = e2.safe; return { x: 6, y: 64, w: F.w - 12, h: F.h - sf.bottom - 68 }; };
+      const rect = () => { const F = e2.frame, sf = e2.safe; return { x: 6, y: 52, w: F.w - 12, h: F.h - sf.bottom - 56 }; };
+      const PLAN_AX = { x: [1, 0], y: [0, -1] };
       const box = o => { c.fillRect(v.X(o.x0), v.Y(o.y1), (o.x1 - o.x0) * v.s, (o.y1 - o.y0) * v.s); };
       const circ = (x, y, r) => { c.beginPath(); c.arc(v.X(x), v.Y(y), r * v.s, 0, 2 * PI); };
       return {
@@ -376,6 +406,7 @@
           c.fillStyle = PAL.tool.coat; circ(cx, cy, T.R); c.fill();
           c.strokeStyle = PAL.gold; c.lineWidth = 1.5; c.beginPath(); c.moveTo(v.X(cx), v.Y(cy)); c.lineTo(v.X(nx), v.Y(ny)); c.stroke();
           c.restore();
+          V.draw.triad2D(c, e2.frame.w - 30, e2.frame.h - e2.safe.bottom - 26, PLAN_AX);
           hudDraw(c);
         },
         final() { scene.final(); },
@@ -392,6 +423,6 @@
     tools: [TOOL],
     cuts: [{ D: 10, z: 2, vc: 503, S: 16000, fz: 0.08, F: 2560, ae: 0.3 }],
     sim: SIM, hold: HOLD, passes: PASSES, ae: AE, xc: XC, lat: LAT, xt: XT, ramp: RAMP, skin: SKIN, skinAe: SKIN_AE, gap: GAP,
-    grids: GRIDS, machine: MACHINE, build, pose, mkPose, tiltX, rings, clearance, survey
+    grids: GRIDS, machine: MACHINE, build, pose, mkPose, tiltX, rings, clearance
   });
 })(globalThis);
