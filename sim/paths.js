@@ -5,7 +5,7 @@
 'use strict';
 const C = G.CamSim;
 if (!C || !C.PathBuilder) throw new Error('paths.js necesita core.js');
-const { PI, sqrt, abs, min, max, floor, ceil, round, hypot, sin, cos, atan2 } = Math;
+const { PI, sqrt, abs, min, max, floor, ceil, round, hypot, sin, cos, acos, atan2 } = Math;
 const TAU = 2 * PI, BIG = 1e20, INF = Infinity;
 const now = () => (G.performance ? G.performance.now() : Date.now());
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -143,7 +143,8 @@ function iso(F, V, lv, sg, cells) {
     if (i >= nx - 1 || j >= ny - 1) return;
     const q = [c, c + 1, c + nx + 1, c + nx];
     let hi = 0;
-    for (let k = 0; k < 4; k++) { const w = V[q[k]]; if (!(abs(w) < BIG) ) return; v[k] = sg * (w - lv); if (v[k] > 0) hi++; }
+    /* un nodo justo en la cota (pared alineada con la rejilla) dejaría el tramo sin orientación: se desempata */
+    for (let k = 0; k < 4; k++) { const w = V[q[k]]; if (!(abs(w) < BIG)) return; v[k] = sg * (w - lv) || 1e-9; if (v[k] > 0) hi++; }
     if (!hi || hi === 4) return;
     const X = x0 + i * cell, Y = y0 + j * cell;
     let nc = 0;
@@ -244,37 +245,6 @@ function arcPts(cx, cy, r, a0, sw, ds) {
   return out;
 }
 
-/* entrada tangente por la izquierda (lado ya vaciado): cuarto de arco que termina en p[0] con su tangente. Si el
-   arranque está en el borde del dominio, el arco es el empalme con el borde (radio rho, centro a rho del borde) y
-   sustituye el principio del tramo: así el filo llega al frente como en un bucle trocoidal y no de frente.
-   ok(x,y,pre) valida cada punto (pre: parte previa al punto de tangencia). Devuelve {lead, from} o null */
-function leadIn(F, p, closed, rhos, ok, ds) {
-  const n = p.length / 2;
-  for (const rho of rhos) {
-    let lead = null, from = 0;
-    if (!closed && F.at(F.D, p[0], p[1]) < 0.5 * F.cell) {
-      for (let k = 0; k < n && k * ds <= 3 * rho + 2; k++) {
-        const t = tangent(p, k, false), cx = p[2 * k] - rho * t[1], cy = p[2 * k + 1] + rho * t[0];
-        if (F.at(F.D, cx, cy) < rho - 0.02) continue;
-        const e = 1e-2, gx = F.at(F.D, cx + e, cy) - F.at(F.D, cx - e, cy), gy = F.at(F.D, cx, cy + e) - F.at(F.D, cx, cy - e), gl = hypot(gx, gy) || 1;
-        const aq = atan2(-gy / gl, -gx / gl), ae = atan2(p[2 * k + 1] - cy, p[2 * k] - cx);
-        let sw = ae - (aq - PI / 2); while (sw <= 0) sw += TAU; while (sw > 1.75 * PI) sw -= TAU;
-        if (sw <= PI / 2) break;
-        lead = arcPts(cx, cy, rho, aq - PI / 2, sw, ds); from = k; lead.pre = PI / 2 / sw; break;
-      }
-    } else {
-      const t = tangent(p, 0, closed), cx = p[0] - rho * t[1], cy = p[1] + rho * t[0], a = atan2(p[1] - cy, p[0] - cx);
-      lead = arcPts(cx, cy, rho, a - PI / 2, PI / 2, ds); lead.pre = 1;
-    }
-    if (!lead) continue;
-    const m = lead.length / 2;
-    let good = true;
-    for (let k = 0; k < m - 1 && good; k++) good = ok(lead[2 * k], lead[2 * k + 1], k / (m - 1) <= lead.pre + 1e-9);
-    if (good) return { lead, from };
-  }
-  return null;
-}
-
 /* ---------- ejecución troceable: con idle devuelve una promesa y cede entre trozos de ≤ ~25 ms ---------- */
 function run(gen, idle) {
   if (!idle) { let r; do r = gen.next(); while (!r.done); return r.value; }
@@ -290,59 +260,54 @@ function run(gen, idle) {
   });
 }
 
-/* enlace levantado por zona ya vaciada: recto si cabe; si no, A* sobre los nodos con T ≤ thr y tirado de cuerda */
-function route(F, T, thr, a, b, skip) {
-  const cell = F.cell, freeAt = (x, y) => { const t = F.at(T, x, y); return t > -BIG && t <= thr; };
-  const clear = (x0, y0, x1, y1) => {
-    const L = hypot(x1 - x0, y1 - y0), n = ceil(L / (0.5 * cell));
-    for (let k = 0; k <= n; k++) {
-      const u = k / n, x = x0 + (x1 - x0) * u, y = y0 + (y1 - y0) * u;
-      if (hypot(x - a[0], y - a[1]) < skip || hypot(x - b[0], y - b[1]) < skip) continue;
-      if (!freeAt(x, y)) return false;
-    }
-    return true;
-  };
-  if (clear(a[0], a[1], b[0], b[1])) return [b[0], b[1]];
-  const { nx, ny, x0, y0 } = F, N = nx * ny, g = new Float32Array(N).fill(INF), par = new Int32Array(N).fill(-1), H = heap(1024);
-  const node = (x, y) => round((y - y0) / cell) * nx + round((x - x0) / cell);
-  const free = q => { const x = x0 + (q % nx) * cell, y = y0 + floor(q / nx) * cell; return T[q] <= thr || hypot(x - a[0], y - a[1]) < skip || hypot(x - b[0], y - b[1]) < skip; };
-  const s = node(a[0], a[1]), e = node(b[0], b[1]), ei = e % nx, ej = floor(e / nx);
-  const hh = q => hypot(q % nx - ei, floor(q / nx) - ej);
-  g[s] = 0; H.push(hh(s), s);
-  let found = false;
-  while (H.size) {
-    const q = H.pop();
-    if (q === e) { found = true; break; }
-    const i = q % nx, j = floor(q / nx);
-    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
-      if (!di && !dj) continue;
-      const ii = i + di, jj = j + dj;
-      if (ii < 0 || jj < 0 || ii >= nx || jj >= ny) continue;
-      const m = jj * nx + ii, w = g[q] + (di && dj ? 1.41421356 : 1);
-      if (w < g[m] && free(m)) { g[m] = w; par[m] = q; H.push(w + hh(m), m); }
-    }
-  }
-  if (!found) return null;
-  const pts = [[b[0], b[1]]];
-  for (let q = par[e]; q >= 0 && q !== s; q = par[q]) pts.push([x0 + (q % nx) * cell, y0 + floor(q / nx) * cell]);
-  pts.push([a[0], a[1]]); pts.reverse();
-  const out = [];
-  let cur = 0;
-  while (cur < pts.length - 1) {
-    let nxt = pts.length - 1;
-    while (nxt > cur + 1 && !clear(pts[cur][0], pts[cur][1], pts[nxt][0], pts[nxt][1])) nxt--;
-    out.push(pts[nxt][0], pts[nxt][1]); cur = nxt;
-  }
+/* normal del borde hacia dentro del dominio (gradiente de D) */
+function inward(F, x, y, out) {
+  const e = 0.5 * F.cell, gx = F.at(F.D, x + e, y) - F.at(F.D, x - e, y), gy = F.at(F.D, x, y + e) - F.at(F.D, x, y - e), l = hypot(gx, gy) || 1;
+  out[0] = gx / l; out[1] = gy / l;
   return out;
+}
+
+/* Empalme con el borde del dominio de radio rho, tangente al frente y al borde, girando a la izquierda (lado ya
+   vaciado). Al final del frente sustituye la llegada de frente contra la pared, que se come de golpe la lúnula de
+   material entre dos pasadas (> 90° de contacto); al principio, el frente sale de la pared como el bucle de un
+   trocoide. Devuelve {cut, P, c, q, sw, a0} o null */
+function fillet(F, p, rho, atEnd, ds) {
+  const n = p.length / 2, g = [0, 0];
+  let pv = 0, pk = -1;
+  for (let s = 0; s < n; s++) {
+    if (s * ds > 3 * rho + 8) return null;
+    const k = atEnd ? n - 1 - s : s, t = tangent(p, k, false), cx = p[2 * k] - rho * t[1], cy = p[2 * k + 1] + rho * t[0];
+    const v = F.at(F.D, cx, cy) - rho;
+    if (v >= 0) {
+      if (!s) return null;
+      const u = pv / (pv - v), ta = tangent(p, pk, false);
+      const x = p[2 * pk] + (p[2 * k] - p[2 * pk]) * u, y = p[2 * pk + 1] + (p[2 * k + 1] - p[2 * pk + 1]) * u;
+      let tx = ta[0] + (t[0] - ta[0]) * u, ty = ta[1] + (t[1] - ta[1]) * u;
+      const tl = hypot(tx, ty) || 1; tx /= tl; ty /= tl;
+      const c = [x - rho * ty, y + rho * tx];
+      inward(F, c[0], c[1], g);
+      const q = [c[0] - rho * g[0], c[1] - rho * g[1]], aP = atan2(y - c[1], x - c[0]), aQ = atan2(q[1] - c[1], q[0] - c[0]);
+      let sw = atEnd ? aQ - aP : aP - aQ;
+      while (sw <= 0) sw += TAU;
+      /* tangente al tramo de borde donde acaba el frente, no a otra pared que quede más cerca del centro */
+      const e = atEnd ? n - 1 : 0;
+      if (sw > PI + 0.3 || hypot(q[0] - p[2 * e], q[1] - p[2 * e + 1]) > 2 * rho + 1) return null;
+      return { cut: atEnd ? k : pk, P: [x, y], c, q, sw, a0: atEnd ? aP : aQ };
+    }
+    pv = v; pk = k;
+  }
+  return null;
 }
 
 /* ---------- adaptativo (§4.1.4) ---------- */
 function* adaptiveGen(o) {
-  const t0 = now(), tool = o.tool, R = tool.R, Dt = tool.D, cell = o.cell || 0.25, z = o.z, lift = o.linkLift != null ? o.linkLift : 0.3;
-  const Fl = o.Flink || 8000, ds = o.ds || 0.5, sw = o.stockWall || 0, smoothN = o.smooth != null ? o.smooth : 2;
+  /* rejilla del campo: 0.5 mm salvo fine. Con 0.25 el compromiso medido no mejora y cuesta un 25 % más; el borde del
+     dominio no depende de ella porque el repaso final se proyecta sobre la SDF exacta */
+  const t0 = now(), tool = o.tool, R = tool.R, Dt = tool.D, cell = o.fine ? o.cell || 0.25 : max(o.cell || 0.5, 0.5), z = o.z, lift = o.linkLift != null ? o.linkLift : 0.3;
+  const Fl = o.Flink || 8000, zSafe = o.safeZ != null ? o.safeZ : z + 15, ds = o.ds || 0.5, sw = o.stockWall || 0, smoothN = o.smooth != null ? o.smooth : 2;
   const aeS = typeof o.ae === 'number' ? { wide: o.ae, mid: o.ae, narrow: o.ae, tight: o.ae } : Object.assign({ wide: 1.2, mid: 1.0, narrow: 0.8, tight: 0.6 }, o.ae);
   for (const k in aeS) if (!(aeS[k] > 0 && aeS[k] < Dt)) throw new Error('Strat.adaptive: ae fuera de (0, D)');
-  const sdf = o.region, start = o.start || [0, 0], rS = o.rStart != null ? o.rStart : 3;
+  const sdf = asSdf(o.region), start = o.start || [0, 0], rS = o.rStart != null ? o.rStart : 3;
   const F = field(sdf, R + sw, cell, start), { nx, ny, D } = F, N = nx * ny;
   yield;
   const AE = aeField(F, Dt, aeS);
@@ -351,102 +316,380 @@ function* adaptiveGen(o) {
   for (let q = 0; q < N; q++) if (D[q] >= 0 && hypot(F.x0 + (q % nx) * cell - start[0], F.y0 + floor(q / nx) * cell - start[1]) <= rS) seeds.push(q);
   if (!seeds.length) throw new Error('Strat.adaptive: el inicio no está en el dominio de centros');
   const T = yield* march(F, AE, seeds, 2.01 * cell);
+  const Dat = (x, y) => F.at(D, x, y);
+  const aeAt = (x, y) => { const i = clamp(round((x - F.x0) / cell), 0, nx - 1), j = clamp(round((y - F.y0) / cell), 0, ny - 1); return AE[j * nx + i]; };
+
   /* celdas por nivel (cada celda en los niveles enteros que cruza) */
   let Lmax = 0;
   const tmin = new Float32Array(N), tmax = new Float32Array(N);
   for (let c = 0; c < N; c++) {
-    const i = c % nx;
-    if (i >= nx - 1 || c + nx + 1 >= N) { tmin[c] = INF; continue; }
+    if (c % nx >= nx - 1 || c + nx + 1 >= N) { tmin[c] = INF; continue; }
     const a = T[c], b = T[c + 1], d = T[c + nx + 1], e = T[c + nx];
     tmin[c] = min(a, b, d, e); tmax[c] = max(a, b, d, e);
     if (tmax[c] < INF) Lmax = max(Lmax, ceil(tmax[c]) - 1);
   }
   const cnt = new Int32Array(Lmax + 2);
-  for (let c = 0; c < N; c++) if (tmin[c] < INF && tmax[c] < INF) for (let L = max(1, ceil(tmin[c])); L < tmax[c]; L++) cnt[L]++;
+  for (let c = 0; c < N; c++) if (tmax[c] < INF) for (let L = max(1, ceil(tmin[c])); L < tmax[c]; L++) cnt[L]++;
   const off = new Int32Array(Lmax + 3);
   for (let L = 1; L <= Lmax + 1; L++) off[L + 1] = off[L] + cnt[L];
   const cells = new Int32Array(off[Lmax + 2]), fill = off.slice();
-  for (let c = 0; c < N; c++) if (tmin[c] < INF && tmax[c] < INF) for (let L = max(1, ceil(tmin[c])); L < tmax[c]; L++) cells[fill[L]++] = c;
+  for (let c = 0; c < N; c++) if (tmax[c] < INF) for (let L = max(1, ceil(tmin[c])); L < tmax[c]; L++) cells[fill[L]++] = c;
   yield;
 
-  const pb = new C.PathBuilder({ ds });
-  const aeAt = (x, y) => { const i = clamp(round((x - F.x0) / cell), 0, nx - 1), j = clamp(round((y - F.y0) / cell), 0, ny - 1); return AE[j * nx + i]; };
-  const cut = (x, y, ty) => { pb.feed(x, y, z, ty || 1); pb.blocks[pb.lastBlock()].ae = aeAt(x, y); };
-  const st = { pieces: 0, links: 0, routed: 0, lifts: 0, levels: Lmax, leads: 0, noLead: 0 };
-  /* enlace levantado a z + lift por la zona con T ≤ thr */
-  const link = (x, y, thr) => {
-    if (!pb.n) { pb.feed(x, y, z, 1); return; }
-    if (hypot(x - pb.x, y - pb.y) < 0.05) return;
-    let r = route(F, T, thr, [pb.x, pb.y], [x, y], 1.5);
-    st.links++;
-    if (!r) { r = [x, y]; st.lifts++; }
-    else if (r.length > 2) st.routed++;
-    pb.feed(pb.x, pb.y, z + lift, 4, Fl);
-    for (let k = 0; k < r.length; k += 2) pb.feed(r[k], r[k + 1], z + lift, 4, Fl);
-    pb.feed(x, y, z, 4, Fl);
-  };
-  const rhos = o.leadR || [6, 4.5, 3, 2, 1.2];
-  const pend = [];
+  /* 1. tramos de cada nivel recortados por el borde del dominio, suavizados y remuestreados */
+  const pieces = [];
   for (let L = 1; L <= Lmax; L++) {
-    const thr = L - 1 + 0.02;
     for (const c of iso(F, T, L, 1, cells.subarray(off[L], off[L + 1]))) {
-      /* recorte por el borde del dominio, con el punto exacto de cruce */
       const p = c.p, n = p.length / 2, d = new Float64Array(n);
-      for (let k = 0; k < n; k++) d[k] = F.at(D, p[2 * k], p[2 * k + 1]);
-      if (c.closed && d.every(v => v >= 0)) { pend.push({ p, closed: true }); continue; }
+      for (let k = 0; k < n; k++) d[k] = Dat(p[2 * k], p[2 * k + 1]);
+      const push = (q, closed) => { if (plen(q, closed) >= 0.5) pieces.push({ L, p: smoothN ? smooth(q, closed, ds) : resample(q, ds, closed), closed }); };
+      if (c.closed && d.every(v => v >= 0)) { push(p, true); continue; }
       if (c.closed) {
         let k0 = 0; while (d[k0] >= 0) k0++;
         p.push(...p.splice(0, 2 * k0)); const dd = Array.from(d); dd.push(...dd.splice(0, k0)); d.set(dd);
         p.push(p[0], p[1]);
       }
       let cur = null;
-      const flush = () => { if (cur && plen(cur, false) >= 0.5) pend.push({ p: cur, closed: false }); cur = null; };
       const m = c.closed ? n + 1 : n;
       for (let k = 0; k < m; k++) {
-        const kk = k % n, x = p[2 * k], y = p[2 * k + 1], v = d[kk];
+        const x = p[2 * k], y = p[2 * k + 1], v = d[k % n];
         if (k > 0) {
           const kp = k - 1, vp = d[kp % n];
           if ((vp >= 0) !== (v >= 0)) {
             const u = vp / (vp - v), cx = p[2 * kp] + (x - p[2 * kp]) * u, cy = p[2 * kp + 1] + (y - p[2 * kp + 1]) * u;
-            if (v >= 0) cur = [cx, cy]; else { if (cur) cur.push(cx, cy); flush(); }
+            if (v >= 0) cur = [cx, cy]; else { if (cur) { cur.push(cx, cy); push(cur, false); } cur = null; }
           }
         }
         if (v >= 0) { if (!cur) cur = []; cur.push(x, y); }
       }
-      flush();
+      if (cur) push(cur, false);
     }
-    const lvl = pend.splice(0).map(q => ({ p: smoothN ? smooth(q.p, q.closed, ds) : resample(q.p, ds, q.closed), closed: q.closed }));
-    while (lvl.length) {
-      const px = pb.n ? pb.x : start[0], py = pb.n ? pb.y : start[1];
-      let bi = 0, bd = INF;
-      for (let k = 0; k < lvl.length; k++) {
-        const q = lvl[k], dd = q.closed ? INF : hypot(q.p[0] - px, q.p[1] - py);
-        let dm = dd;
-        if (q.closed) for (let j = 0; j < q.p.length; j += 2) dm = min(dm, hypot(q.p[j] - px, q.p[j + 1] - py));
-        if (dm < bd) { bd = dm; bi = k; }
+    if (L % 8 === 0) yield;
+  }
+  yield;
+
+  /* 2. Simulación en planta del material a vaciar: en cada nodo de una rejilla de 1 mm, la distancia de los centros
+     ya cortados (hay material donde pasa de R). Interpolada da el borde del material con precisión de centésimas,
+     que es lo que ve el arco de contacto. Con ella se elige la entrada de cada tramo, se baja siempre sobre vacío y los
+     enlaces no tocan material. Se da por abierto el taladro de la hélice (centros a ≤ rStart del inicio) */
+  const sg = o.simCell || 1, sx0 = F.x0, sy0 = F.y0, snx = floor((nx - 1) * cell / sg) + 1, sny = floor((ny - 1) * cell / sg) + 1;
+  const Dm = new Float32Array(snx * sny), RU = R + 1.5, RS2 = (R - 1.6) * (R - 1.6), logI = [], logV = [];
+  for (let j = 0, q = 0; j < sny; j++) for (let i = 0; i < snx; i++, q++) Dm[q] = max(0, hypot(sx0 + i * sg - start[0], sy0 + j * sg - start[1]) - rS);
+  let logOn = false;
+  const stamp = (ax, ay, bx, by) => {
+    const i0 = max(0, ceil((min(ax, bx) - RU - sx0) / sg)), i1 = min(snx - 1, floor((max(ax, bx) + RU - sx0) / sg));
+    const j0 = max(0, ceil((min(ay, by) - RU - sy0) / sg)), j1 = min(sny - 1, floor((max(ay, by) + RU - sy0) / sg));
+    const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+    for (let j = j0; j <= j1; j++) {
+      const y = sy0 + j * sg;
+      for (let i = i0, q = j * snx + i0; i <= i1; i++, q++) {
+        const old = Dm[q];
+        if (old * old < RS2 && old < R) continue;
+        const x = sx0 + i * sg;
+        let u = l2 > 1e-12 ? ((x - ax) * dx + (y - ay) * dy) / l2 : 0;
+        u = u < 0 ? 0 : u > 1 ? 1 : u;
+        const ex = x - ax - u * dx, ey = y - ay - u * dy, d2 = ex * ex + ey * ey;
+        if (d2 < old * old) { if (logOn) { logI.push(q); logV.push(old); } Dm[q] = sqrt(d2); }
       }
-      const q = lvl.splice(bi, 1)[0];
-      let p = q.closed ? rotateTo(q.p, px, py) : q.p;
-      const okPt = (x, y, pre) => { const dv = F.at(D, x, y); if (dv < -0.02) return false; return !pre || F.at(T, x, y) <= thr; };
-      const li = leadIn(F, p, q.closed, rhos, okPt, ds);
-      st.pieces++;
-      if (li) { st.leads++; link(li.lead[0], li.lead[1], thr); for (let k = 2; k < li.lead.length; k += 2) cut(li.lead[k], li.lead[k + 1]); p = p.slice(2 * li.from + 2); }
-      else { st.noLead++; link(p[0], p[1], thr); p = p.slice(2); }
-      for (let k = 0; k < p.length; k += 2) cut(p[k], p[k + 1]);
-      if (q.closed) {
-        /* cierre del bucle, 1 mm de solape y salida en cuarto de arco hacia lo vaciado */
-        const full = li ? q.p.slice(0, 2 * li.from + 2) : q.p.slice(0, 2);
-        for (let k = 0; k < full.length; k += 2) cut(full[k], full[k + 1]);
-        const t = tangent(q.p, li ? li.from : 0, true), r = 2, cx = pb.x - r * t[1], cy = pb.y + r * t[0], a = atan2(pb.y - cy, pb.x - cx);
-        const out = arcPts(cx, cy, r, a, PI / 2, ds);
-        if (out.every((v, k) => k & 1 || okPt(v, out[k + 1], false))) for (let k = 2; k < out.length; k += 2) cut(out[k], out[k + 1]);
-      }
-      if (st.pieces % 16 === 0) yield;
     }
+  };
+  const dAt = (x, y) => {
+    const u = (x - sx0) / sg, v = (y - sy0) / sg, i = floor(u), j = floor(v);
+    if (i < 0 || j < 0 || i >= snx - 1 || j >= sny - 1) return 1e4;
+    const fu = u - i, fv = v - j, q = j * snx + i;
+    return (Dm[q] * (1 - fu) + Dm[q + 1] * fu) * (1 - fv) + (Dm[q + snx] * (1 - fu) + Dm[q + snx + 1] * fu) * fv;
+  };
+  /* arco de contacto en la mitad delantera, como ZMap.engagement a 0.075 mm del filo; cuenta el sobreespesor de pared */
+  const NP = 61, PC = new Float64Array(NP), PS = new Float64Array(NP), rp = R + 0.075;
+  for (let k = 0; k < NP; k++) { const a = -PI / 2 + PI * k / (NP - 1); PC[k] = cos(a); PS[k] = sin(a); }
+  const engage = (cx, cy, hx, hy) => {
+    let best = 0, r = 0;
+    const wall = Dat(cx, cy) < 0.2;
+    for (let k = 0; k < NP; k++) {
+      const x = cx + rp * (hx * PC[k] - hy * PS[k]), y = cy + rp * (hx * PS[k] + hy * PC[k]);
+      if (dAt(x, y) > R || wall && Dat(x, y) < -R) { if (++r > best) best = r; } else r = 0;
+    }
+    return best * 180 / (NP - 1);
+  };
+  /* ¿el disco de la herramienta centrada aquí no toca material ni pared? Margen según el uso (lv): 0 justo donde
+     acaba de cortar, 1 para bajar, 2 para enlazar a z + linkLift (a 0.3 mm del suelo, cualquier resto se pelaría en
+     toda la altura). Se mira la circunferencia de radio R + margen y un anillo interior */
+  const NC = 30, CC = new Float64Array(NC), CS = new Float64Array(NC);
+  for (let k = 0; k < NC; k++) { CC[k] = cos(TAU * k / NC); CS[k] = sin(TAU * k / NC); }
+  const RL = R + (o.linkMargin != null ? o.linkMargin : 0.15);
+  const solid = (x, y) => dAt(x, y) > R + 0.005 && Dat(x, y) >= -R;
+  const discClear = (x, y, lv, dEnd) => {
+    const dv = Dat(x, y);
+    if (dv < (lv > 1 ? 0.25 : dEnd ? min(0.25, 0.3 * dEnd) - 0.02 : -0.02)) return false;
+    const rm = lv > 1 ? RL : lv ? R + 0.05 : R - 0.05;
+    if (solid(x, y)) return false;
+    for (let k = 0; k < NC; k++) if (solid(x + rm * CC[k], y + rm * CS[k])) return false;
+    for (let k = 0; k < NC; k += 3) if (solid(x + 0.6 * R * CC[k], y + 0.6 * R * CS[k])) return false;
+    return true;
+  };
+  /* estampa provisionalmente pts (x,y planos) a pasos de ~1 mm y devuelve el mayor compromiso desde el punto m0;
+     deshace al salir */
+  const trial = (pts, m0) => {
+    logOn = true;
+    let worst = 0, ax = pts[0], ay = pts[1];
+    for (let k = 2; k < pts.length; k += 2) {
+      const bx = pts[k], by = pts[k + 1], l = hypot(bx - ax, by - ay);
+      if (l < 0.9 && k < pts.length - 2) continue;
+      if (l < 1e-9) continue;
+      stamp(ax, ay, bx, by);
+      if (k / 2 >= m0) { const e = engage(bx, by, (bx - ax) / l, (by - ay) / l); if (e > worst) worst = e; }
+      ax = bx; ay = by;
+    }
+    for (let k = logI.length - 1; k >= 0; k--) Dm[logI[k]] = logV[k];
+    logI.length = logV.length = 0; logOn = false;
+    return worst;
+  };
+  yield;
+
+  /* 3. entradas y salidas. Tipos por punto: 0 bajada (enlace), 1 corte, 2 entrada, 3 salida */
+  const RH = o.leadR || 6, ACC = o.accept || 56, HARD = 74, SPAN = 8;
+  const st = { pieces: pieces.length, levels: Lmax, links: 0, routed: 0, lifts: 0, filletIn: 0, filletOut: 0, leadIn: 0, plunge: 0, skipped: 0, dropped: 0 };
+  const g2 = [0, 0];
+  const geomOk = pts => { for (let k = 0; k < pts.length; k += 2) if (Dat(pts[k], pts[k + 1]) < -0.03) return false; return true; };
+  /* Entrada desde la pared en media vuelta, como el fondo de un bucle trocoidal: recta por lo vaciado en sentido
+     contrario al frente, semicírculo de radio rho que toca la pared en q y sale tangente al frente en P. Entrar a lo
+     largo de la pared hacia el material arrastraría de frente la lúnula entre dos tangencias (contacto > 90°); en
+     la media vuelta, lo que queda delante de q ya lo barrió la media vuelta anterior */
+  const uTurn = (f, rho) => {
+    const aP = atan2(f.P[1] - f.c[1], f.P[0] - f.c[0]), hx = -sin(aP), hy = cos(aP), bx = 2 * f.c[0] - f.P[0], by = 2 * f.c[1] - f.P[1];
+    const arc = arcPts(f.c[0], f.c[1], rho, aP - PI, PI, ds);
+    if (!geomOk(arc)) return null;
+    const aeL = aeAt(f.q[0], f.q[1]);
+    for (const dl of [aeL + 0.6, 2 * aeL + 1, 4, 6]) {
+      const seg = [], n = max(1, ceil(dl / ds));
+      for (let k = 0; k < n; k++) seg.push(bx + hx * dl * (1 - k / n), by + hy * dl * (1 - k / n));
+      if (!geomOk(seg) || !discClear(seg[0], seg[1], 1)) continue;
+      /* el tramo recto va por vacío al avance de enlace; el arco, al de corte */
+      const lead = seg.concat(arc), ty = [], Fs = [], nq = seg.length / 2 + round((PI - f.sw) * rho / ds);
+      for (let k = 0; k < lead.length / 2; k++) { ty.push(k < nq ? 2 : 1); Fs.push(k < seg.length / 2 ? Fl : undefined); }
+      return { lead, ty, F: Fs };
+    }
+    return null;
+  };
+  /* arco de entrada por la izquierda (lado vaciado) tangente en el punto k: un cuarto o, si no cabe, media vuelta, que
+     arranca más adentro (los primeros bucles alrededor del taladro de la hélice) */
+  const quarter = (p, k, closed, rho, sw = PI / 2) => {
+    const t = tangent(p, k, closed), cx = p[2 * k] - rho * t[1], cy = p[2 * k + 1] + rho * t[0];
+    const arc = arcPts(cx, cy, rho, atan2(p[2 * k + 1] - cy, p[2 * k] - cx) - sw, sw, ds);
+    return geomOk(arc) && discClear(arc[0], arc[1], 1) ? arc : null;
+  };
+  const front = (p, a, b) => { const out = []; for (let k = max(0, a); k <= b && k < p.length / 2; k++) out.push(p[2 * k], p[2 * k + 1]); return out; };
+  /* elige entre candidatos {lead, k0, skip}: el primero con compromiso ≤ ACC, o el mejor */
+  /* Elige entre candidatos {lead, k0, skip}: el primero con compromiso ≤ ACC o, si ninguno, el mejor. Saltarse el
+     principio del frente deja material junto a la pared que el frente siguiente se come de golpe: solo se admite
+     si ninguna entrada completa baja de HARD */
+  const pick = (cands, p) => {
+    let best = null, bs = INF;
+    for (const c of cands) {
+      if (c.skip && bs <= HARD) break;
+      const s = trial(c.lead.concat(front(p, c.k0 + 1, c.k0 + SPAN / ds)), 1) + 4 * c.skip;
+      if (s < bs) { bs = s; best = c; }
+      if (s <= ACC) break;
+    }
+    return best;
+  };
+  const radii = p => { let m = 0; for (let k = 0; k < p.length; k += 2) m = max(m, Dat(p[k], p[k + 1])); const r0 = clamp(0.9 * m, 1.2, RH); return [r0, 0.8 * r0, 0.6 * r0, 0.45 * r0].filter(r => r >= 1); };
+
+  /* 4. orden: un tramo de nivel L se corta cuando ya no queda ningún tramo de nivel menor a menos de 2R + 4 mm (el
+     material a su alrededor está como con el orden estricto por niveles, §4.1.4-7) y, de los disponibles, el más
+     cercano. Así se acaba cada zona antes de saltar a otra y los enlaces son cortos */
+  const HC = 4, dDep = 2 * R + 4, hnx = ceil(nx * cell / HC) + 1, hny = ceil(ny * cell / HC) + 1;
+  const hcell = (x, y) => clamp(floor((y - sy0) / HC), 0, hny - 1) * hnx + clamp(floor((x - sx0) / HC), 0, hnx - 1);
+  const owners = Array.from({ length: hnx * hny }, () => []), minL = new Float64Array(hnx * hny).fill(INF), rr = ceil(dDep / HC);
+  pieces.forEach((pc, id) => {
+    const own = new Set();
+    for (let k = 0; k < pc.p.length; k += 2) own.add(hcell(pc.p[k], pc.p[k + 1]));
+    pc.own = Array.from(own);
+    const near = new Set();
+    for (const h of pc.own) { const hi = h % hnx, hj = (h - hi) / hnx; for (let j = max(0, hj - rr); j <= min(hny - 1, hj + rr); j++) for (let i = max(0, hi - rr); i <= min(hnx - 1, hi + rr); i++) near.add(j * hnx + i); }
+    pc.near = Int32Array.from(near);
+    for (const h of pc.own) { owners[h].push(id); if (pc.L < minL[h]) minL[h] = pc.L; }
+  });
+  const avail = pc => { for (let k = 0; k < pc.near.length; k++) if (minL[pc.near[k]] < pc.L) return false; return true; };
+  yield;
+
+  const pb = new C.PathBuilder({ ds });
+  /* corte: estampa en la simulación el tramo desde el punto anterior si ya estaba a la cota de corte */
+  /* las entradas y salidas en el plano van al avance de corte (por defecto PathBuilder las pondría a la mitad) */
+  const Fc = tool.cut && tool.cut.F || 0;
+  /* la simulación se estampa a cuerdas de ~1 mm; flush() la pone al día antes de cada consulta */
+  let sxp = NaN, syp = NaN;
+  const flush = () => { if (sxp === sxp && pb.n && (pb.x !== sxp || pb.y !== syp)) stamp(sxp, syp, pb.x, pb.y); sxp = pb.x; syp = pb.y; };
+  const cut = (x, y, ty, F) => {
+    if (!(pb.n && abs(pb.z - z) < 1e-9)) sxp = NaN;
+    else if (sxp !== sxp) { sxp = pb.x; syp = pb.y; }
+    pb.feed(x, y, z, ty, F != null ? F : ty === 1 ? 0 : Fc); pb.blocks[pb.lastBlock()].ae = aeAt(x, y);
+    if (sxp === sxp && hypot(x - sxp, y - syp) >= 1) { stamp(sxp, syp, x, y); sxp = x; syp = y; }
+  };
+  /* enlaces: A* en rejilla de 1 mm por los centros cuyo disco no toca material, con tirado de cuerda */
+  const LG = 1, lnx = floor(snx * sg / LG) + 1, lny = floor(sny * sg / LG) + 1, gfree = new Int8Array(lnx * lny);
+  /* a menos de 1 mm de los extremos (en el A*, 1.5) se admite rozar la pared y el margen es el de salida o bajada */
+  const segClear = (x0, y0, x1, y1) => {
+    const l = hypot(x1 - x0, y1 - y0), n = max(1, ceil(l / 0.8));
+    for (let k = 1; k < n; k++) { const u = k / n; if (!discClear(x0 + (x1 - x0) * u, y0 + (y1 - y0) * u, u * l <= 1 ? 0 : (1 - u) * l <= 1 ? 1 : 2, min(u, 1 - u) * l)) return false; }
+    return true;
+  };
+  const route = (a, b) => {
+    if (segClear(a[0], a[1], b[0], b[1])) return [b[0], b[1]];
+    gfree.fill(0);
+    const N2 = lnx * lny, g = new Float64Array(N2).fill(INF), par = new Int32Array(N2).fill(-1), H = heap(256);
+    const nid = (x, y) => clamp(round((y - sy0) / LG), 0, lny - 1) * lnx + clamp(round((x - sx0) / LG), 0, lnx - 1);
+    const s = nid(a[0], a[1]), e = nid(b[0], b[1]), ei = e % lnx, ej = (e - ei) / lnx;
+    const hh = q => hypot(q % lnx - ei, floor(q / lnx) - ej);
+    const fr = q => {
+      if (q === e) return true;
+      if (!gfree[q]) {
+        const x = sx0 + (q % lnx) * LG, y = sy0 + floor(q / lnx) * LG;
+        const da = hypot(x - a[0], y - a[1]), db = hypot(x - b[0], y - b[1]);
+        gfree[q] = discClear(x, y, da < 1.5 ? 0 : db < 1.5 ? 1 : 2, min(da, db)) ? 1 : -1;
+      }
+      return gfree[q] > 0;
+    };
+    g[s] = 0; H.push(hh(s), s);
+    let found = false;
+    while (H.size) {
+      const q = H.pop();
+      if (q === e) { found = true; break; }
+      const i = q % lnx, j = (q - i) / lnx;
+      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+        if (!di && !dj) continue;
+        const ii = i + di, jj = j + dj;
+        if (ii < 0 || jj < 0 || ii >= lnx || jj >= lny) continue;
+        const m = jj * lnx + ii, w = g[q] + (di && dj ? 1.41421356 : 1);
+        if (w < g[m] && fr(m)) { g[m] = w; par[m] = q; H.push(w + 1.2 * hh(m), m); }
+      }
+    }
+    if (!found) return null;
+    const pts = [b];
+    for (let q = par[e]; q >= 0 && q !== s; q = par[q]) pts.push([sx0 + (q % lnx) * LG, sy0 + floor(q / lnx) * LG]);
+    pts.push(a); pts.reverse();
+    const out = [];
+    let cur = 0;
+    while (cur < pts.length - 1) {
+      let nxt = cur + 1;
+      for (let k = cur + 2; k < pts.length && k - nxt <= 12; k++) if (segClear(pts[cur][0], pts[cur][1], pts[k][0], pts[k][1])) nxt = k;
+      out.push(pts[nxt][0], pts[nxt][1]); cur = nxt;
+    }
+    return out;
+  };
+  /* enlace: sube linkLift, cruza por lo vaciado y baja en avance sobre vacío (la bajada es una entrada, tipo 2) */
+  const away = (x, y) => { const dv = Dat(x, y); if (dv >= 0.25) return null; inward(F, x, y, g2); return [x + (0.3 - dv) * g2[0], y + (0.3 - dv) * g2[1]]; };
+  const link = (x, y) => {
+    if (!pb.n) { pb.feed(x, y, z, 2); stamp(x, y, x, y); return; }
+    flush(); sxp = NaN;
+    if (hypot(x - pb.x, y - pb.y) < 0.05) return;
+    st.links++;
+    /* junto a la pared, separarse (y acercarse) a la cota de corte: a z + linkLift las crestas entre pasadas de pared
+       contarían como material arrancado por el enlace */
+    const oa = away(pb.x, pb.y), ob = away(x, y), fx = x, fy = y;
+    if (oa) cut(oa[0], oa[1], 3);
+    if (ob) { x = ob[0]; y = ob[1]; }
+    const r = route([pb.x, pb.y], [x, y]);
+    if (r) {
+      if (r.length > 2) st.routed++;
+      pb.feed(pb.x, pb.y, z + lift, 4, Fl);
+      for (let k = 0; k < r.length; k += 2) pb.feed(r[k], r[k + 1], z + lift, 4, Fl);
+    } else {
+      /* sin paso libre a ras: retirada por encima del bruto (no debería ocurrir; stats.lifts lo cuenta) */
+      st.lifts++;
+      pb.feed(pb.x, pb.y, zSafe, 4, Fl).feed(x, y, zSafe, 4, Fl);
+    }
+    pb.feed(x, y, z, 2);
+    stamp(x, y, x, y);
+    if (ob) cut(fx, fy, 2);
+  };
+  const emitLead = c => { for (let k = 0; k < c.lead.length; k += 2) { if (!k) link(c.lead[0], c.lead[1]); else cut(c.lead[k], c.lead[k + 1], c.ty ? c.ty[k / 2] : 2, c.F && c.F[k / 2]); } };
+
+  const doOpen = pc => {
+    flush();
+    const p = pc.p, n = p.length / 2, RS = radii(p), cands = [];
+    if (Dat(p[0], p[1]) < 0.5 * cell) for (const rho of RS) {
+      const fi = fillet(F, p, rho, false, ds), u = fi && uTurn(fi, rho);
+      if (u) cands.push({ lead: u.lead, ty: u.ty, F: u.F, k0: fi.cut, skip: 0, fil: 1 });
+    }
+    for (let k = 0; k < n - 2 && k * ds <= 8; k += 2) for (const rho of [4, 2.5, 1.2]) {
+      const a = quarter(p, k, false, rho);
+      if (a) { cands.push({ lead: a, k0: k, skip: k * ds }); break; }
+    }
+    const c = pick(cands, p);
+    /* sin ninguna entrada sobre vacío (restos de esquina de pocos mm): se deja para el repaso del contorno */
+    if (!c && plen(p, false) < 4) { st.dropped++; return; }
+    if (!c) { st.plunge++; link(p[0], p[1]); }
+    else { if (c.fil) st.filletIn++; else { st.leadIn++; if (c.skip) st.skipped++; } emitLead(c); }
+    const k0 = c ? c.k0 : 0;
+    /* salida: empalme con el borde si mejora el compromiso de la llegada */
+    const outs = [];
+    if (Dat(p[2 * n - 2], p[2 * n - 1]) < 0.5 * cell) for (const rho of RS) {
+      const fo = fillet(F, p, rho, true, ds);
+      if (!fo || fo.cut <= k0 + 1) continue;
+      const arc = arcPts(fo.c[0], fo.c[1], rho, fo.a0, fo.sw, ds);
+      if (geomOk(arc)) outs.push({ cut: fo.cut, tail: [fo.P[0], fo.P[1]].concat(arc.slice(2)) });
+    }
+    outs.push({ cut: n - 1, tail: [] });
+    let kc = n - 1;
+    for (const e of outs) kc = min(kc, e.cut);
+    kc = max(k0 + 1, kc - SPAN / ds);
+    for (let k = k0 + 1; k <= kc; k++) cut(p[2 * k], p[2 * k + 1], 1);
+    flush();
+    let best = outs[outs.length - 1], bs = INF;
+    if (outs.length > 1) for (const e of outs) {
+      const s = trial([pb.x, pb.y].concat(front(p, kc + 1, e.cut), e.tail), 1);
+      if (s < bs - 2) { bs = s; best = e; }
+      if (s <= ACC) break;
+    }
+    if (best.tail.length) st.filletOut++;
+    for (let k = kc + 1; k <= best.cut; k++) cut(p[2 * k], p[2 * k + 1], 1);
+    for (let k = 0; k < best.tail.length; k += 2) cut(best.tail[k], best.tail[k + 1], 1);
+  };
+  const doClosed = (pc, from) => {
+    flush();
+    const p0 = rotateTo(pc.p, from[0], from[1]), n = p0.length / 2, cands = [];
+    for (let off = 0; off < n && off * ds < 40; off += 10) {
+      const p = off ? p0.slice(2 * off).concat(p0.slice(0, 2 * off)) : p0;
+      for (const [rho, sw] of [[4, PI / 2], [3, PI / 2], [2, PI / 2], [1.2, PI / 2], [2, PI], [1.4, PI], [0.9, PI]]) { const a = quarter(p, 0, true, rho, sw); if (a) { cands.push({ lead: a, p, k0: 0, skip: 0 }); break; } }
+    }
+    let c = null, bs = INF;
+    for (const k of cands) { const s = trial(k.lead.concat(k.p.slice(2, 2 + 2 * SPAN / ds)), 1); if (s < bs) { bs = s; c = k; } if (s <= ACC) break; }
+    const p = c ? c.p : p0;
+    if (c) { st.leadIn++; emitLead(c); } else { st.plunge++; link(p[0], p[1]); }
+    for (let k = 1; k < n; k++) cut(p[2 * k], p[2 * k + 1], 1);
+    let ov = 0;
+    for (let k = 0; k < n && ov < 1; k++) { cut(p[2 * k], p[2 * k + 1], 1); ov += k ? hypot(p[2 * k] - p[2 * k - 2], p[2 * k + 1] - p[2 * k - 1]) : 0; }
+    const t = tangent(p, 0, true), cx = pb.x - 2 * t[1], cy = pb.y + 2 * t[0], lo = arcPts(cx, cy, 2, atan2(pb.y - cy, pb.x - cx), PI / 2, ds);
+    if (geomOk(lo)) for (let k = 2; k < lo.length; k += 2) cut(lo[k], lo[k + 1], 3);
+  };
+
+  const done = new Uint8Array(pieces.length);
+  let left = pieces.length, px = start[0], py = start[1];
+  while (left) {
+    let bi = -1, bd = INF;
+    for (let i = 0; i < pieces.length; i++) {
+      if (done[i]) continue;
+      const pc = pieces[i];
+      if (!avail(pc)) continue;
+      let dm = hypot(pc.p[0] - px, pc.p[1] - py);
+      if (pc.closed) for (let j = 2; j < pc.p.length; j += 2) dm = min(dm, hypot(pc.p[j] - px, pc.p[j + 1] - py));
+      if (dm < bd) { bd = dm; bi = i; }
+    }
+    const pc = pieces[bi];
+    if (pc.closed) doClosed(pc, [px, py]); else doOpen(pc);
+    done[bi] = 1; left--;
+    for (const h of pc.own) { let m = INF; for (const id of owners[h]) if (!done[id] && pieces[id].L < m) m = pieces[id].L; minL[h] = m; }
+    px = pb.x; py = pb.y;
+    if (left % 8 === 0) yield;
   }
   /* repaso del contorno del dominio: deja el sobreespesor de pared uniforme */
   const loops = iso(F, D, 0, -1).filter(c => c.closed).map(c => snap(resample(c.p, ds, true), sdf, R + sw));
-  loopPass(pb, loops, { leadR: 2, types: [1, 1], link: (x, y) => link(x, y, Lmax + 1), at: cut, z, inside: (x, y) => F.at(D, x, y) >= -0.02 });
+  loopPass(pb, loops, { leadR: 2, types: [2, 3], link, at: cut, z, inside: (x, y) => Dat(x, y) >= -0.02 });
+  flush();
+  let rest = 0;
+  for (let j = 0, q = 0; j < sny; j++) for (let i = 0; i < snx; i++, q++) if (Dm[q] > R + 0.05 && Dat(sx0 + i * sg, sy0 + j * sg) >= -R + 0.05) rest++;
+  st.restMm2 = rest * sg * sg;
   st.ms = now() - t0;
   pb.stats = st;
   pb.field = { F, T, AE, aeAt };
@@ -494,7 +737,7 @@ const Strat = C.Strat = {
     const T = o.tool, sdf = asSdf(o.region), off = T.R + (o.stockWall || 0), F = field(sdf, off, o.cell || 0.25, o.start), z = o.z, ae = o.ae;
     let mx = 0; for (let q = 0; q < F.D.length; q++) mx = max(mx, F.D[q]);
     const pb = new C.PathBuilder({ ds: 0.5 }), K = floor(mx / ae - 1e-6), order = o.order === 'outside-in' ? 1 : -1;
-    for (let k = order < 0 ? K : 0; order < 0 ? k >= 0 : k <= K; k -= order) {
+    for (let k = order < 0 ? K : 0; order < 0 ? k >= 0 : k <= K; k += order) {
       const loops = iso(F, F.D, k * ae, -1).filter(c => c.closed).map(c => k ? resample(c.p, 0.5, true) : snap(resample(c.p, 0.5, true), sdf, off));
       while (loops.length) {
         const px = pb.n ? pb.x : (o.start || [0, 0])[0], py = pb.n ? pb.y : (o.start || [0, 0])[1];
@@ -572,17 +815,20 @@ const Strat = C.Strat = {
     }
     return pb;
   },
-  /* semiacabado previo estampado de golpe: piel uniforme de `stock` sobre el modelo con la cresta de la bola a paso ae
-     y la marca en la dirección de las pasadas. Por defecto congela el resultado como estado de reset() */
+  /* semiacabado previo estampado de golpe: piel de `stock` medida sobre la normal del modelo, con la cresta de la bola a
+     paso ae (medido en planta, así que en ladera crece como ae/cos α) y la marca en la dirección de las pasadas. Por
+     defecto congela el resultado como estado de reset() */
   skin(o) {
     const zm = o.zmap, m = o.model, st = o.stock || 0, T = o.tool, ae = o.ae, ax = o.axis === 'y' ? 1 : 0, id = o.toolId != null ? o.toolId : 9;
-    const R = T.R, sdf = o.region ? asSdf(o.region) : null, h = zm.h, at = zm.at, ball = T.k === 1, c2 = ax ? -1 : 1;
-    const g = round((c2 + 1) * 127.5), FL = C.ZMap.FLAG;
-    for (let j = 0, q = 0; j < zm.ny; j++) for (let i = 0; i < zm.nx; i++, q++) {
+    const R = T.R, sdf = o.region ? asSdf(o.region) : null, h = zm.h, at = zm.at, ball = T.k === 1, nx = zm.nx, ny = zm.ny;
+    const g = ax ? 0 : 255, FL = C.ZMap.FLAG;
+    for (let j = 0, q = 0; j < ny; j++) for (let i = 0; i < nx; i++, q++) {
       const x = zm.xc(i), y = zm.yc(j);
       if (sdf && sdf(x, y) > 0) continue;
-      const w = ((ax ? x : y) - (o.offset || 0)) / ae, d = abs(w - round(w)) * ae;
-      const nz = m[q] + st + (ball ? R - sqrt(max(0, R * R - d * d)) : 0);
+      const gx = (m[q + (i < nx - 1 ? 1 : 0)] - m[q - (i > 0 ? 1 : 0)]) / ((i > 0 && i < nx - 1 ? 2 : 1) * zm.cx);
+      const gy = (m[q + (j < ny - 1 ? nx : 0)] - m[q - (j > 0 ? nx : 0)]) / ((j > 0 && j < ny - 1 ? 2 : 1) * zm.cy);
+      const w = ((ax ? x : y) - (o.offset || 0)) / ae, d = abs(w - round(w)) * ae * sqrt(1 + (ax ? gx * gx : gy * gy));
+      const nz = m[q] + (st + (ball ? R - sqrt(max(0, R * R - d * d)) : 0)) * sqrt(1 + gx * gx + gy * gy);
       if (nz >= h[q]) continue;
       zm.removed += (h[q] - nz) * zm.cx * zm.cy; h[q] = nz;
       const w4 = q * 4; at[w4] = id; at[w4 + 1] = g; at[w4 + 2] = 128; at[w4 + 3] = (at[w4 + 3] | FL.CUT | FL.MARK | FL.SKIN) & ~FL.FLANK;
@@ -592,5 +838,5 @@ const Strat = C.Strat = {
     return zm;
   }
 };
-Strat._internal = { field, iso, edt, aeField, resample, smooth, signedArea };
+Strat._internal = { field, iso, edt, aeField, march, resample, smooth, signedArea, fillet };
 })(globalThis);

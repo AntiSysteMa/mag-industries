@@ -50,19 +50,21 @@ const xfv = (m, x, y, z, o) => { o[0] = m[0] * x + m[4] * y + m[8] * z + m[12]; 
 const IDM = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 /* matriz de modelo: punta en pos y eje +Z local llevado a axis */
 function poseTo(o, pos, ax) {
-  let z = ax ? norm(ax) : [0, 0, 1];
-  const r = Math.abs(z[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0];
-  const x = norm([r[1] * z[2] - r[2] * z[1], r[2] * z[0] - r[0] * z[2], r[0] * z[1] - r[1] * z[0]]);
-  const y = [z[1] * x[2] - z[2] * x[1], z[2] * x[0] - z[0] * x[2], z[0] * x[1] - z[1] * x[0]];
-  o[0] = x[0]; o[1] = x[1]; o[2] = x[2]; o[3] = 0; o[4] = y[0]; o[5] = y[1]; o[6] = y[2]; o[7] = 0;
-  o[8] = z[0]; o[9] = z[1]; o[10] = z[2]; o[11] = 0; o[12] = pos[0]; o[13] = pos[1]; o[14] = pos[2]; o[15] = 1;
+  let zx = 0, zy = 0, zz = 1;
+  if (ax) { const l = Math.hypot(ax[0], ax[1], ax[2]) || 1; zx = ax[0] / l; zy = ax[1] / l; zz = ax[2] / l; }
+  /* x = r × z con r = Z o, cerca del polo, X */
+  let xx, xy, xz;
+  if (Math.abs(zz) < 0.9) { xx = -zy; xy = zx; xz = 0; } else { xx = 0; xy = -zz; xz = zy; }
+  const l = Math.hypot(xx, xy, xz) || 1; xx /= l; xy /= l; xz /= l;
+  o[0] = xx; o[1] = xy; o[2] = xz; o[3] = 0; o[4] = zy * xz - zz * xy; o[5] = zz * xx - zx * xz; o[6] = zx * xy - zy * xx; o[7] = 0;
+  o[8] = zx; o[9] = zy; o[10] = zz; o[11] = 0; o[12] = pos[0]; o[13] = pos[1]; o[14] = pos[2]; o[15] = 1;
   return o;
 }
 
 /* ---------- GLSL ---------- */
 const HEAD = '#version 300 es\nprecision highp float; precision highp int;\n';
 const COMMON = `
-uniform vec3 uL; uniform vec3 uL2; uniform vec4 uEye; uniform int uCheap;
+uniform vec3 uL; uniform vec3 uL2; uniform vec4 uEye;
 vec3 viewDir(vec3 P){ return uEye.w>.5 ? normalize(uEye.xyz-P) : uEye.xyz; }
 vec3 env(vec3 r){
   vec3 c=mix(vec3(.05,.055,.06),vec3(.11,.125,.14),smoothstep(-.3,.2,r.z));
@@ -82,13 +84,22 @@ vec3 shade(vec3 N,vec3 V,vec3 base,float metal,float gloss,vec3 T,float an,float
   vec3 Fr=F0+(1.-F0)*pow(1.-nv,5.);
   vec3 col=(dif*nl+F0*sp*nl)*1.6*sh+dif*max(dot(N,uL2),0.)*.35;
   vec3 e=env(reflect(-V,N));
-  if(an>0.&&uCheap==0) e=(e+env(reflect(-V,normalize(N+B*.18)))+env(reflect(-V,normalize(N-B*.18)))+env(reflect(-V,normalize(N+B*.4)))+env(reflect(-V,normalize(N-B*.4))))*.2;
+#ifndef CHEAP
+  if(an>0.) e=(e+env(reflect(-V,normalize(N+B*.18)))+env(reflect(-V,normalize(N-B*.18)))+env(reflect(-V,normalize(N+B*.4)))+env(reflect(-V,normalize(N-B*.4))))*.2;
+#endif
   return col+Fr*e*ao*(.55+.45*sh)+dif*vec3(.10,.12,.14)*ao;
 }
 vec3 tonemap(vec3 c){ c=c*(2.51*c+.03)/(c*(2.43*c+.59)+.14); return pow(clamp(c,0.,1.),vec3(1./2.2)); }
+#ifdef CHEAP
+float vnoise(vec2 p){ return .5; }
+float anoise(vec2 p){ return .5; }
+#else
 float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
 float vnoise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
   return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y); }
+/* ruido que se apaga a su media cuando su periodo baja de ~2 px: sin muaré en caras lejanas ni a DPR 1 */
+float anoise(vec2 p){ vec2 w=fwidth(p); return mix(.5,vnoise(p),1.-smoothstep(.35,.9,max(w.x,w.y))); }
+#endif
 uniform vec4 uCapA[3]; uniform vec3 uCapB[3];
 /* sombra de la herramienta: rayo hacia la luz contra tres cápsulas a lo largo de su eje, penumbra creciente */
 float capSh(vec3 P,vec4 A,vec3 Bp){
@@ -136,22 +147,28 @@ in vec3 vP; in vec3 vN; in vec2 vAS; in vec2 vC; flat in int vSide; out vec4 o;
 void main(){
   if(uSec.x>.5&&vSide!=5){ float d=(uSec.x<1.5?vP.x:vP.y)-uSec.y; if(d*uSec.z<-1e-3) discard; }
   vec3 N0=normalize(vN), N=N0, V=viewDir(vP), base, T=vec3(1,0,0); float metal,gloss,an=0.;
-  float g=vnoise(vP.xy*2.3)*.6+vnoise(vP.xy*9.)*.4;
+  float g=vnoise(vP.xy*2.3)*.6+anoise(vP.xy*9.)*.4;
   vec2 fc=clamp(vC,vec2(0),vec2(uN-1)); float raw=0.;
   if(vSide==5){
     base=uCut*(.96+.06*g); metal=.3; gloss=.3;
     if(fract((gl_FragCoord.x+gl_FragCoord.y)/uHatch)<.24) base*=.42;
   } else if(vSide!=0){
-    base=uCol[0]*(.93+.12*g)*(.95+.07*sin(vP.z*11.+vnoise(vP.xy*.4)*2.)); metal=.45; gloss=.3; an=.3;
+    /* lateral del bruto: mate con marcas finas horizontales */
+    float s=abs(N.x)>.5?vP.y:vP.x, kz=1.-smoothstep(.35,.9,fwidth(vP.z)*1.8);
+    base=uCol[0]*(.95+.08*anoise(vec2(s*.15,vP.z*7.)))*(1.+.06*kz*sin(vP.z*11.+vnoise(vec2(s*.4,vP.z))*2.)); metal=.45; gloss=.3; an=.3;
     T=normalize(vec3(-N.y,N.x,0.)); raw=1.;
   } else {
-    ivec2 c0=ivec2(floor(fc)); vec2 f=fc-vec2(c0); vec4 w=vec4((1.-f.x)*(1.-f.y),f.x*(1.-f.y),(1.-f.x)*f.y,f.x*f.y);
+#ifdef CHEAP
+    ivec2 c0=ivec2(fc+.5); vec4 w=vec4(1,0,0,0); const int NK=1;
+#else
+    ivec2 c0=ivec2(floor(fc)); vec2 f=fc-vec2(c0); vec4 w=vec4((1.-f.x)*(1.-f.y),f.x*(1.-f.y),(1.-f.x)*f.y,f.x*f.y); const int NK=4;
+#endif
     base=vec3(0.); metal=0.; gloss=0.;
-    for(int k=0;k<4;k++){ ivec2 q=min(c0+ivec2(k&1,k>>1),uN-1); int id=int(texelFetch(uA,q,0).r*255.+.5);
+    for(int k=0;k<NK;k++){ ivec2 q=min(c0+ivec2(k&1,k>>1),uN-1); int id=int(texelFetch(uA,q,0).r*255.+.5);
       if(id==0){ base+=uCol[0]*w[k]; metal+=.45*w[k]; gloss+=.32*w[k]; an+=(uRaw==2?0.:.22)*w[k]; raw+=w[k]; }
       else { base+=uCol[id&7]*w[k]; metal+=.72*w[k]; gloss+=.5*w[k]; an+=.35*w[k]; } }
     if(raw>.5){
-      base*= uRaw==1 ? .9+.2*vnoise(vec2(vP.x*.05,vP.y*2.6)) : (.95+.08*g)*(.97+.05*vnoise(vec2(vP.x*.15,vP.y*14.)));
+      base*= uRaw==1 ? .9+.2*anoise(vec2(vP.x*.05,vP.y*2.6)) : (.95+.08*g)*(.97+.05*anoise(vec2(vP.x*.15,vP.y*14.)));
       if(N.z>.75) T=vec3(1,0,0);
     } else base*=.975+.045*g;
     vec2 d2=texture(uA,(fc+.5)/vec2(uN)).gb*2.-1.;
@@ -223,20 +240,21 @@ void main(){
 }`],
   seg: [HEAD + `layout(location=0) in vec4 aA; layout(location=1) in vec4 aB; layout(location=2) in vec2 aS;
 uniform mat4 uVP; uniform mat4 uMdl; uniform vec2 uRes; uniform float uW; uniform float uLift; uniform float uBias;
-out float vX; out float vD; flat out int vT; out float vAl;
+uniform vec4 uCol[8]; uniform float uDash[8];
+out float vX; out float vD; flat out vec4 vCol; flat out float vPer;
 void main(){
-  bool b=gl_VertexID>1; float side=(gl_VertexID&1)==0?-1.:1.;
+  int c=gl_VertexID&3; bool b=c>1; float side=(c&1)==0?-1.:1.;
   vec4 pa=uVP*vec4((uMdl*vec4(aA.xyz,1.)).xyz+vec3(0,0,uLift),1.), pb=uVP*vec4((uMdl*vec4(aB.xyz,1.)).xyz+vec3(0,0,uLift),1.);
   vec2 sa=pa.xy/pa.w*uRes, sb=pb.xy/pb.w*uRes, d=sb-sa; float l=length(d); d=l>1e-6?d/l:vec2(1,0);
   float hw=uW*.5+1.; vec4 p=b?pb:pa; p.xy+=vec2(-d.y,d.x)*side*hw/uRes*p.w; p.z-=uBias*p.w;
-  gl_Position=p; vX=side*hw; vD=b?aB.w:aA.w; vT=int(aS.x+.5); vAl=aS.y;
-}`, HEAD + `uniform vec4 uCol[8]; uniform float uDash[8]; uniform float uPx; uniform vec2 uUp; uniform float uAlpha; uniform float uW; uniform vec2 uHid;
-in float vX; in float vD; flat in int vT; in float vAl; out vec4 o;
+  int t=int(aS.x+.5)&7; gl_Position=p; vX=side*hw; vD=b?aB.w:aA.w; vCol=uCol[t]; vCol.a*=aS.y; vPer=uDash[t];
+}`, HEAD + `uniform float uPx; uniform vec2 uUp; uniform float uAlpha; uniform float uW; uniform vec2 uHid;
+in float vX; in float vD; flat in vec4 vCol; flat in float vPer; out vec4 o;
 void main(){
   if(vD>uUp.y||vD<uUp.x) discard;
-  float per=uHid.x>0.?uHid.x:uDash[vT&7]; if(per>0.&&fract(vD*uPx/per)>.5) discard;
-  vec4 c=uCol[vT&7]; float a=c.a*vAl*uAlpha*uHid.y*clamp(uW*.5+.5-abs(vX),0.,1.);
-  o=vec4(c.rgb*a,a);
+  float per=uHid.x>0.?uHid.x:vPer; if(per>0.&&fract(vD*uPx/per)>.5) discard;
+  float a=vCol.a*uAlpha*uHid.y*clamp(uW*.5+.5-abs(vX),0.,1.);
+  o=vec4(vCol.rgb*a,a);
 }`]
 };
 
@@ -249,10 +267,11 @@ function hub() {
   const force = P.gl === 'force';
   const attrs = { alpha: true, premultipliedAlpha: true, antialias: false, depth: true, stencil: false,
     preserveDrawingBuffer: false, powerPreference: 'low-power', failIfMajorPerformanceCaveat: true };
-  let cv = D.createElement('canvas'), gl = null;
-  try { gl = cv.getContext('webgl2', attrs); } catch (e) { gl = null; }
-  if (!gl && force) {
-    cv = D.createElement('canvas'); attrs.failIfMajorPerformanceCaveat = false;
+  /* con force, segundo intento sin caveat en un lienzo nuevo: nunca se reintenta sobre el mismo */
+  let cv, gl = null;
+  for (let k = 0; k < (force ? 2 : 1) && !gl; k++) {
+    if (k) attrs.failIfMajorPerformanceCaveat = false;
+    cv = D.createElement('canvas');
     try { gl = cv.getContext('webgl2', attrs); } catch (e) { gl = null; }
   }
   if (!gl || gl.isContextLost()) return null;
@@ -270,9 +289,7 @@ function Hub(cv, gl, renderer, soft, lc) {
   const n = G.navigator || {}, mq = q => { try { return G.matchMedia(q).matches; } catch (e) { return false; } };
   this.tier = soft ? 'C' : mq('(pointer: fine)') && !/Mobi|Android|iPhone|iPad/i.test(n.userAgent || '') && G.innerWidth >= 768 && !(n.deviceMemory <= 4) ? 'A' : 'B';
   this.scenes = []; this.gen = 1; this.progs = {}; this.grids = {}; this.ev = { lost: [], restored: [] };
-  this.lc = lc; this.par = gl.getExtension('KHR_parallel_shader_compile');
-  this.tq = gl.getExtension('EXT_disjoint_timer_query_webgl2');
-  this.samples = Math.min(4, gl.getParameter(gl.MAX_SAMPLES) || 0);
+  this.lc = lc; this.caps();
   this.small = 0; cv.width = cv.height = 1;
   this.debug = { lose: () => this.loseContext(), restore: () => this.restoreContext() };
   cv.addEventListener('webglcontextlost', e => {
@@ -282,12 +299,19 @@ function Hub(cv, gl, renderer, soft, lc) {
     this.emit('lost');
   }, false);
   cv.addEventListener('webglcontextrestored', () => {
-    this.lost = false; this.gen++; this.progs = {}; this.grids = {};
+    this.lost = false; this.gen++; this.progs = {}; this.grids = {}; this.caps();
     for (const s of this.scenes) s.restored();
     this.emit('restored');
   }, false);
 }
 Hub.prototype = {
+  /* las extensiones hay que volver a pedirlas tras una restauración */
+  caps() {
+    const gl = this.gl;
+    this.par = gl.getExtension('KHR_parallel_shader_compile');
+    this.tq = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+    this.samples = Math.min(4, gl.getParameter(gl.MAX_SAMPLES) || 0);
+  },
   on(e, fn) { (this.ev[e] || (this.ev[e] = [])).push(fn); },
   emit(e) { for (const f of this.ev[e] || []) { try { f(); } catch (x) {} } },
   scene(cv2, ctx, view) { const s = new SceneGL(this, cv2, ctx, view); this.scenes.push(s); return s; },
@@ -300,18 +324,20 @@ Hub.prototype = {
   },
   stats() { return { gpuMB: this.gpuMB, canvas: [this.cv.width, this.cv.height], scenes: this.scenes.length, renderer: this.renderer, samples: this.samples }; },
   /* compila sin consultar el estado: con KHR_parallel_shader_compile el enlace sigue en segundo plano */
-  want(name) {
-    if (this.lost || this.progs[name]) return;
+  /* ck: variante barata del nivel C (sin ruido, material del vecino más cercano, sin muestras anisótropas) */
+  want(name, ck) {
+    const key = ck ? name + 'C' : name;
+    if (this.lost || this.progs[key] || this.gl.isContextLost()) return;
     const gl = this.gl, p = gl.createProgram(), s = SRC[name];
     for (let i = 0; i < 2; i++) {
       const sh = gl.createShader(i ? gl.FRAGMENT_SHADER : gl.VERTEX_SHADER);
-      gl.shaderSource(sh, s[i]); gl.compileShader(sh); gl.attachShader(p, sh);
+      gl.shaderSource(sh, ck ? s[i].replace(HEAD, HEAD + '#define CHEAP 1\n') : s[i]); gl.compileShader(sh); gl.attachShader(p, sh);
     }
-    gl.linkProgram(p); p.ok = false; this.progs[name] = p;
+    gl.linkProgram(p); p.ok = false; this.progs[key] = p;
   },
-  prog(name) {
-    this.want(name);
-    const gl = this.gl, p = this.progs[name];
+  prog(name, ck) {
+    this.want(name, ck);
+    const gl = this.gl, p = this.progs[ck ? name + 'C' : name];
     if (p.ok) return p;
     if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
       const log = gl.getAttachedShaders(p).map(s => gl.getShaderInfoLog(s)).join(' ') + gl.getProgramInfoLog(p);
@@ -322,6 +348,11 @@ Hub.prototype = {
     for (let i = 0; i < n; i++) { const a = gl.getActiveUniform(p, i); p.u[a.name.replace('[0]', '')] = gl.getUniformLocation(p, a.name); }
     p.ok = true;
     return p;
+  },
+  /* resuelve cuando los programas pedidos están enlazados (o al agotar ms): sin bloquear el hilo en el primer frame() */
+  whenReady(ms) {
+    const t0 = now();
+    return new Promise(res => { const f = () => { if (this.lost || this.ready() || now() - t0 > (ms || 3000)) res(!this.lost); else G.setTimeout(f, 16); }; f(); });
   },
   ready() {
     if (this.lost) return false;
@@ -461,7 +492,7 @@ const Terrain = ext(Res, {
   },
   mk(gl) {
     const zm = this.zm, nx = zm.nx, ny = zm.ny, H = this.H;
-    ['ter', 'bake', 'seg', 'tool'].forEach(n => H.want(n));
+    ['ter', 'bake', 'seg', 'tool'].forEach(n => this.sc.want(n));
     const g = this.g = {};
     g.h = tex(gl, gl.R32F, gl.RED, gl.FLOAT, null, nx, ny);
     g.a = tex(gl, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, null, nx, ny, gl.LINEAR);
@@ -501,20 +532,21 @@ const Terrain = ext(Res, {
       if (lx > 0) x0 -= Math.ceil(sl * lx / ll); else x1 += Math.ceil(-sl * lx / ll);
       if (ly > 0) y0 -= Math.ceil(sl * ly / ll); else y1 += Math.ceil(-sl * ly / ll);
       const r = this.full ? [0, 0, nx, ny] : [Math.max(0, x0), Math.max(0, y0), Math.min(nx, x1), Math.min(ny, y1)];
-      const p = this.H.prog('bake');
+      const p = this.sc.prog('bake');
       gl.bindFramebuffer(gl.FRAMEBUFFER, g.fb); gl.viewport(0, 0, nx, ny);
       gl.enable(gl.SCISSOR_TEST); gl.scissor(r[0], r[1], r[2] - r[0], r[3] - r[1]);
       gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
       gl.useProgram(p); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, g.h);
       gl.uniform1i(p.u.uH, 0); gl.uniform2i(p.u.uN, nx, ny); gl.uniform2f(p.u.uS, zm.sx, zm.sy); gl.uniform3fv(p.u.uL, L1);
       gl.bindVertexArray(this.sc.vaoE()); gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.bindVertexArray(null); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       this.cells = (r[2] - r[0]) * (r[3] - r[1]);
     }
     this.full = false; zm.clean();
     this.ms = now() - t0;
   },
   draw(gl, sc, it) {
-    const zm = this.zm, g = this.g, p = sc.H.prog('ter'), u = p.u, cam = sc.cam;
+    const zm = this.zm, g = this.g, p = sc.prog('ter'), u = p.u, cam = sc.cam;
     gl.useProgram(p); sc.common(p);
     gl.uniformMatrix4fv(u.uVP, false, cam.VP);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, g.h); gl.uniform1i(u.uH, 0);
@@ -575,7 +607,7 @@ const ToolMesh = ext(Res, {
   },
   mk(gl) {
     const g = this.g = {};
-    this.H.want('tool');
+    this.sc.want('tool');
     g.vao = gl.createVertexArray(); gl.bindVertexArray(g.vao);
     g.vb = vbuf(gl, this.P);
     for (let i = 0; i < 3; i++) { gl.enableVertexAttribArray(i); gl.vertexAttribPointer(i, 3, gl.FLOAT, false, 36, i * 12); }
@@ -585,7 +617,7 @@ const ToolMesh = ext(Res, {
   free(gl) { gl.deleteVertexArray(this.g.vao); gl.deleteBuffer(this.g.vb); gl.deleteBuffer(this.g.ib); },
   bytes() { return this.P.byteLength + this.I.byteLength; },
   draw(gl, sc, it, pass) {
-    const p = sc.H.prog('tool'), u = p.u, T = this.T, M = it.M || poseTo(sc.m4, it.pos || [0, 0, 0], it.axis), et = this.I.BYTES_PER_ELEMENT;
+    const p = sc.prog('tool'), u = p.u, T = this.T, M = it.M || poseTo(sc.m4, it.pos || [0, 0, 0], it.axis), et = this.I.BYTES_PER_ELEMENT;
     const ty = et === 4 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
     gl.useProgram(p); sc.common(p);
     gl.uniformMatrix4fv(u.uVP, false, sc.cam.VP); gl.uniformMatrix4fv(u.uMdl, false, M);
@@ -601,19 +633,27 @@ const ToolMesh = ext(Res, {
   }
 });
 
-/* segmentos con distancia acumulada: backplot, aristas y vectores (cuadriláteros de ancho en px, con borde suave) */
-function segBuf(n) { return new Float32Array(n * 10); }
+/* segmentos con distancia acumulada: backplot, aristas y vectores. Cuadriláteros indexados de 4 vértices (el
+   vértice sale de gl_VertexID & 3): con instancias, SwiftShader pagaba ~20 µs por tramo. */
+const SV = 40;
+function segBuf(n) { return new Float32Array(n * SV); }
 function putSeg(a, i, x0, y0, z0, d0, x1, y1, z1, d1, st, al) {
-  const o = i * 10; a[o] = x0; a[o + 1] = y0; a[o + 2] = z0; a[o + 3] = d0; a[o + 4] = x1; a[o + 5] = y1; a[o + 6] = z1; a[o + 7] = d1; a[o + 8] = st; a[o + 9] = al;
+  for (let c = 0, o = i * SV; c < 4; c++, o += 10) {
+    a[o] = x0; a[o + 1] = y0; a[o + 2] = z0; a[o + 3] = d0; a[o + 4] = x1; a[o + 5] = y1; a[o + 6] = z1; a[o + 7] = d1; a[o + 8] = st; a[o + 9] = al;
+  }
 }
-function segVao(gl, g, data, dyn) {
+function segVao(gl, g, data, n, dyn) {
   g.vao = gl.createVertexArray(); gl.bindVertexArray(g.vao);
   g.vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, g.vb); gl.bufferData(gl.ARRAY_BUFFER, data, dyn ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
-  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 40, 0); gl.vertexAttribDivisor(0, 1);
-  gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 40, 16); gl.vertexAttribDivisor(1, 1);
-  gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 40, 32); gl.vertexAttribDivisor(2, 1);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 40, 0);
+  gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 40, 16);
+  gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 40, 32);
+  const I = n * 4 > 65536 ? new Uint32Array(n * 6) : new Uint16Array(n * 6);
+  for (let k = 0, q = 0; k < n; k++, q += 6) { const v = k * 4; I[q] = v; I[q + 1] = v + 1; I[q + 2] = v + 2; I[q + 3] = v + 2; I[q + 4] = v + 1; I[q + 5] = v + 3; }
+  g.ib = vbuf(gl, I, gl.ELEMENT_ARRAY_BUFFER); g.it = I.BYTES_PER_ELEMENT === 4 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT; g.ie = I.BYTES_PER_ELEMENT;
   gl.bindVertexArray(null);
 }
+function segFree(gl, g) { gl.deleteVertexArray(g.vao); gl.deleteBuffer(g.vb); gl.deleteBuffer(g.ib); }
 function styleArr(list) {
   const c = new Float32Array(32), d = new Float32Array(8);
   for (let i = 0; i < 8; i++) {
@@ -623,43 +663,51 @@ function styleArr(list) {
   }
   return { c, d };
 }
-function drawSegs(gl, sc, it, g, n, sty, o) {
-  if (!n) return;
-  const p = sc.H.prog('seg'), u = p.u, v = sc.view, w = Math.max(1, (it.width || o.width || 1) * v.scale);
+function drawSegs(gl, sc, it, g, n, sty, o, first) {
+  first = first || 0;
+  if (n <= first) return;
+  const p = sc.prog('seg'), u = p.u, v = sc.view, w = Math.max(1, (it.width || o.width || 1) * v.scale);
   gl.useProgram(p);
   gl.uniformMatrix4fv(u.uVP, false, sc.cam.VP); gl.uniformMatrix4fv(u.uMdl, false, it.M || IDM);
   gl.uniform2f(u.uRes, v.pw / 2, v.ph / 2); gl.uniform1f(u.uW, w);
   gl.uniform1f(u.uLift, o.lift || 0); gl.uniform1f(u.uBias, o.bias || 0);
   gl.uniform4fv(u.uCol, sty.c); gl.uniform1fv(u.uDash, sty.d); gl.uniform1f(u.uPx, sc.cam.s);
-  gl.uniform2f(u.uUp, o.from || -1e9, o.upTo == null ? 1e9 : o.upTo);
+  gl.uniform2f(u.uUp, o.from == null ? -1e9 : o.from, o.upTo == null ? 1e9 : o.upTo);
   gl.uniform1f(u.uAlpha, it.alpha == null ? 1 : it.alpha);
   gl.uniform2f(u.uHid, o.hid ? o.hid[0] : 0, o.hid ? o.hid[1] : 1);
-  gl.bindVertexArray(g.vao); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n);
+  gl.bindVertexArray(g.vao); gl.drawElements(gl.TRIANGLES, (n - first) * 6, g.it, first * 6 * g.ie);
 }
+/* primer índice con a[i] > x en un array creciente */
+function upper(a, n, x) { let lo = 0, hi = n; while (lo < hi) { const m = (lo + hi) >> 1; if (a[m] > x) hi = m; else lo = m + 1; } return lo; }
 
 const Lines = ext(Res, {
   init(path, o) { o = o || {}; this.upTo = o.upTo == null ? 1e9 : o.upTo; this.from = o.from || 0; this.alpha = o.alpha == null ? 1 : o.alpha; this.width = o.width || 1; this.sty = styleArr(o.styles || PAL.path || [{ c: '#2EE6A8', a: 0.55 }]); this.set(path); },
   set(path) {
     this.drop();
-    const n = path.n, p = path.pts, d = path.dist, a = segBuf(Math.max(1, n - 1));
+    const n = path.n, p = path.pts, d = path.dist, a = segBuf(Math.max(1, n - 1)), d0 = new Float32Array(Math.max(1, n - 1)), d1 = new Float32Array(Math.max(1, n - 1));
     let k = 0;
     for (let i = 0; i + 1 < n; i++) {
       const j = (i + 1) * 4, q = i * 4;
       if (p[q] === p[j] && p[q + 1] === p[j + 1] && p[q + 2] === p[j + 2]) continue;
+      d0[k] = d[i]; d1[k] = d[i + 1];
       putSeg(a, k++, p[q], p[q + 1], p[q + 2], d[i], p[j], p[j + 1], p[j + 2], d[i + 1], p[j + 3], 1);
     }
-    this.data = a; this.n = k; this.len = path.len; this.gen = 0;
+    this.data = a; this.d0 = d0; this.d1 = d1; this.n = k; this.len = path.len; this.gen = 0;
     return this;
   },
-  mk(gl) { this.H.want('seg'); segVao(gl, this.g = {}, this.data.subarray(0, Math.max(1, this.n) * 10)); },
-  free(gl) { gl.deleteVertexArray(this.g.vao); gl.deleteBuffer(this.g.vb); },
-  bytes() { return this.n * 40; },
+  mk(gl) { this.sc.want('seg'); segVao(gl, this.g = {}, this.data.subarray(0, Math.max(1, this.n) * SV), Math.max(1, this.n)); },
+  free(gl) { segFree(gl, this.g); },
+  bytes() { return this.n * (SV * 4 + 12); },
+  /* solo se envían los tramos entre from y upTo; el fragment shader recorta el tramo a medias */
   draw(gl, sc, it) {
-    drawSegs(gl, sc, { alpha: (it.alpha == null ? 1 : it.alpha) * this.alpha, M: it.M, width: it.width || this.width }, this.g, this.n, this.sty,
-      { upTo: it.upTo != null ? it.upTo : this.upTo, from: this.from, lift: 0.06, bias: 0.002 });
+    const a = this.ia || (this.ia = {}), o = this.io || (this.io = { lift: 0.06, bias: 0.002 });
+    a.alpha = (it.alpha == null ? 1 : it.alpha) * this.alpha; a.M = it.M; a.width = it.width || this.width;
+    o.upTo = it.upTo != null ? it.upTo : this.upTo; o.from = it.from != null ? it.from : this.from;
+    drawSegs(gl, sc, a, this.g, upper(this.d0, this.n, o.upTo), this.sty, o, o.from > 0 ? upper(this.d1, this.n, o.from - 1e-6) : 0);
   }
 });
 
+const VEC = { bias: 0.003 };
 const Vectors = ext(Res, {
   init(max, o) {
     o = o || {}; this.max = max; this.data = segBuf(max); this.n = 0; this.dirty = true; this.width = o.width || 1.5;
@@ -672,12 +720,14 @@ const Vectors = ext(Res, {
     putSeg(this.data, this.n++, p[0], p[1], p[2], 0, p[0] + d[0] * l, p[1] + d[1] * l, p[2] + d[2] * l, len, style || 0, alpha == null ? 1 : alpha);
     this.dirty = true; return this;
   },
-  mk(gl) { this.H.want('seg'); segVao(gl, this.g = {}, this.data, true); this.dirty = true; },
-  free(gl) { gl.deleteVertexArray(this.g.vao); gl.deleteBuffer(this.g.vb); },
-  bytes() { return this.max * 40; },
+  mk(gl) { this.sc.want('seg'); segVao(gl, this.g = {}, this.data, this.max, true); this.dirty = true; },
+  free(gl) { segFree(gl, this.g); },
+  bytes() { return this.max * SV * 4; },
   draw(gl, sc, it) {
-    if (this.dirty) { gl.bindBuffer(gl.ARRAY_BUFFER, this.g.vb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.data, 0, this.n * 10); this.dirty = false; }
-    drawSegs(gl, sc, { alpha: it.alpha, M: it.M, width: it.width || this.width }, this.g, this.n, this.sty, { bias: 0.003 });
+    if (this.dirty) { gl.bindBuffer(gl.ARRAY_BUFFER, this.g.vb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.data, 0, this.n * SV); this.dirty = false; }
+    const a = this.ia || (this.ia = {});
+    a.alpha = it.alpha; a.M = it.M; a.width = it.width || this.width;
+    drawSegs(gl, sc, a, this.g, this.n, this.sty, VEC);
   }
 });
 
@@ -779,6 +829,7 @@ function build(def) {
   }
   return { pos: new Float32Array(P), nrm: new Float32Array(N), idx: I, edges: def.edges || new Float32Array(E) };
 }
+const HID = { hid: [7, 0.35] }, VIS = { bias: 0.0005 };
 const Mesh = ext(Res, {
   init(def) {
     const b = build(def), nv = b.pos.length / 3, m = def.material || {};
@@ -786,7 +837,7 @@ const Mesh = ext(Res, {
     for (let i = 0; i < nv; i++) { v.set(b.pos.subarray(i * 3, i * 3 + 3), i * 6); v.set(b.nrm.subarray(i * 3, i * 3 + 3), i * 6 + 3); }
     this.V = v; this.I = b.idx instanceof Uint32Array || b.idx instanceof Uint16Array ? b.idx : nv > 65535 ? new Uint32Array(b.idx) : new Uint16Array(b.idx);
     this.base = new Float32Array(lin(m.color || '#9AA8B6')); this.mat = new Float32Array([m.metal == null ? 0.3 : m.metal, m.gloss == null ? 0.45 : m.gloss, 1]);
-    this.alpha = m.alpha == null ? 1 : m.alpha; this.zk = (def.zebra || 7) / PI;
+    this.alpha = m.alpha == null ? 1 : m.alpha; this.zk = (def.zebra || 20) / PI;
     this.setEdges(b.edges);
   },
   /* aristas: pares de puntos; la distancia se acumula mientras los tramos se encadenan (discontinuo continuo) */
@@ -804,22 +855,23 @@ const Mesh = ext(Res, {
   },
   mk(gl) {
     const g = this.g = {};
-    this.H.want('mesh'); this.H.want('seg');
+    this.sc.want('mesh'); this.sc.want('seg');
     g.vao = gl.createVertexArray(); gl.bindVertexArray(g.vao);
     g.vb = vbuf(gl, this.V);
     gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 24, 0);
     gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 24, 12);
     g.ib = vbuf(gl, this.I, gl.ELEMENT_ARRAY_BUFFER);
     gl.bindVertexArray(null);
-    g.e = {}; segVao(gl, g.e, this.E);
+    g.e = {}; segVao(gl, g.e, this.E, Math.max(1, this.ne));
   },
-  free(gl) { const g = this.g; gl.deleteVertexArray(g.vao); gl.deleteBuffer(g.vb); gl.deleteBuffer(g.ib); gl.deleteVertexArray(g.e.vao); gl.deleteBuffer(g.e.vb); },
+  free(gl) { const g = this.g; gl.deleteVertexArray(g.vao); gl.deleteBuffer(g.vb); gl.deleteBuffer(g.ib); segFree(gl, g.e); },
   bytes() { return this.V.byteLength + this.I.byteLength + this.E.byteLength; },
   surf(gl, sc, it, depthOnly) {
-    const p = sc.H.prog('mesh'), u = p.u, a = (it.alpha == null ? 1 : it.alpha) * this.alpha;
+    const p = sc.prog('mesh'), u = p.u, a = (it.alpha == null ? 1 : it.alpha) * this.alpha;
     gl.useProgram(p); sc.common(p);
     gl.uniformMatrix4fv(u.uVP, false, sc.cam.VP); gl.uniformMatrix4fv(u.uMdl, false, it.M || IDM);
-    gl.uniform3fv(u.uBase, it.color ? new Float32Array(lin(it.color)) : this.base);
+    if (it.color && it.color !== this.ck) { this.ck = it.color; this.cb = new Float32Array(lin(it.color)); }
+    gl.uniform3fv(u.uBase, it.color ? this.cb : this.base);
     gl.uniform3f(u.uMat, this.mat[0], this.mat[1], a);
     gl.uniform1i(u.uZeb, it.mode === 'zebra' ? 1 : 0); gl.uniform1f(u.uZk, it.zebra ? it.zebra / PI : this.zk);
     gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1, 2);
@@ -831,18 +883,22 @@ const Mesh = ext(Res, {
   },
   edges(gl, sc, it) {
     if (!this.ne) return;
-    const wire = it.mode === 'edges', col = it.edgeColor || (wire ? '#2EE6A8' : '#1B2634'), sty = this.sty && this.styC === col ? this.sty : (this.styC = col, this.sty = styleArr([{ c: col, a: 1 }]));
-    const ia = { alpha: it.alpha, M: it.M, width: it.edgeWidth || 1 };
-    if (wire && it.hidden !== false) {
+    const wire = WIRE[it.mode], col = it.edgeColor || (wire ? '#2EE6A8' : '#1B2634'), sty = this.sty && this.styC === col ? this.sty : (this.styC = col, this.sty = styleArr([{ c: col, a: 1 }]));
+    const ia = this.ia || (this.ia = {});
+    ia.alpha = it.alpha; ia.M = it.M; ia.width = it.edgeWidth || 1;
+    if (it.mode === 'edges' && it.hidden !== false) {
       gl.depthFunc(gl.GREATER);
-      drawSegs(gl, sc, ia, this.g.e, this.ne, sty, { hid: [7, it.hiddenAlpha == null ? 0.35 : it.hiddenAlpha] });
+      HID.hid[1] = it.hiddenAlpha == null ? 0.35 : it.hiddenAlpha;
+      drawSegs(gl, sc, ia, this.g.e, this.ne, sty, HID);
       gl.depthFunc(gl.LEQUAL);
     }
-    drawSegs(gl, sc, ia, this.g.e, this.ne, sty, { bias: 0.0005 });
+    drawSegs(gl, sc, ia, this.g.e, this.ne, sty, VIS);
   }
 });
 
 /* ---------- escena ---------- */
+/* modos de malla que solo escriben profundidad: alámbrico con ocultas, sin ocultas, y oclusor invisible */
+const WIRE = { edges: 1, hidden: 1, depth: 1 };
 function SceneGL(H, cv2, ctx, view) {
   this.H = H; this.cv2 = cv2; this.ctx = ctx; this.view = view || { w: cv2.width, h: cv2.height, scale: 1, ox: 0, oy: 0, pw: cv2.width, ph: cv2.height, msaa: false };
   this.res = []; this.cam = new Camera(this); this.m4 = new Float32Array(16);
@@ -852,13 +908,17 @@ function SceneGL(H, cv2, ctx, view) {
   if (!H.colShank) { H.colShank = new Float32Array(lin((PAL.tool && PAL.tool.shank) || '#8C9399')); H.colHold = new Float32Array(lin((PAL.tool && PAL.tool.holder) || '#8A96A3')); H.colFlg = new Float32Array(lin((PAL.tool && PAL.tool.flange) || '#4A5056')); }
 }
 SceneGL.prototype = {
-  terrain(zm, o) { const t = new Terrain(this); t.init(zm, o || {}); if (!this.H.lost) ['ter', 'bake', 'seg', 'tool'].forEach(n => this.H.want(n)); return t; },
-  tool(T, o) { const t = new ToolMesh(this); t.init(T, o); if (!this.H.lost) this.H.want('tool'); return t; },
-  mesh(def) { const m = new Mesh(this); m.init(def); if (!this.H.lost) { this.H.want('mesh'); this.H.want('seg'); } return m; },
-  lines(path, o) { const l = new Lines(this); l.init(path, o); if (!this.H.lost) this.H.want('seg'); return l; },
-  vectors(max, o) { const v = new Vectors(this); v.init(max, o); return v; },
+  /* los programas se piden al crear el recurso: con KHR_parallel_shader_compile enlazan mientras la escena sigue */
+  terrain(zm, o) { const t = new Terrain(this); t.init(zm, o || {}); ['ter', 'bake', 'seg', 'tool'].forEach(n => this.want(n)); return t; },
+  tool(T, o) { const t = new ToolMesh(this); t.init(T, o); this.want('tool'); return t; },
+  mesh(def) { const m = new Mesh(this); m.init(def); this.want('mesh'); this.want('seg'); return m; },
+  lines(path, o) { const l = new Lines(this); l.init(path, o); this.want('seg'); return l; },
+  want(n) { if (!this.H.lost) this.H.want(n, this.view.tier === 'C'); },
+  prog(n) { return this.H.prog(n, this.view.tier === 'C'); },
+  vectors(max, o) { const v = new Vectors(this); v.init(max, o); this.want('seg'); return v; },
   camera(o) { return this.cam.set(o); },
   ready() { return this.H.ready(); },
+  whenReady(ms) { return this.H.whenReady(ms); },
   bytes() {
     let b = 0; for (const r of this.res) b += r.bytes();
     if (this.fb) b += this.fb.w * this.fb.h * 8 * this.fb.s;
@@ -868,7 +928,6 @@ SceneGL.prototype = {
   common(p) {
     const gl = this.H.gl, u = p.u;
     gl.uniform3fv(u.uL, L1); if (u.uL2) gl.uniform3fv(u.uL2, L2); if (u.uEye) gl.uniform4fv(u.uEye, this.cam.eye);
-    if (u.uCheap) gl.uniform1i(u.uCheap, this.view.tier === 'C' ? 1 : 0);
     if (u.uCapA) { gl.uniform4fv(u.uCapA, this.caps); gl.uniform3fv(u.uCapB, this.capB); }
   },
   restored() { this.fb = null; this.q = []; },
@@ -935,18 +994,18 @@ SceneGL.prototype = {
     for (const it of list) {
       const h = it && it.h; if (!h || !h.g) continue;
       if (h instanceof Terrain) h.draw(gl, this, it);
-      else if (h instanceof Mesh) { const a = (it.alpha == null ? 1 : it.alpha) * h.alpha; if (a >= 1 || it.mode === 'edges' || it.mode === 'hidden') h.surf(gl, this, it, it.mode === 'edges' || it.mode === 'hidden'); }
+      else if (h instanceof Mesh) { const w = WIRE[it.mode]; if (w || (it.alpha == null ? 1 : it.alpha) * h.alpha >= 1) h.surf(gl, this, it, w); }
       else if (h instanceof ToolMesh && (it.alpha == null || it.alpha >= 1)) h.draw(gl, this, it, 0);
     }
     gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
     for (const it of list) {
       const h = it && it.h; if (!h || !h.g) continue;
       if (h instanceof Lines || h instanceof Vectors) h.draw(gl, this, it);
-      else if (h instanceof Mesh && (it.mode === 'edges' || it.edges)) h.edges(gl, this, it);
+      else if (h instanceof Mesh && (it.mode === 'edges' || it.mode === 'hidden' || it.edges)) h.edges(gl, this, it);
     }
     for (const it of list) {
       const h = it && it.h; if (!h || !h.g) continue;
-      if (h instanceof Mesh && it.mode !== 'edges' && it.mode !== 'hidden' && (it.alpha == null ? 1 : it.alpha) * h.alpha < 1) h.surf(gl, this, it, false);
+      if (h instanceof Mesh && !WIRE[it.mode] && (it.alpha == null ? 1 : it.alpha) * h.alpha < 1) h.surf(gl, this, it, false);
       else if (h instanceof ToolMesh) { if (it.alpha != null && it.alpha < 1) h.draw(gl, this, it, 0); h.draw(gl, this, it, 1); }
     }
     gl.depthMask(true); gl.disable(gl.BLEND); gl.bindVertexArray(null);
@@ -982,5 +1041,5 @@ SceneGL.prototype = {
   }
 };
 
-C.GL = { hub, VERSION: '1.0.0', pose: (pos, axis, o) => poseTo(o || new Float32Array(16), pos, axis) };
+C.GL = { hub, VERSION: '1.1.0', pose: (pos, axis, o) => poseTo(o || new Float32Array(16), pos, axis) };
 })(globalThis);
