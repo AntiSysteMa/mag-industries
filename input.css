@@ -90,30 +90,6 @@ html.no-gsap .w-in{ transform:none; }
 .scanline{ animation:scanline 5s linear infinite; }
 @keyframes spark{ 0%,100%{opacity:0; transform:scale(.4);} 45%{opacity:1; transform:scale(1);} 55%{opacity:.8;} }
 .spark{ animation:spark 1.1s ease-in-out infinite; transform-origin:center; transform-box:fill-box; }
-@keyframes laser-sweep{ 0%{transform:translateX(-10%);} 100%{transform:translateX(110%);} }
-.laser-beam{ animation:laser-sweep 3.2s ease-in-out infinite alternate; }
-@keyframes wire-buzz{ 0%,100%{transform:translateX(0);} 50%{transform:translateX(1.5px);} }
-.wire{ animation:wire-buzz .18s ease-in-out infinite; }
-@keyframes float-y{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
-.float-y{ animation:float-y 6s ease-in-out infinite; }
-.scene3d{ perspective:900px; }
-@keyframes spin3d{ from{transform:rotateX(-24deg) rotateY(0deg);} to{transform:rotateX(-24deg) rotateY(360deg);} }
-.cube{ position:relative; width:120px; height:120px; transform-style:preserve-3d; animation:spin3d 14s linear infinite; }
-.cube .face{ position:absolute; width:120px; height:120px; border:1.5px solid rgba(18,247,160,.55); background:rgba(18,247,160,.05); }
-.cube .f-front{ transform:translateZ(60px); } .cube .f-back{ transform:rotateY(180deg) translateZ(60px); }
-.cube .f-right{ transform:rotateY(90deg) translateZ(60px); border-color:rgba(255,196,0,.5); background:rgba(255,196,0,.05); }
-.cube .f-left{ transform:rotateY(-90deg) translateZ(60px); border-color:rgba(255,196,0,.5); background:rgba(255,196,0,.05); }
-.cube .f-top{ transform:rotateX(90deg) translateZ(60px); } .cube .f-bottom{ transform:rotateX(-90deg) translateZ(60px); }
-
-/* ===== Torneado CNC ===== */
-@keyframes chuck-spin{ to{ transform:rotate(360deg); } }
-.chuck-spin{ animation:chuck-spin .9s linear infinite; transform-box:fill-box; transform-origin:center; }
-@keyframes bar-tex{ 0%{transform:translateY(-9px); opacity:0;} 25%{opacity:.5;} 75%{opacity:.5;} 100%{transform:translateY(9px); opacity:0;} }
-.bar-tex{ animation:bar-tex .5s linear infinite; }
-@keyframes chip-fly{ 0%{transform:translate(0,0) rotate(0deg); opacity:1;} 100%{transform:translate(-22px,-30px) rotate(-160deg); opacity:0;} }
-.chip{ animation:chip-fly .8s ease-out infinite; transform-box:fill-box; transform-origin:center; }
-.chip.d2{ animation-duration:.65s; animation-delay:.2s; }
-.chip.d3{ animation-duration:.95s; animation-delay:.45s; }
 
 /* El contenido es VISIBLE POR DEFECTO. La animación de entrada es una mejora,
    no un requisito para poder leer la web. Solo se oculta bajo `html.anim-ready`,
@@ -128,7 +104,7 @@ html.anim-ready.gsap-on .reveal{ transition:none; }
 @media (prefers-reduced-motion: reduce){
   .reveal{opacity:1 !important; transform:none !important; transition:none;}
   .w-in{transform:none !important;}
-  .path-trace,.status-dot,.scanline,.spark,.laser-beam,.wire,.float-y,.cube,.chuck-spin,.bar-tex,.chip,.scroll-hint .line::after{ animation:none !important; }
+  .path-trace,.status-dot,.scanline,.spark,.scroll-hint .line::after{ animation:none !important; }
 }
 /* La elevación usa `translate`, no `transform`: GSAP deja `transform` en línea
    tras el revelado y, con transform, el :hover dejaba de tener efecto. */
@@ -378,6 +354,27 @@ html.anim-ready.gsap-on p.reveal:not(.in){ filter:blur(6px); }
 @media (min-width:640px){ .manifest-2, .manifest-3{ grid-template-columns:repeat(2,1fr); } .manifest-3 > li:nth-child(even){ background:none; } .manifest-3 > li:nth-child(4n+2), .manifest-3 > li:nth-child(4n+3){ background:rgb(var(--c-panel)); } }
 @media (min-width:1024px){ .manifest-3{ grid-template-columns:repeat(3,1fr); } .manifest-3 > li:nth-child(n){ background:none; } .manifest-3 > li:nth-child(even){ background:rgb(var(--c-panel)); } }
 @media (max-width:639px){ .manifest-2 > li:nth-child(n){ background:none; } .manifest-2 > li:nth-child(even){ background:rgb(var(--c-panel)); } }
+
+/* ----- Pantallas de simulación (canvas[data-sim], las monta sim/runtime.js) -----
+   Las pantallas son oscuras también en tema claro: se fijan aquí los tokens
+   que leen las utilidades, en vez de forzar cada una con !important. */
+.screen{ --c-grid:255 255 255; --grid-a:.04; --c-gold:212 175 55; --c-gold-dim:150 120 40;
+         --c-green:46 230 168; --c-green-dim:20 150 110; --safety:#D4AF37; --cyber:#2EE6A8; --alert:#FF5A3C; }
+.sim-canvas{ opacity:0; transition:opacity var(--sim-fade,.4s) var(--ease-out); }
+.sim-live .sim-canvas{ opacity:1; }
+.sim-poster{ transition:opacity var(--sim-fade,.4s) var(--ease-out); }
+.sim-live .sim-poster{ opacity:0; }
+#hero-panel .screen{ --sim-fade:.6s; }
+.sim-live .scanline{ display:none; }
+.sim-live .screen-bar{ -webkit-backdrop-filter:none; backdrop-filter:none; }
+.sim-live .sim-fallback{ visibility:hidden; }
+.screen-bar{ contain:layout paint; }
+[data-hud]{ font-variant-numeric:tabular-nums; }
+[data-hud="blk"]{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+[data-hud-bar]{ transform-origin:left center; }
+.sim-toggle{ min-width:44px; min-height:24px; }
+@media (hover:hover) and (pointer:fine){ .sim-toggle:hover{ color:#EAF0F6; } }
+@media (prefers-reduced-motion: reduce){ .sim-canvas,.sim-poster{ transition:none; } .sim-toggle{ display:none; } }
 
 /* ----- Luz de sonda sobre la rejilla del hero ----- */
 .probe{

@@ -245,14 +245,14 @@ function arcPts(cx, cy, r, a0, sw, ds) {
   return out;
 }
 
-/* ---------- ejecución troceable: con idle devuelve una promesa y cede entre trozos de ≤ ~25 ms ---------- */
+/* ---------- ejecución troceable: con idle devuelve una promesa y cede tras cada trozo de ~20 ms ---------- */
 function run(gen, idle) {
   if (!idle) { let r; do r = gen.next(); while (!r.done); return r.value; }
   return new Promise((res, rej) => {
     const step = () => {
       try {
         const t0 = now();
-        for (;;) { const r = gen.next(); if (r.done) return res(r.value); if (now() - t0 > 25) break; }
+        for (;;) { const r = gen.next(); if (r.done) return res(r.value); if (now() - t0 > 20) break; }
         Promise.resolve(idle()).then(step, rej);
       } catch (e) { rej(e); }
     };
@@ -337,12 +337,11 @@ function* adaptiveGen(o) {
   yield;
 
   /* 1. tramos de cada nivel recortados por el borde del dominio, suavizados y remuestreados */
-  const pieces = [];
-  for (let L = 1; L <= Lmax; L++) {
-    for (const c of iso(F, T, L, 1, cells.subarray(off[L], off[L + 1]))) {
+  const levelPieces = (L, list, out) => {
+    for (const c of iso(F, T, L, 1, list)) {
       const p = c.p, n = p.length / 2, d = new Float64Array(n);
       for (let k = 0; k < n; k++) d[k] = Dat(p[2 * k], p[2 * k + 1]);
-      const push = (q, closed) => { if (plen(q, closed) >= 0.5) pieces.push({ L, p: smoothN ? smooth(q, closed, ds) : resample(q, ds, closed), closed }); };
+      const push = (q, closed) => { if (plen(q, closed) >= 0.5) out.push({ L, p: smoothN ? smooth(q, closed, ds) : resample(q, ds, closed), closed }); };
       if (c.closed && d.every(v => v >= 0)) { push(p, true); continue; }
       if (c.closed) {
         let k0 = 0; while (d[k0] >= 0) k0++;
@@ -364,6 +363,11 @@ function* adaptiveGen(o) {
       }
       if (cur) push(cur, false);
     }
+    return out;
+  };
+  const pieces = [];
+  for (let L = 1; L <= Lmax; L++) {
+    levelPieces(L, cells.subarray(off[L], off[L + 1]), pieces);
     if (L % 8 === 0) yield;
   }
   yield;
@@ -373,23 +377,37 @@ function* adaptiveGen(o) {
      que es lo que ve el arco de contacto. Con ella se elige la entrada de cada tramo, se baja siempre sobre vacío y los
      enlaces no tocan material. Se da por abierto el taladro de la hélice (centros a ≤ rStart del inicio) */
   const sg = o.simCell || 1, sx0 = F.x0, sy0 = F.y0, snx = floor((nx - 1) * cell / sg) + 1, sny = floor((ny - 1) * cell / sg) + 1;
-  const Dm = new Float32Array(snx * sny), RU = R + 1.5, RS2 = (R - 1.6) * (R - 1.6), logI = [], logV = [];
+  const Dm = new Float32Array(snx * sny), RU = R + 1.5, RSKIP = R - 1.6;
+  let logI = new Int32Array(1 << 14), logV = new Float32Array(1 << 14), logN = 0;
   for (let j = 0, q = 0; j < sny; j++) for (let i = 0; i < snx; i++, q++) Dm[q] = max(0, hypot(sx0 + i * sg - start[0], sy0 + j * sg - start[1]) - rS);
   let logOn = false;
-  const stamp = (ax, ay, bx, by) => {
-    const i0 = max(0, ceil((min(ax, bx) - RU - sx0) / sg)), i1 = min(snx - 1, floor((max(ax, bx) + RU - sx0) / sg));
-    const j0 = max(0, ceil((min(ay, by) - RU - sy0) / sg)), j1 = min(sny - 1, floor((max(ay, by) + RU - sy0) / sg));
-    const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+  /* solo las filas y columnas del disco o cápsula de radio RU; si el tramo continúa al anterior (cont), lo que
+     queda detrás de su punto inicial ya está a esa distancia del tramo anterior */
+  const stamp = (ax, ay, bx, by, cont) => {
+    const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy, ylo = min(ay, by), yhi = max(ay, by), xlo = min(ax, bx), xhi = max(ax, bx);
+    const j0 = max(0, ceil((ylo - RU - sy0) / sg)), j1 = min(sny - 1, floor((yhi + RU - sy0) / sg)), half = cont && l2 > 1e-12;
     for (let j = j0; j <= j1; j++) {
-      const y = sy0 + j * sg;
+      const y = sy0 + j * sg, e0 = y < ylo ? ylo - y : y > yhi ? y - yhi : 0, w = sqrt(max(0, RU * RU - e0 * e0));
+      let xa = xlo - w, xb = xhi + w;
+      if (half) {
+        const c = -(y - ay) * dy;
+        if (abs(dx) > 1e-9) { const xc = ax + c / dx; if (dx > 0) xa = max(xa, xc); else xb = min(xb, xc); } else if (c >= 0) continue;
+      }
+      const i0 = max(0, ceil((xa - sx0) / sg)), i1 = min(snx - 1, floor((xb - sx0) / sg));
       for (let i = i0, q = j * snx + i0; i <= i1; i++, q++) {
         const old = Dm[q];
-        if (old * old < RS2 && old < R) continue;
+        if (old < RSKIP) continue;
         const x = sx0 + i * sg;
         let u = l2 > 1e-12 ? ((x - ax) * dx + (y - ay) * dy) / l2 : 0;
         u = u < 0 ? 0 : u > 1 ? 1 : u;
         const ex = x - ax - u * dx, ey = y - ay - u * dy, d2 = ex * ex + ey * ey;
-        if (d2 < old * old) { if (logOn) { logI.push(q); logV.push(old); } Dm[q] = sqrt(d2); }
+        if (d2 < old * old) {
+          if (logOn) {
+            if (logN === logI.length) { const a = new Int32Array(2 * logN), b = new Float32Array(2 * logN); a.set(logI); b.set(logV); logI = a; logV = b; }
+            logI[logN] = q; logV[logN++] = old;
+          }
+          Dm[q] = sqrt(d2);
+        }
       }
     }
   };
@@ -402,14 +420,16 @@ function* adaptiveGen(o) {
   /* arco de contacto en la mitad delantera, como ZMap.engagement a 0.075 mm del filo; cuenta el sobreespesor de pared */
   const NP = 61, PC = new Float64Array(NP), PS = new Float64Array(NP), rp = R + 0.075;
   for (let k = 0; k < NP; k++) { const a = -PI / 2 + PI * k / (NP - 1); PC[k] = cos(a); PS[k] = sin(a); }
+  /* el arco que no arranca en el lado derecho y queda a la izquierda del avance es fresado en oposición: penaliza */
   const engage = (cx, cy, hx, hy) => {
-    let best = 0, r = 0;
+    let best = 0, r = 0, end = 0;
     const wall = Dat(cx, cy) < 0.2;
     for (let k = 0; k < NP; k++) {
       const x = cx + rp * (hx * PC[k] - hy * PS[k]), y = cy + rp * (hx * PS[k] + hy * PC[k]);
-      if (dAt(x, y) > R || wall && Dat(x, y) < -R) { if (++r > best) best = r; } else r = 0;
+      if (dAt(x, y) > R || wall && Dat(x, y) < -R) { if (++r > best) { best = r; end = k; } } else r = 0;
     }
-    return best * 180 / (NP - 1);
+    const e = best * 180 / (NP - 1);
+    return e >= 12 && end - best / 2 > 0.6 * NP ? e + 40 : e;
   };
   /* ¿el disco de la herramienta centrada aquí no toca material ni pared? Margen según el uso (lv): 0 justo donde
      acaba de cortar, 1 para bajar, 2 para enlazar a z + linkLift (a 0.3 mm del suelo, cualquier resto se pelaría en
@@ -429,26 +449,33 @@ function* adaptiveGen(o) {
   };
   /* estampa provisionalmente pts (x,y planos) a pasos de ~1 mm y devuelve el mayor compromiso desde el punto m0;
      deshace al salir */
-  const trial = (pts, m0) => {
-    logOn = true;
-    let worst = 0, ax = pts[0], ay = pts[1];
-    for (let k = 2; k < pts.length; k += 2) {
+  /* con win, además de lim: compromiso medio en 10 mm de recorrido; si pasa de win, cuenta como lim */
+  let hotK = -1;
+  const WB = new Float64Array(16);
+  const trial = (pts, m0, lim = INF, win = INF) => {
+    logOn = true; hotK = -1;
+    let worst = 0, ax = pts[0], ay = pts[1], wn = 0, ws = 0;
+    for (let k = 2; k < pts.length && worst < lim; k += 2) {
       const bx = pts[k], by = pts[k + 1], l = hypot(bx - ax, by - ay);
       if (l < 0.9 && k < pts.length - 2) continue;
       if (l < 1e-9) continue;
-      stamp(ax, ay, bx, by);
-      if (k / 2 >= m0) { const e = engage(bx, by, (bx - ax) / l, (by - ay) / l); if (e > worst) worst = e; }
+      stamp(ax, ay, bx, by, k > 2);
+      if (k / 2 >= m0) {
+        let e = engage(bx, by, (bx - ax) / l, (by - ay) / l);
+        if (win < INF) { ws += e - (wn >= 10 ? WB[wn % 10] : 0); WB[wn++ % 10] = e; if (wn >= 10 && ws / 10 > win) e = max(e, lim); }
+        if (e > worst) { worst = e; if (e >= lim) hotK = k; }
+      }
       ax = bx; ay = by;
     }
-    for (let k = logI.length - 1; k >= 0; k--) Dm[logI[k]] = logV[k];
-    logI.length = logV.length = 0; logOn = false;
+    for (let k = logN - 1; k >= 0; k--) Dm[logI[k]] = logV[k];
+    logN = 0; logOn = false;
     return worst;
   };
   yield;
 
   /* 3. entradas y salidas. Tipos por punto: 0 bajada (enlace), 1 corte, 2 entrada, 3 salida */
   const RH = o.leadR || 6, ACC = o.accept || 56, HARD = 74, SPAN = 8;
-  const st = { pieces: pieces.length, levels: Lmax, links: 0, routed: 0, lifts: 0, filletIn: 0, filletOut: 0, leadIn: 0, plunge: 0, skipped: 0, dropped: 0 };
+  const st = { pieces: pieces.length, levels: Lmax, relief: 0, links: 0, routed: 0, lifts: 0, filletIn: 0, filletOut: 0, leadIn: 0, plunge: 0, skipped: 0, dropped: 0 };
   const g2 = [0, 0];
   const geomOk = pts => { for (let k = 0; k < pts.length; k += 2) if (Dat(pts[k], pts[k + 1]) < -0.03) return false; return true; };
   /* Entrada desde la pared en media vuelta, como el fondo de un bucle trocoidal: recta por lo vaciado en sentido
@@ -479,7 +506,6 @@ function* adaptiveGen(o) {
     return geomOk(arc) && discClear(arc[0], arc[1], 1) ? arc : null;
   };
   const front = (p, a, b) => { const out = []; for (let k = max(0, a); k <= b && k < p.length / 2; k++) out.push(p[2 * k], p[2 * k + 1]); return out; };
-  /* elige entre candidatos {lead, k0, skip}: el primero con compromiso ≤ ACC, o el mejor */
   /* Elige entre candidatos {lead, k0, skip}: el primero con compromiso ≤ ACC o, si ninguno, el mejor. Saltarse el
      principio del frente deja material junto a la pared que el frente siguiente se come de golpe: solo se admite
      si ninguna entrada completa baja de HARD */
@@ -487,7 +513,7 @@ function* adaptiveGen(o) {
     let best = null, bs = INF;
     for (const c of cands) {
       if (c.skip && bs <= HARD) break;
-      const s = trial(c.lead.concat(front(p, c.k0 + 1, c.k0 + SPAN / ds)), 1) + 4 * c.skip;
+      const s = trial(c.lead.concat(front(p, c.k0 + 1, c.k0 + SPAN / ds)), 1, bs - 4 * c.skip) + 4 * c.skip;
       if (s < bs) { bs = s; best = c; }
       if (s <= ACC) break;
     }
@@ -519,19 +545,27 @@ function* adaptiveGen(o) {
   const Fc = tool.cut && tool.cut.F || 0;
   /* la simulación se estampa a cuerdas de ~1 mm; flush() la pone al día antes de cada consulta */
   let sxp = NaN, syp = NaN;
-  const flush = () => { if (sxp === sxp && pb.n && (pb.x !== sxp || pb.y !== syp)) stamp(sxp, syp, pb.x, pb.y); sxp = pb.x; syp = pb.y; };
+  const flush = () => { if (sxp === sxp && pb.n && (pb.x !== sxp || pb.y !== syp)) stamp(sxp, syp, pb.x, pb.y, true); sxp = pb.x; syp = pb.y; };
   const cut = (x, y, ty, F) => {
     if (!(pb.n && abs(pb.z - z) < 1e-9)) sxp = NaN;
     else if (sxp !== sxp) { sxp = pb.x; syp = pb.y; }
-    pb.feed(x, y, z, ty, F != null ? F : ty === 1 ? 0 : Fc); pb.blocks[pb.lastBlock()].ae = aeAt(x, y);
-    if (sxp === sxp && hypot(x - sxp, y - syp) >= 1) { stamp(sxp, syp, x, y); sxp = x; syp = y; }
+    pb.feed(x, y, z, ty, F != null ? F : ty === 1 ? 0 : Fc); pb.blocks[pb.lastBlock()].ae = round(aeAt(x, y) * 100) / 100;
+    if (sxp === sxp && hypot(x - sxp, y - syp) >= 1) { stamp(sxp, syp, x, y, true); sxp = x; syp = y; }
   };
   /* enlaces: A* en rejilla de 1 mm por los centros cuyo disco no toca material, con tirado de cuerda */
   const LG = 1, lnx = floor(snx * sg / LG) + 1, lny = floor(sny * sg / LG) + 1, gfree = new Int8Array(lnx * lny);
   /* a menos de 1 mm de los extremos (en el A*, 1.5) se admite rozar la pared y el margen es el de salida o bajada */
+  /* en el tramo central basta el borde de la cápsula (y una línea interior): los discos completos solo en los
+     extremos del tramo central y en el primer y último milímetro */
   const segClear = (x0, y0, x1, y1) => {
-    const l = hypot(x1 - x0, y1 - y0), n = max(1, ceil(l / 0.8));
-    for (let k = 1; k < n; k++) { const u = k / n; if (!discClear(x0 + (x1 - x0) * u, y0 + (y1 - y0) * u, u * l <= 1 ? 0 : (1 - u) * l <= 1 ? 1 : 2, min(u, 1 - u) * l)) return false; }
+    const l = hypot(x1 - x0, y1 - y0), n = max(1, ceil(l / 0.8)), nx2 = -(y1 - y0) / (l || 1), ny2 = (x1 - x0) / (l || 1), ri = 0.6 * R;
+    let mid = 0;
+    for (let k = 1; k < n; k++) {
+      const u = k / n, x = x0 + (x1 - x0) * u, y = y0 + (y1 - y0) * u, lv = u * l <= 1 ? 0 : (1 - u) * l <= 1 ? 1 : 2;
+      if (lv < 2 || !mid++ || (k + 1 < n && (1 - (k + 1) / n) * l <= 1) || k === n - 1) { if (!discClear(x, y, lv, min(u, 1 - u) * l)) return false; continue; }
+      if (Dat(x, y) < 0.25 || solid(x, y) || solid(x + RL * nx2, y + RL * ny2) || solid(x - RL * nx2, y - RL * ny2)) return false;
+      if (k % 3 === 0 && (solid(x + ri * nx2, y + ri * ny2) || solid(x - ri * nx2, y - ri * ny2))) return false;
+    }
     return true;
   };
   const route = (a, b) => {
@@ -587,7 +621,7 @@ function* adaptiveGen(o) {
     /* junto a la pared, separarse (y acercarse) a la cota de corte: a z + linkLift las crestas entre pasadas de pared
        contarían como material arrancado por el enlace */
     const oa = away(pb.x, pb.y), ob = away(x, y), fx = x, fy = y;
-    if (oa) cut(oa[0], oa[1], 3);
+    if (oa) { cut(oa[0], oa[1], 3); flush(); sxp = NaN; }
     if (ob) { x = ob[0]; y = ob[1]; }
     const r = route([pb.x, pb.y], [x, y]);
     if (r) {
@@ -605,7 +639,26 @@ function* adaptiveGen(o) {
   };
   const emitLead = c => { for (let k = 0; k < c.lead.length; k += 2) { if (!k) link(c.lead[0], c.lead[1]); else cut(c.lead[k], c.lead[k + 1], c.ty ? c.ty[k / 2] : 2, c.F && c.F[k / 2]); } };
 
-  const doOpen = pc => {
+  /* Guarda de compromiso: si lo planeado (entrada y frente hasta la salida) pasa de GUARD en la simulación, antes se
+     corta un frente intermedio (nivel L − 1/2, y luego L − 1/4) solo alrededor del punto caliente y se vuelve a planear.
+     Pasa en las lúnulas junto a la pared y en frentes muy curvados, donde un paso de nivel arranca más de ae */
+  const GUARD = o.guard != null ? o.guard : 74, GWIN = o.guardWin != null ? o.guardWin : 62, GD = o.guardDepth || 2, RZ = R + 4;
+  const relief = (hx, hy, Lr, depth) => {
+    st.relief++;
+    const i0 = clamp(floor((hx - RZ - F.x0) / cell), 0, nx - 2), i1 = clamp(ceil((hx + RZ - F.x0) / cell), 0, nx - 2);
+    const j0 = clamp(floor((hy - RZ - F.y0) / cell), 0, ny - 2), j1 = clamp(ceil((hy + RZ - F.y0) / cell), 0, ny - 2), list = [];
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const c = j * nx + i; if (tmin[c] < Lr && tmax[c] > Lr && tmax[c] < INF) list.push(c); }
+    const rp = levelPieces(Lr, list, []).filter(q => plen(q.p, q.closed) >= 2);
+    while (rp.length) {
+      let bi = 0, bd = INF;
+      rp.forEach((q, i) => { const d = hypot(q.p[0] - pb.x, q.p[1] - pb.y); if (d < bd) { bd = d; bi = i; } });
+      const q = rp.splice(bi, 1)[0];
+      flush();
+      if (trial(q.p, 1) < 8) continue;
+      if (q.closed) doClosed(q, [pb.x, pb.y], depth); else doOpen(q, depth);
+    }
+  };
+  const doOpen = (pc, depth = 0) => {
     flush();
     const p = pc.p, n = p.length / 2, RS = radii(p), cands = [];
     if (Dat(p[0], p[1]) < 0.5 * cell) for (const rho of RS) {
@@ -619,8 +672,6 @@ function* adaptiveGen(o) {
     const c = pick(cands, p);
     /* sin ninguna entrada sobre vacío (restos de esquina de pocos mm): se deja para el repaso del contorno */
     if (!c && plen(p, false) < 4) { st.dropped++; return; }
-    if (!c) { st.plunge++; link(p[0], p[1]); }
-    else { if (c.fil) st.filletIn++; else { st.leadIn++; if (c.skip) st.skipped++; } emitLead(c); }
     const k0 = c ? c.k0 : 0;
     /* salida: empalme con el borde si mejora el compromiso de la llegada */
     const outs = [];
@@ -634,13 +685,26 @@ function* adaptiveGen(o) {
     let kc = n - 1;
     for (const e of outs) kc = min(kc, e.cut);
     kc = max(k0 + 1, kc - SPAN / ds);
+    if (c && depth < GD) {
+      const plan = c.lead.concat(front(p, k0 + 1, kc));
+      if (trial(plan, 1, GUARD, GWIN) >= GUARD && hotK > 0) { relief(plan[hotK], plan[hotK + 1], pc.L - 0.5 ** (depth + 1), depth + 1); return doOpen(pc, depth + 1); }
+    }
+    if (!c) { st.plunge++; link(p[0], p[1]); }
+    else { if (c.fil) st.filletIn++; else { st.leadIn++; if (c.skip) st.skipped++; } emitLead(c); }
     for (let k = k0 + 1; k <= kc; k++) cut(p[2 * k], p[2 * k + 1], 1);
     flush();
     let best = outs[outs.length - 1], bs = INF;
     if (outs.length > 1) for (const e of outs) {
-      const s = trial([pb.x, pb.y].concat(front(p, kc + 1, e.cut), e.tail), 1);
+      const s = trial([pb.x, pb.y].concat(front(p, kc + 1, e.cut), e.tail), 1, bs - 2);
       if (s < bs - 2) { bs = s; best = e; }
       if (s <= ACC) break;
+    }
+    if (depth < GD && bs >= GUARD) {
+      const ex = [pb.x, pb.y].concat(front(p, kc + 1, best.cut), best.tail);
+      if (trial(ex, 1, GUARD, GWIN) >= GUARD && hotK > 0) {
+        relief(ex[hotK], ex[hotK + 1], pc.L - 0.5 ** (depth + 1), depth + 1);
+        return doOpen({ L: pc.L, p: p.slice(2 * max(0, kc - 2)), closed: false }, depth + 1);
+      }
     }
     if (best.tail.length) st.filletOut++;
     for (let k = kc + 1; k <= best.cut; k++) cut(p[2 * k], p[2 * k + 1], 1);
@@ -654,7 +718,7 @@ function* adaptiveGen(o) {
       for (const [rho, sw] of [[4, PI / 2], [3, PI / 2], [2, PI / 2], [1.2, PI / 2], [2, PI], [1.4, PI], [0.9, PI]]) { const a = quarter(p, 0, true, rho, sw); if (a) { cands.push({ lead: a, p, k0: 0, skip: 0 }); break; } }
     }
     let c = null, bs = INF;
-    for (const k of cands) { const s = trial(k.lead.concat(k.p.slice(2, 2 + 2 * SPAN / ds)), 1); if (s < bs) { bs = s; c = k; } if (s <= ACC) break; }
+    for (const k of cands) { const s = trial(k.lead.concat(k.p.slice(2, 2 + 2 * SPAN / ds)), 1, bs); if (s < bs) { bs = s; c = k; } if (s <= ACC) break; }
     const p = c ? c.p : p0;
     if (c) { st.leadIn++; emitLead(c); } else { st.plunge++; link(p[0], p[1]); }
     for (let k = 1; k < n; k++) cut(p[2 * k], p[2 * k + 1], 1);
@@ -681,14 +745,15 @@ function* adaptiveGen(o) {
     done[bi] = 1; left--;
     for (const h of pc.own) { let m = INF; for (const id of owners[h]) if (!done[id] && pieces[id].L < m) m = pieces[id].L; minL[h] = m; }
     px = pb.x; py = pb.y;
-    if (left % 8 === 0) yield;
+    yield;
   }
   /* repaso del contorno del dominio: deja el sobreespesor de pared uniforme */
   const loops = iso(F, D, 0, -1).filter(c => c.closed).map(c => snap(resample(c.p, ds, true), sdf, R + sw));
   loopPass(pb, loops, { leadR: 2, types: [2, 3], link, at: cut, z, inside: (x, y) => Dat(x, y) >= -0.02 });
   flush();
+  /* la simulación estampa cuerdas de 1 mm: en los arcos de radio ≥ 1.2 la flecha llega a 0.11 */
   let rest = 0;
-  for (let j = 0, q = 0; j < sny; j++) for (let i = 0; i < snx; i++, q++) if (Dm[q] > R + 0.05 && Dat(sx0 + i * sg, sy0 + j * sg) >= -R + 0.05) rest++;
+  for (let j = 0, q = 0; j < sny; j++) for (let i = 0; i < snx; i++, q++) if (Dm[q] > R + 0.12 && Dat(sx0 + i * sg, sy0 + j * sg) >= -R + 0.05) rest++;
   st.restMm2 = rest * sg * sg;
   st.ms = now() - t0;
   pb.stats = st;
@@ -764,7 +829,7 @@ const Strat = C.Strat = {
   /* ranura trocoidal de p0 a p1: bucles en G3 de radio rho = (slotW − D)/2. En el semicírculo de corte el F programado
      es el del centro, Fedge·rho/(rho+R), para que el filo vaya a Fedge; el retorno, sin corte, a returnFactor·Fedge */
   trochoid(o) {
-    const D = o.D, R = D / 2, rho = (o.slotW - D) / 2, z = o.z, Fe = o.Fedge, Fc = round(C.MECH.trochoidCenterF(Fe, rho, R)), Fr = round((o.returnFactor || 2.5) * Fe);
+    const D = o.D, R = D / 2, rho = (o.slotW - D) / 2, z = o.z, Fe = o.Fedge, Fc = round(C.MECH.trochoidCenterF(Fe, rho, R)), Fr = o.Freturn || round((o.returnFactor || 2.5) * Fe);
     if (!(rho > 0)) throw new Error('Strat.trochoid: la ranura debe ser más ancha que la herramienta');
     const [ax, ay] = o.p0, [bx, by] = o.p1, L = hypot(bx - ax, by - ay), ux = (bx - ax) / L, uy = (by - ay) / L, vx = -uy, vy = ux;
     const nl = o.loops || ceil(L / o.step - 1e-9) + 1, s = L / (nl - 1);

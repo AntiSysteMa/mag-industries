@@ -116,14 +116,14 @@ uniform highp sampler2D uH; uniform ivec2 uN; uniform vec2 uS;
 float Hc(ivec2 c){ return texelFetch(uH,clamp(c,ivec2(0),uN-1),0).r; }
 `;
 const SRC = {
-  ter: [HEAD + `uniform mat4 uVP; uniform vec2 uO; uniform float uBot; uniform int uSide; uniform highp sampler2D uD; uniform vec4 uSec;
+  ter: [HEAD + `uniform mat4 uVP; uniform vec2 uO; uniform float uBot; uniform int uSide; uniform int uK; uniform highp sampler2D uD; uniform vec4 uSec;
 ${HEIGHT}
 out vec3 vP; out vec3 vN; out vec2 vAS; out vec2 vC; flat out int vSide;
 vec2 XY(ivec2 c){ vec2 p=(vec2(c)+.5)*uS/vec2(uN);
   if(c.x<=0)p.x=0.; if(c.x>=uN.x-1)p.x=uS.x; if(c.y<=0)p.y=0.; if(c.y>=uN.y-1)p.y=uS.y; return p; }
 void main(){
   ivec2 c; float z; vec3 n; vec2 xy; vSide=uSide; vAS=vec2(1.);
-  if(uSide==0){ c=ivec2(gl_VertexID%uN.x,gl_VertexID/uN.x); z=Hc(c); xy=XY(c);
+  if(uSide==0){ int gx=(uN.x+uK-2)/uK+1; c=min(ivec2(gl_VertexID%gx,gl_VertexID/gx)*uK,uN-1); z=Hc(c); xy=XY(c);
     vec4 d=texelFetch(uD,c,0); vAS=d.rg; vec2 q=d.ba*2.-1.; n=vec3(q,sqrt(max(0.,1.-dot(q,q)))); }
   else { int k=gl_VertexID/2; bool bot=(gl_VertexID%2)==1; vec2 cs=uS/vec2(uN);
     if(uSide==5){
@@ -141,12 +141,20 @@ void main(){
   vP=vec3(xy+uO,z); vN=n; vC=vec2(c);
   gl_Position=uVP*vec4(vP,1.);
 }`, HEAD + `uniform highp sampler2D uA; uniform highp sampler2D uM; uniform int uMode; uniform int uRaw; uniform float uMarks; uniform float uFade;
-uniform float uHatch; uniform vec3 uCol[8]; uniform vec3 uCut; uniform vec3 uCmp[3]; uniform vec2 uTol; uniform vec4 uSec;
+uniform float uHatch; uniform vec3 uCol[8]; uniform vec3 uCut; uniform vec3 uCmp[3]; uniform vec2 uTol; uniform vec4 uSec; uniform highp sampler2D uD;
 ${COMMON}${HEIGHT}
 in vec3 vP; in vec3 vN; in vec2 vAS; in vec2 vC; flat in int vSide; out vec4 o;
 void main(){
   if(uSec.x>.5&&vSide!=5){ float d=(uSec.x<1.5?vP.x:vP.y)-uSec.y; if(d*uSec.z<-1e-3) discard; }
-  vec3 N0=normalize(vN), N=N0, V=viewDir(vP), base, T=vec3(1,0,0); float metal,gloss,an=0.;
+  vec3 N0=normalize(vN); vec2 AS=vAS;
+#ifdef CHEAP
+  /* con la rejilla diezmada la geometría solo da la silueta: normal, AO y sombra se leen por celda */
+  /* en paredes manda la faceta: la normal muestreada de una celda de pared sobre una rampa de dos celdas da dientes */
+  if(vSide==0){ vec4 d=texture(uD,(vC+.5)/vec2(uN)); vec2 q=d.ba*2.-1.;
+    vec3 nf=normalize(cross(dFdx(vP),dFdy(vP))); nf*=sign(nf.z+1e-6); float w=smoothstep(.55,.85,nf.z);
+    N0=normalize(mix(nf,vec3(q,sqrt(max(0.,1.-dot(q,q)))),w)); AS=mix(vAS,d.rg,w); }
+#endif
+  vec3 N=N0, V=viewDir(vP), base, T=vec3(1,0,0); float metal,gloss,an=0.;
   float g=vnoise(vP.xy*2.3)*.6+anoise(vP.xy*9.)*.4;
   vec2 fc=clamp(vC,vec2(0),vec2(uN-1)); float raw=0.;
   if(vSide==5){
@@ -175,7 +183,7 @@ void main(){
     if(raw<=.5&&N.z>.75&&dot(d2,d2)>.01){ float th=.5*atan(d2.y,d2.x); T=vec3(cos(th),sin(th),0.); an*=smoothstep(.75,.95,N.z)*min(1.,length(d2)*1.5); }
     else if(N.z<=.75){ T=normalize(vec3(-N.y,N.x,0.)+vec3(1e-4,0,0)); N=normalize(N+vec3(0,0,sin(vP.z*7.)*uMarks*.04)); }
   }
-  float sh=min(vAS.y,toolShadow(vP)), ao=vAS.x;
+  float sh=min(AS.y,toolShadow(vP)), ao=AS.x;
   vec3 col=tonemap(shade(N,V,base,metal,gloss,T,an,ao,sh));
   if(uMode==1&&vSide==0){ ivec2 c=ivec2(fc+.5); float dv=(Hc(c)-texelFetch(uM,c,0).r)*N0.z;
     if(!(raw>.5&&abs(dv)<uTol.x)){ vec3 k=dv<-uTol.x?uCmp[2]:dv>uTol.y?uCmp[0]:uCmp[1];
@@ -369,7 +377,7 @@ Hub.prototype = {
     let w = 0;
     for (let j = 0; j < ny - 1; j++) { for (let i = 0; i < nx; i++) { idx[w++] = (j + 1) * nx + i; idx[w++] = j * nx + i; } idx[w++] = 0xFFFFFFFF; }
     const ib = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+    gl.bindVertexArray(null); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
     return (this.grids[k] = { ib, n: idx.length });
   },
   /* el lienzo crece al momento y encoge con histéresis: 2 s con el máximo visible por debajo del 85 % */
@@ -497,14 +505,20 @@ const Terrain = ext(Res, {
     g.h = tex(gl, gl.R32F, gl.RED, gl.FLOAT, null, nx, ny);
     g.a = tex(gl, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, null, nx, ny, gl.LINEAR);
     g.m = tex(gl, gl.R32F, gl.RED, gl.FLOAT, null, nx, ny);
-    g.d = tex(gl, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, null, nx, ny);
+    g.d = tex(gl, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, null, nx, ny, gl.LINEAR);
     g.fb = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, g.fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, g.d, 0);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    g.vao = gl.createVertexArray(); gl.bindVertexArray(g.vao);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, H.grid(nx, ny).ib);
-    gl.bindVertexArray(null);
+    g.vao = gl.createVertexArray(); g.k = 0;
     this.full = true; this.mdirty = true;
+  },
+  /* nivel C: con celdas de menos de ~2 px de dispositivo el coste lo marca el número de triángulos (SwiftShader), así
+     que la malla va a una de cada dos celdas; con histéresis para que no salte al orbitar */
+  lod(sc) {
+    if (sc.view.tier !== 'C') return (this.k = 1);
+    const px = sc.cam.s * this.zm.cell * sc.view.scale;
+    this.k = this.k === 2 ? (px > 2.3 ? 1 : 2) : (px < 2 ? 2 : 1);
+    return this.k;
   },
   free(gl) { const g = this.g; gl.deleteTexture(g.h); gl.deleteTexture(g.a); gl.deleteTexture(g.m); gl.deleteTexture(g.d); gl.deleteFramebuffer(g.fb); gl.deleteVertexArray(g.vao); },
   bytes() { return this.zm.nx * this.zm.ny * 16; },
@@ -560,8 +574,10 @@ const Terrain = ext(Res, {
     const s = this.section;
     gl.uniform4f(u.uSec, s ? (s.axis === 'x' ? 1 : 2) : 0, s ? s.at : 0, s && s.keep === '-' ? -1 : 1, 0);
     gl.uniform1f(u.uHatch, 5 * sc.view.scale);
+    const k = this.lod(sc), gr = sc.H.grid(Math.ceil((zm.nx - 1) / k) + 1, Math.ceil((zm.ny - 1) / k) + 1);
     gl.bindVertexArray(g.vao);
-    gl.uniform1i(u.uSide, 0); gl.drawElements(gl.TRIANGLE_STRIP, sc.H.grid(zm.nx, zm.ny).n, gl.UNSIGNED_INT, 0);
+    if (g.k !== k || g.ib !== gr.ib) { gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gr.ib); g.k = k; g.ib = gr.ib; }
+    gl.uniform1i(u.uK, k); gl.uniform1i(u.uSide, 0); gl.drawElements(gl.TRIANGLE_STRIP, gr.n, gl.UNSIGNED_INT, 0);
     gl.bindVertexArray(sc.vaoE());
     for (let k = 1; k <= 4; k++) { gl.uniform1i(u.uSide, k); gl.drawArrays(gl.TRIANGLE_STRIP, 0, (k & 1 ? zm.nx : zm.ny) * 2); }
     if (s) { gl.uniform1i(u.uSide, 5); gl.drawArrays(gl.TRIANGLE_STRIP, 0, (s.axis === 'x' ? zm.ny : zm.nx) * 2); }
@@ -1041,5 +1057,5 @@ SceneGL.prototype = {
   }
 };
 
-C.GL = { hub, VERSION: '1.1.0', pose: (pos, axis, o) => poseTo(o || new Float32Array(16), pos, axis) };
+C.GL = { hub, VERSION: '1.2.0', pose: (pos, axis, o) => poseTo(o || new Float32Array(16), pos, axis) };
 })(globalThis);
