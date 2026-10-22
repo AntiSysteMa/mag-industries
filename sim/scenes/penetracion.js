@@ -17,7 +17,7 @@
   /* reloj de máquina por etapa (s): unas 2 h comprimidas en ≈ 11 s; la cadencia del salto es estilizada */
   const ST = [{ k: 'approach', d: 1.1, m: 8 }, { k: 'rough', d: 5.6, m: 3300 }, { k: 'switch', d: 0.2, m: 30 },
     { k: 'finish', d: 2.6, m: 3780 }, { k: 'retract', d: 0.75, m: 10 }, { k: 'end', d: 1.25, m: 0 }];
-  const START = 58, OUT = OIL + 2, ORBIT_HZ = 2, RIB_SHARE = 0.62, STEP = 1 / 120;
+  const START = 58, OUT = OIL + 8, ORBIT_HZ = 2, RIB_SHARE = 0.62, STEP = 1 / 120;
   const X0 = -16, DX = 0.01, NX = 3200;
   const COL = { piece: '#848C93', wall: '#565C61', rim: '#1C2226', graphite: '#3A3D40', holder: '#8A939B' };
 
@@ -115,14 +115,20 @@
     o.reset();
     return o;
   }
-  /* avanza la cavidad por los pasos fijos de la rejilla de tiempo (determinista con cualquier dt) */
+  /* avanza la cavidad por los pasos fijos de la rejilla de tiempo (determinista con cualquier dt). En desbaste no hay
+     órbita y el perfil es el mínimo de una erosión monótona en z: basta erosionar una vez en la cota más baja del
+     tramo, que es lo que hace barato final() */
   function simulate(cav, ta, tb, S, check) {
-    let k = Math.floor(ta / STEP) + 1;
+    let k = Math.floor(ta / STEP) + 1, low = Infinity;
     for (; k * STEP <= tb + 1e-9; k++) {
       state(k * STEP, S);
-      if (S.erode) cav.erode(S.zf, S.ox, S.gap);
+      if (S.erode) {
+        if (!check && S.k === 'rough') { if (S.zf < low) low = S.zf; }
+        else { if (low < Infinity) { cav.erode(low, 0, ROUGH.gap); low = Infinity; } cav.erode(S.zf, S.ox, S.gap); }
+      }
       if (check) check(S, cav);
     }
+    if (low < Infinity) cav.erode(low, 0, ROUGH.gap);
   }
 
   C.define('penetracion', async function (env) {
@@ -137,7 +143,7 @@
 
     const geo = () => {
       const w = env.frame.w, h = env.frame.h, lvl = 12, yP = lvl + OIL * PX;
-      return { w, h, lvl, yP, cx: Math.round(w * 0.58), bot: h };
+      return { w, h, lvl, yP, cx: Math.round(w * 0.6), bot: h };
     };
     const X = x => L.cx + x * PX, Y = z => L.yP - z * PX;
 
@@ -195,10 +201,14 @@
         }
       }
       wasJump = jumping;
+      /* al llegar al portaelectrodos, más ancho que el grafito, la burbuja lo rodea por fuera */
+      const yH = Y(S.z + EL.ribL + EL.bodyH), hx = EL.holder.w / 2 * PX + 2, ax = X(S.ox), kx = min(1, 14 * dt);
       for (const b of BUB) {
         if (!b.on) continue;
         if (b.pop > 0) { b.pop -= dt; if (b.pop <= 0) b.on = false; continue; }
-        b.y -= b.v * dt; b.ph += 2 * PI * b.w * dt; b.x = b.x0 + b.a * Math.sin(b.ph);
+        b.y -= b.v * dt; b.ph += 2 * PI * b.w * dt;
+        if (b.y < yH + 4 && abs(b.x0 - ax) < hx) b.x0 += (ax + (b.x0 < ax ? -hx : hx) - b.x0) * kx;
+        b.x = b.x0 + b.a * Math.sin(b.ph);
         if (b.y <= L.lvl + b.r) { b.y = L.lvl; b.pop = 0.1; }
       }
       for (const d of DEB) {

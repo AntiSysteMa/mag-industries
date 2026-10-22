@@ -42,7 +42,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="tailwind.css?v=13">
+<link rel="stylesheet" href="tailwind.css?v=14">
 <script>
   (function(){ try{ var t=localStorage.getItem('mag-theme')||'dark'; document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark'); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
   /* La animacion de entrada es una MEJORA, no un requisito para ver la web.
@@ -141,41 +141,42 @@
 
     <p>En acero de construcción esto se aguanta. En un D2 templado a 58-60 HRC, o en un H13, el filo se recalienta y se descascarilla antes de que te des cuenta.</p>
 
-    <!-- DIAGRAMA -->
+    <!-- DIAGRAMA: el lienzo anima la planta; el SVG queda encima con los textos y, sin lienzo, con su dibujo estático -->
     <figure class="my-10">
-      <div class="screen relative border border-night-line clip-corner overflow-hidden" style="aspect-ratio:16/7">
+      <div class="screen sim-screen relative border border-night-line clip-corner overflow-hidden" style="aspect-ratio:16/7">
         <div class="absolute inset-0 bg-grid opacity-40"></div>
+        <canvas class="sim-canvas absolute inset-0 w-full h-full" data-sim="blog-trocoidal" data-safe="0 0 0 0" aria-hidden="true"></canvas>
         <svg viewBox="0 0 640 280" class="absolute inset-0 w-full h-full" role="img" aria-label="Comparación entre ranurado a pleno ancho, con 180 grados de contacto, y trocoidal, con unos 40 grados">
+          <g class="sim-fallback">
+            <defs><mask id="troc-hist" maskUnits="userSpaceOnUse" x="0" y="0" width="640" height="280"><rect width="640" height="280" fill="#fff"/><rect x="27" y="19" width="193" height="20"/><rect x="135" y="139" width="40" height="27"/><rect x="115" y="166" width="80" height="18"/><rect x="79" y="238" width="152" height="19"/><rect x="357" y="19" width="82" height="20"/><rect x="478" y="142" width="45" height="27"/><rect x="460" y="169" width="80" height="18"/><rect x="420" y="238" width="130" height="19"/></mask><clipPath id="troc-stock"><rect x="360" y="60" width="250" height="170"/></clipPath></defs>
+            <rect x="30.5" y="60.5" width="249" height="169" fill="#0F1823" stroke="#2C3B4C"/>
+            <path d="M124,230V112.8A31,31 0 0 1 186,112.8V230Z" fill="#16222F"/>
+            <path d="M124,230V112.8M186,230V112.8" stroke="#4A5B6E" stroke-width="1.4"/>
+            <rect x="360.5" y="60.5" width="249" height="169" fill="#0F1823" stroke="#2C3B4C"/>
+            <path d="M423,230V148.2A62,62 0 0 1 547,148.2V230Z" fill="#16222F"/>
+            <path d="M516,143.2A31,31 0 0 0 501.9,117.2" fill="none" stroke="#16222F" stroke-width="62" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M423,230V148.2M547,230V148.2" stroke="#4A5B6E" stroke-width="1.4"/>
+            <g clip-path="url(#troc-stock)"><path d="M516,292A31,31 0 0 0 454,292A31.1,31.1 0 0 0 516,287A31,31 0 0 0 454,287A31.1,31.1 0 0 0 516,282.1A31,31 0 0 0 454,282.1A31.1,31.1 0 0 0 516,277.1A31,31 0 0 0 454,277.1A31.1,31.1 0 0 0 516,272.2A31,31 0 0 0 454,272.2A31.1,31.1 0 0 0 516,267.2A31,31 0 0 0 454,267.2A31.1,31.1 0 0 0 516,262.2A31,31 0 0 0 454,262.2A31.1,31.1 0 0 0 516,257.3A31,31 0 0 0 454,257.3A31.1,31.1 0 0 0 516,252.3A31,31 0 0 0 454,252.3A31.1,31.1 0 0 0 516,247.4A31,31 0 0 0 454,247.4A31.1,31.1 0 0 0 516,242.4A31,31 0 0 0 454,242.4A31.1,31.1 0 0 0 516,237.4A31,31 0 0 0 454,237.4A31.1,31.1 0 0 0 516,232.5A31,31 0 0 0 454,232.5A31.1,31.1 0 0 0 516,227.5A31,31 0 0 0 454,227.5A31.1,31.1 0 0 0 516,222.6A31,31 0 0 0 454,222.6A31.1,31.1 0 0 0 516,217.6A31,31 0 0 0 454,217.6A31.1,31.1 0 0 0 516,212.6A31,31 0 0 0 454,212.6A31.1,31.1 0 0 0 516,207.7A31,31 0 0 0 454,207.7A31.1,31.1 0 0 0 516,202.7A31,31 0 0 0 454,202.7A31.1,31.1 0 0 0 516,197.8A31,31 0 0 0 454,197.8A31.1,31.1 0 0 0 516,192.8A31,31 0 0 0 454,192.8A31.1,31.1 0 0 0 516,187.8A31,31 0 0 0 454,187.8A31.1,31.1 0 0 0 516,182.9A31,31 0 0 0 454,182.9A31.1,31.1 0 0 0 516,177.9A31,31 0 0 0 454,177.9A31.1,31.1 0 0 0 516,173A31,31 0 0 0 454,173A31.1,31.1 0 0 0 516,168A31,31 0 0 0 454,168A31.1,31.1 0 0 0 516,163A31,31 0 0 0 454,163A31.1,31.1 0 0 0 516,158.1A31,31 0 0 0 454,158.1A31.1,31.1 0 0 0 516,153.1A31,31 0 0 0 454,153.1A31.1,31.1 0 0 0 516,148.2A31,31 0 0 0 454,148.2A31.1,31.1 0 0 0 516,143.2A31,31 0 0 0 501.9,117.2" fill="none" stroke="#2EE6A8" stroke-width="0.8" opacity="0.28" mask="url(#troc-hist)"/></g>
+            <path d="M124,112.8A31,31 0 0 1 186,112.8" fill="none" stroke="#FF5A3C" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="155" cy="112.8" r="31" fill="none" stroke="#CDD8E4" stroke-width="1.8"/>
+            <circle cx="155" cy="112.8" r="3" fill="#CDD8E4"/>
+            <path d="M519.7,91.8A31,31 0 0 0 493.9,87.3" fill="none" stroke="#FF5A3C" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="501.9" cy="117.2" r="31" fill="none" stroke="#CDD8E4" stroke-width="1.8"/>
+            <circle cx="501.9" cy="117.2" r="3" fill="#CDD8E4"/>
+          </g>
           <!-- IZQUIERDA: pleno ancho -->
           <text x="30" y="34" fill="#8592A3" font-size="12" class="tag">RANURADO A PLENO ANCHO</text>
-          <rect x="30" y="60" width="250" height="170" fill="#0F1823" stroke="#2C3B4C"/>
-          <rect x="105" y="60" width="100" height="170" fill="#16222F"/>
-          <line x1="105" y1="60" x2="105" y2="230" stroke="#4A5B6E" stroke-width="1.4"/>
-          <line x1="205" y1="60" x2="205" y2="230" stroke="#4A5B6E" stroke-width="1.4"/>
-          <path d="M155,95 m-50,0 a50,50 0 0 0 100,0" fill="none" stroke="#FF5A3C" stroke-width="5" stroke-linecap="round"/>
-          <circle cx="155" cy="95" r="50" fill="none" stroke="#CDD8E4" stroke-width="1.8"/>
-          <circle cx="155" cy="95" r="4" fill="#CDD8E4"/>
           <text x="155" y="160" fill="#FF5A3C" font-size="19" text-anchor="middle" font-weight="700">180°</text>
           <text x="155" y="180" fill="#8592A3" font-size="11" text-anchor="middle" class="tag">de contacto</text>
           <text x="155" y="252" fill="#FF5A3C" font-size="11" text-anchor="middle" class="tag">ae = 100 % · ap pequeño</text>
 
           <!-- DERECHA: trocoidal -->
           <text x="360" y="34" fill="#8592A3" font-size="12" class="tag">TROCOIDAL</text>
-          <rect x="360" y="60" width="250" height="170" fill="#0F1823" stroke="#2C3B4C"/>
-          <rect x="435" y="60" width="100" height="170" fill="#16222F"/>
-          <line x1="435" y1="60" x2="435" y2="230" stroke="#4A5B6E" stroke-width="1.4"/>
-          <line x1="535" y1="60" x2="535" y2="230" stroke="#4A5B6E" stroke-width="1.4"/>
-          <!-- bucles -->
-          <g fill="none" stroke="#12F7A0" stroke-width="1.2" opacity="0.45">
-            <circle cx="455" cy="110" r="34"/><circle cx="470" cy="145" r="34"/><circle cx="485" cy="180" r="34"/>
-          </g>
-          <path d="M497,84 a34,34 0 0 0 -30,-14" fill="none" stroke="#FF5A3C" stroke-width="5" stroke-linecap="round"/>
-          <circle cx="475" cy="95" r="34" fill="none" stroke="#CDD8E4" stroke-width="1.8"/>
-          <circle cx="475" cy="95" r="4" fill="#CDD8E4"/>
-          <text x="500" y="163" fill="#12F7A0" font-size="19" text-anchor="middle" font-weight="700">~40°</text>
+          <text x="500" y="163" fill="#2EE6A8" font-size="19" text-anchor="middle" font-weight="700">~40°</text>
           <text x="500" y="183" fill="#8592A3" font-size="11" text-anchor="middle" class="tag">de contacto</text>
-          <text x="485" y="252" fill="#12F7A0" font-size="11" text-anchor="middle" class="tag">ae = 8 % · ap grande</text>
+          <text x="485" y="252" fill="#2EE6A8" font-size="11" text-anchor="middle" class="tag">ae = 8 % · ap grande</text>
         </svg>
+        <button type="button" class="sim-toggle absolute top-2 right-2 tag text-[9px] text-steel-400" aria-pressed="false" hidden>pausa</button>
       </div>
       <figcaption class="text-sm text-steel-500 mt-3">El arco rojo es el tramo que está cortando en cada instante. La herramienta es la misma; lo que cambia es cuánto material abarca de una vez.</figcaption>
     </figure>
@@ -294,6 +295,7 @@
 </a>
 
 <script defer src="/_vercel/insights/script.js"></script>
-<script src="app.js?v=14" defer></script>
+<script src="app.js?v=15" defer></script>
+<script defer src="sim/blog-trocoidal.js?v=1"></script>
 </body>
 </html>

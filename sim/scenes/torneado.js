@@ -135,6 +135,11 @@
       if (!m.g0) { const tg = css ? cssS(r) : Sp; while (abs(S - tg) > 1) { const dt = min(DT, abs(tg - S) / MACH.sAcc); toward(tg, dt); t += dt; rec(i, 1); } }
       const z0 = z, r0 = r, L = hypot(m.to[0] - z0, m.to[1] - r0);
       let s = 0, v = 0;
+      /* avance a S estable (G97, o G96 sin cambio de diámetro): velocidad constante, basta la muestra final */
+      if (!m.g0 && L > 1e-9 && (!css || abs(m.to[1] - r0) < 1e-9) && abs(S - (css ? cssS(r0) : Sp)) <= 1) {
+        S = css ? cssS(r0) : Sp; t += L / (m.f * S / 60); z = m.to[0]; r = m.to[1]; rec(i);
+        return;
+      }
       while (s < L - 1e-9) {
         toward(css ? cssS(m.g0 ? m.to[1] : r) : Sp, DT);
         const vt = m.g0 ? min(VR, v + A * DT, sqrt(2 * A * (L - s))) : m.f * S / 60;
@@ -244,8 +249,10 @@
 
   C.define('torneado', async function (env) {
     const V = C.V2D, PAL = C.PAL, doc = G.document, t0 = G.performance.now();
-    const B = build(), part = Part(B), chips = Chips(env.rng), VM = B.TM / SIM, D = ENTRY + VM + HOLD;
-    const initMs = G.performance.now() - t0, P = {}, fix = C.fmt.fix;
+    const B = build(), buildMs = G.performance.now() - t0;
+    await env.idle();
+    const t1 = G.performance.now(), part = Part(B), chips = Chips(env.rng), VM = B.TM / SIM, D = ENTRY + VM + HOLD;
+    const initMs = buildMs + G.performance.now() - t1, P = {}, fix = C.fmt.fix;
     let t = 0, last = -1, held = false, L = null, bar = null, strips = null, hudT = -1, rows = null, jobs = { n: 0, sum: 0, max: 0 };
 
     const geo = () => {
@@ -363,7 +370,8 @@
       c.restore();
     }
 
-    /* HUD de lienzo bajo el rótulo del HTML (arriba a la izquierda): la torreta barre toda la mitad superior derecha */
+    /* HUD de lienzo bajo el rótulo del HTML (arriba a la izquierda): la torreta barre la mitad superior derecha. Cuatro
+       filas como mucho: la quinta caería sobre la barra (borde superior en y = 67) */
     const GCOL = { G00: PAL.hud.g0 || PAL.gold, G01: PAL.hud.g, G02: PAL.hud.g, G03: PAL.hud.g, G70: PAL.hud.g, G71: PAL.hud.g };
     const tok = (s, col) => s.split(' ').map((w, k) => ({ text: (k ? ' ' : '') + w, color: k === 0 && /^N/.test(w) ? PAL.hud.text : GCOL[w] || col }));
     function texts(force) {
@@ -379,8 +387,9 @@
       rows = [tok(b1, PAL.hud.value), b2 ? tok(b2, PAL.hud.value) : [],
         [{ text: 'X', color: PAL.hud.text }, { text: fix(dia, 3), color: PAL.hud.value }, { text: ' Z', color: PAL.hud.text }, { text: fix(P.z, 3), color: PAL.hud.value }],
         [{ text: 'S', color: PAL.hud.text }, { text: String(S), color: PAL.hud.value }, { text: ' · ', color: PAL.hud.text },
-          feed ? { text: 'F' + m.f.toFixed(2), color: PAL.hud.value } : { text: m && m.g0 && !ended && t >= ENTRY ? 'G00' : 'F–', color: m && m.g0 && !ended && t >= ENTRY ? PAL.gold : PAL.hud.text }],
-        [{ text: 'Vc ' + (feed ? Math.round(PI * dia * P.S / 1000) : '–') + ' · ', color: PAL.hud.text }, { text: 'SIM ×' + SIM, color: PAL.hud.sim }]];
+          feed ? { text: 'F' + m.f.toFixed(2), color: PAL.hud.value } : { text: m && m.g0 && !ended && t >= ENTRY ? 'G00' : 'F–', color: m && m.g0 && !ended && t >= ENTRY ? PAL.gold : PAL.hud.text },
+          { text: ' · Vc ' + (feed ? Math.round(PI * dia * P.S / 1000) : '–') + ' · ', color: PAL.hud.text }, { text: 'SIM ×' + SIM, color: PAL.hud.sim }]];
+      if (!b2) rows.splice(1, 1);
     }
     function hud(c) {
       c.save();
