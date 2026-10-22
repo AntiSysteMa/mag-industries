@@ -6,7 +6,7 @@
   if (!C || !C.define || !C.Shapes || !C.Shapes.pocketD2) return;
   const PK = C.Shapes.pocketD2, hypot = Math.hypot, PI = Math.PI;
 
-  const SIM = 14, HOLD = 1.5, BINS = 128, REF_BY = 1;
+  const SIM = 14, HOLD = 1.5, BINS = 128, ENTRY = 0.03;
   const LIGHT = [-0.3, 0.3, 0.9], BP_ALPHA = 0.5;
   const MACHINE = { rapid: 36000, accel: 4.9, tcTime: 5, spindleRamp: 1.5, zChange: 200 };
   const ZC = PK.rough.z, REF_AE = 6;
@@ -58,12 +58,26 @@
     return L;
   }
 
+  /* Repaso del contorno: el tramo final cuyos frentes van todos sobre el borde del dominio de centros. Devuelve su primer
+     punto (la entrada tras el último enlace) y la longitud de corte acumulada hasta ahí. */
+  function contour(P, off) {
+    const p = P.pts, ty = k => p[4 * k + 3] | 0;
+    let k = P.n - 1;
+    while (k > 0 && !(ty(k) === 1 && Math.abs(PK.sdf.region(p[4 * k], p[4 * k + 1]) + off) > 0.05)) k--;
+    while (k < P.n && (ty(k) === 1 || ty(k) === 3)) k++;
+    while (k < P.n && (ty(k) === 3 || ty(k) === 4)) k++;
+    const cum = cutLength({ pts: p, n: Math.min(k, P.n) });
+    return { k, cum };
+  }
+
   /* φ frente al progreso: máximo por casilla y muestras sueltas para los criterios */
   function Series(total, cap) {
     const s = { total, cum: 0, bin: -1, n: 0, cap, hi: new Float32Array(BINS), cnt: new Uint16Array(BINS), phi: new Float32Array(cap), at: new Float32Array(cap) };
     s.reset = () => { s.cum = 0; s.bin = -1; s.n = 0; s.hi.fill(0); s.cnt.fill(0); };
     s.add = (d, deg) => {
       s.cum += d;
+      /* en la rejilla los arcos de ranura salen a 181–182° */
+      if (deg > 180) deg = 180;
       const k = Math.min(BINS - 1, Math.floor(s.cum / total * BINS));
       if (k > s.bin) s.bin = k;
       if (!(deg > 0)) return;
@@ -111,13 +125,17 @@
     let k1 = 0, k2 = path.n - 1;
     while (k1 < path.n && (p[4 * k1 + 3] | 0) !== 1) k1++;
     while (k2 > 0 && (p[4 * k2 + 3] | 0) === 0) k2--;
-    const total = cutLength(path);
-    return { zm, T, path, pathMs, prog, ref, total, cap: path.n + Math.ceil(total / STEP) + 4096, roughS: prog.pointTime(0, k2) - prog.pointTime(0, k1) };
+    const total = cutLength(path), rep = contour(path, T.R + PK.rough.stockWall);
+    return { zm, T, path, pathMs, prog, ref, total, kRep: rep.k, cumRep: rep.cum, cap: path.n + Math.ceil(total / STEP) + 4096, roughS: prog.pointTime(0, k2) - prog.pointTime(0, k1) };
   }
 
-  /* Muestras para los criterios de §4.1.4: sin el primer 3 %, solo en contacto */
+  /* Muestras para los criterios de §4.1.4: solo en contacto y sin el primer 3 % de la longitud de corte (la salida del
+     taladro de la hélice), el mismo tramo que el gráfico atenúa */
   function summary(S) {
-    const n = S.n, k0 = Math.floor(n * 0.03), a = Array.from(S.phi.subarray(k0, n)).sort((x, y) => x - y);
+    const n = S.n, e = ENTRY * S.total;
+    let k0 = 0;
+    while (k0 < n && S.at[k0] < e) k0++;
+    const a = Array.from(S.phi.subarray(k0, n)).sort((x, y) => x - y);
     const q = f => a.length ? a[Math.min(a.length - 1, Math.floor(f * a.length))] : 0;
     let worst = 0, sum = 0, j = k0;
     for (let k = k0; k < n; k++) {
@@ -127,6 +145,30 @@
     }
     return { n: a.length, med: q(0.5), p95: q(0.95), max: a.length ? a[a.length - 1] : 0, over70: a.filter(v => v > 70).length, win10: +worst.toFixed(1) };
   }
+
+  /* La sombra de TopView2D sale por celda y en las curvas se ve la escalera de 0.4 mm a DPR 2: se suaviza la máscara
+     con 3×3 entre celdas de altura parecida (no se mezcla la cara superior con el fondo). Mientras WP-C no la haga
+     bilineal (requests/F-C-sombra-escalera.md). */
+  function softShadow(tv) {
+    const zm = tv.zm, nx = zm.nx, ny = zm.ny, h = zm.h, sb = tv.sb, raw = new Uint8Array(sb.length).fill(255), own = tv.shadow;
+    tv.shadow = function (x0, y0, x1, y1) {
+      own.call(this, x0, y0, x1, y1);
+      for (let j = y0; j <= y1; j++) raw.set(sb.subarray(j * nx + x0, j * nx + x1 + 1), j * nx + x0);
+      const a = Math.max(1, x0), b = Math.min(nx - 2, x1), j1 = Math.min(ny - 2, y1);
+      for (let j = Math.max(1, y0); j <= j1; j++) for (let i = a; i <= b; i++) {
+        const q = j * nx + i, v = raw[q];
+        if (raw[q - 1] === v && raw[q + 1] === v && raw[q - nx] === v && raw[q + nx] === v) continue;
+        const h0 = h[q];
+        let sum = 4 * v, w = 4;
+        for (let k = 0; k < 8; k++) {
+          const n = q + NB[k] + NB[k + 8] * nx;
+          if (Math.abs(h[n] - h0) <= 0.5) { sum += NBW[k] * raw[n]; w += NBW[k]; }
+        }
+        sb[q] = sum / w + 0.5;
+      }
+    };
+  }
+  const NB = [-1, 1, 0, 0, -1, 1, -1, 1, 0, 0, -1, 1, -1, -1, 1, 1], NBW = [2, 2, 2, 2, 1, 1, 1, 1];
 
   C.define('hsm', async function (env) {
     const V = C.V2D, PAL = C.PAL, t0 = G.performance.now(), REDC = PAL.css(PAL.alert, 0.7);
@@ -140,7 +182,9 @@
     while (kl > 1 && !((pp[4 * kl + 3] | 0) === 1 && Math.abs(pp[4 * kl + 2] - ZC) < 1e-6)) kl--;
     const tLast = (prog.pointTime(0, kl - 1) + prog.pointTime(0, kl)) / 2;
     const initOwnMs = G.performance.now() - t0 - B.pathMs, topMs = { n: 0, sum: 0, max: 0, over6: 0 }, fx = v => +v.toFixed(3);
-    let t = 0, done = null, held = false, fin = false, top = null, ae = null, hudT = -1, phiTxt = '', l1 = '', l2 = '';
+    let t = 0, done = null, held = false, fin = false, top = null, ae = null, hudT = -1, phiN = null, phiTxt = 'φ –', l1 = '', l2 = '', rT = -1;
+    const binE = Math.ceil(ENTRY * BINS), binR = Math.min(BINS - 1, Math.floor(B.cumRep / B.total * BINS));
+    const contact = () => meter.contact && prog.state().phase !== 'end';
     /* sweep solo escribe el id si el rebaje del paso pasa de 0.01: en la rampa de la hélice el centro del taladro quedaba
        con color de bruto (requests/F-A1-id-rampa.md) */
     const fixIds = (x, y) => {
@@ -159,21 +203,24 @@
       return st;
     };
 
+    /* Los números van a 15 Hz para que se puedan leer; si hay φ o no se decide en render() con el mismo estado que el arco */
     function texts(force) {
       if (!force && Math.abs(t - hudT) < 0.066) return;
       hudT = t;
       const st = prog.state(), b = path.blocks[path.blockOf[st.k]];
-      if (b && b.ae != null) ae = b.ae;
-      const s = 'S' + Math.round(st.S) + ' F' + Math.round(st.feed), a = 'ae ' + (ae == null ? '–' : ae.toFixed(1));
+      /* en el repaso del contorno el ae no es un parámetro de la operación */
+      if (st.k >= B.kRep) ae = 'repaso';
+      else if (b && b.ae != null) ae = b.ae;
+      const s = 'S' + Math.round(st.S) + ' F' + Math.round(st.feed), a = typeof ae === 'string' ? ae : 'ae ' + (ae == null ? '–' : ae.toFixed(1));
       if (env.frame.w >= 380) { l1 = 'T1 Ø12 z5 · ' + s + ' · ' + a; l2 = ''; } else { l1 = 'T1 Ø12 z5 · ' + s; l2 = a + ' · '; }
-      const on = meter.contact && st.phase !== 'end';
-      phiTxt = 'φ ' + (on ? Math.round(meter.eng.deg) + '°' : '–');
+      phiN = contact() ? Math.round(meter.eng.deg) : null;
     }
 
     function layout() {
       const F = env.frame, sf = env.safe, s = (F.w - 166) / 112, top0 = 34, bottom = F.h - sf.bottom;
       const plan = { x: 8, y: Math.max(top0, (top0 + bottom - 72 * s) / 2), w: 112 * s, h: 72 * s };
-      return { s, plan, chart: { x: F.w - 8 - 128, y: top0, w: 128, h: bottom - 4 - top0 } };
+      /* el gráfico baja de la esquina de 56 × 32 del botón de pausa */
+      return { s, plan, chart: { x: F.w - 8 - 128, y: top0 + 6, w: 128, h: bottom - 10 - top0 } };
     }
 
     function chart(c, r, cur) {
@@ -186,10 +233,10 @@
         c.fillStyle = PAL.hud.text; c.fillText(v + '°', r.x - 3, y);
       }
       const X = k => r.x + (k + 0.5) / BINS * r.w, Y = v => r.y + r.h - Math.min(180, v) / 180 * r.h;
-      const line = (S, upTo) => {
+      const line = (S, from, upTo) => {
         let pen = false;
         c.beginPath();
-        for (let k = 0; k <= upTo; k++) {
+        for (let k = from; k <= upTo; k++) {
           if (!S.cnt[k]) { pen = false; continue; }
           const y = Y(S.hi[k]);
           if (pen) c.lineTo(X(k), y); else { c.moveTo(X(k), y); pen = true; }
@@ -197,9 +244,16 @@
         c.stroke();
       };
       /* las dos series con el mismo estadístico: el φ máximo de cada casilla */
-      if (R.done) { c.strokeStyle = REDC; c.lineWidth = 1; c.setLineDash([3, 2]); line(ref, BINS - 1); c.setLineDash([]); }
-      c.strokeStyle = PAL.green; c.lineWidth = 1.25;
-      line(cur, Math.min(BINS - 1, cur.bin));
+      if (R.done) { c.strokeStyle = REDC; c.lineWidth = 1; c.setLineDash([3, 2]); line(ref, 0, BINS - 1); c.setLineDash([]); }
+      /* la salida del taladro y el repaso del contorno, atenuados: no son el régimen que se compara */
+      const up = Math.min(BINS - 1, cur.bin), DIM = PAL.css(PAL.green, 0.4);
+      c.lineWidth = 1.25;
+      c.strokeStyle = DIM; line(cur, 0, Math.min(binE, up));
+      if (up > binE) { c.strokeStyle = PAL.green; line(cur, binE, Math.min(binR, up)); }
+      if (up > binR) { c.strokeStyle = DIM; line(cur, binR, up); }
+      c.font = V.font.cap; c.fillStyle = PAL.hud.text;
+      if (up >= binE) { c.textAlign = 'left'; c.fillText('entrada', r.x + 1, r.y + r.h - 6); }
+      if (up > binR) { c.textAlign = 'right'; c.fillText('repaso', r.x + r.w, Y(cur.hi[up] || 12) - 8); }
       if (cur.bin >= 0 && cur.bin < BINS - 1) {
         const x = Math.round(r.x + Math.min(1, cur.cum / cur.total) * r.w) + 0.5;
         c.strokeStyle = 'rgba(234,240,246,.3)'; c.beginPath(); c.moveTo(x, r.y); c.lineTo(x, r.y + r.h); c.stroke();
@@ -211,7 +265,8 @@
       c.save();
       V.draw.hudText(c, x, y - 2, [{ text: phiTxt, color: PAL.hud.value }], { size: 13 });
       c.font = V.font.cap; c.textBaseline = 'middle'; c.textAlign = 'left'; c.lineWidth = 1.25;
-      const yl = y + 19;
+      const yl = y + 19, w = 35 + c.measureText('HSM').width + c.measureText('offset').width;
+      x = Math.min(x, env.frame.w - 60 - w);
       c.fillStyle = PAL.hud.text;
       for (const [txt, col, dash] of [['HSM', PAL.green, []], ['offset', REDC, [3, 2]]]) {
         c.strokeStyle = col; c.setLineDash(dash); c.beginPath(); c.moveTo(x, yl + 0.5); c.lineTo(x + 10, yl + 0.5); c.stroke();
@@ -221,8 +276,9 @@
       c.restore();
     }
 
-    if (env.onFonts) env.onFonts(() => {});
-    /* la referencia se termina en segundo plano; como tarde, al empezar el desbaste (antes ya no hay serie HSM) */
+    /* registrarse hace que el runtime repinte al cargar la fuente (leyenda medida con measureText) */
+    if (env.onFonts) env.onFonts(() => { hudT = -1; });
+    /* la referencia se termina en segundo plano a trozos de 20 ms; el gráfico la pinta cuando está entera */
     if (!R.done) (async () => { while (!R.step(20)) await env.idle(); if (env.wake) env.wake(); })().catch(() => R.step(Infinity));
     const refNow = () => { if (!R.done) R.step(Infinity); };
 
@@ -231,21 +287,24 @@
       grid: zm.nx + 'x' + zm.ny,
       start() {
         prog.reset(); meter.reset(); live.reset();
-        t = 0; held = false; fin = false; ae = null; hudT = -1;
+        t = 0; held = false; fin = false; ae = null; hudT = -1; phiN = null; rT = -1;
         advance(0); texts(true);
       },
       update(tt) {
         if (tt >= VD && held) { t = tt; return false; }
         t = tt;
-        if (tt > REF_BY) refNow();
         advance(Math.min(tt, VD) * SIM);
         texts(false);
         if (tt >= VD) { held = true; texts(true); }
         return true;
       },
       render() {
-        const c = env.ctx2d, L = layout(), st = prog.state(), end = st.phase === 'end';
-        if (!top) top = V.TopView2D(c, zm, { shadows: true, shadowHz: 10, tints: { 1: PAL.tint.rough }, rect: L.plan, s: L.s, light: LIGHT });
+        const c = env.ctx2d, L = layout(), st = prog.state(), end = st.phase === 'end', on = contact();
+        /* repintado sin avance (pausa, tamaño, seek): los números del instante exacto */
+        if (t === rT) texts(true);
+        rT = t;
+        phiTxt = 'φ ' + (on ? (phiN == null ? Math.round(meter.eng.deg) : phiN) + '°' : '–');
+        if (!top) { top = V.TopView2D(c, zm, { shadows: true, shadowHz: 10, tints: { 1: PAL.tint.rough }, rect: L.plan, s: L.s, light: LIGHT }); softShadow(top); }
         top.setRect(L.plan, L.s);
         top.render();
         topMs.n++; topMs.sum += top.ms; if (top.ms > topMs.max) topMs.max = top.ms; if (top.ms > 6) topMs.over6++;
@@ -254,7 +313,7 @@
           V.draw.backplot(c, path, end ? path.len : st.dist, top.ox, top.oy, top.s);
           c.globalAlpha = 1;
         }
-        V.draw.toolPlan(c, T, top.X(st.pos[0]), top.Y(st.pos[1]), top.s, { arc: meter.contact && !end ? meter.eng : null, holder: true });
+        V.draw.toolPlan(c, T, top.X(st.pos[0]), top.Y(st.pos[1]), top.s, { arc: on ? meter.eng : null, holder: true });
         const lines = [{ text: l1, color: PAL.hud.text }];
         lines.push(l2 ? { parts: [{ text: l2, color: PAL.hud.text }, { text: 'SIM ×' + SIM, color: PAL.hud.sim }] } : { text: 'SIM ×' + SIM, color: PAL.hud.sim });
         V.draw.hudText(c, 8, 4, lines, { lh: 14 });
@@ -265,7 +324,7 @@
         refNow();
         if (prog.t > tLast) { prog.reset(); meter.reset(); live.reset(); }
         advance(tLast);
-        t = tLast / SIM; held = true; fin = true; texts(true);
+        t = tLast / SIM; held = true; fin = true; rT = -1; texts(true);
       },
       hud() { return HUD; },
       resize() { if (top) top.markAll(); hudT = -1; texts(true); },
@@ -276,7 +335,8 @@
           topMs: { avg: fx(topMs.sum / (topMs.n || 1)), max: fx(topMs.max), n: topMs.n, over6: topMs.over6 },
           phi: done ? done.phi : summary(live), phiRef: r, cycleDone: !!done, wrongSide: done ? done.wrong : meter.wrong,
           linkMm3: fx(done ? done.link : meter.rem[4]), rapidMm3: fx(meter.rem[0]),
-          arc: { on: meter.contact, deg: meter.eng.deg, drawnDeg: fx((meter.eng.a1 - meter.eng.a0) * 180 / PI) } };
+          arc: { on: contact(), deg: meter.eng.deg, drawnDeg: fx((meter.eng.a1 - meter.eng.a0) * 180 / PI) }, hudPhi: phiTxt, hudAe: ae,
+          kRep: B.kRep, binRep: binR, binEntry: binE };
       },
       dispose() { if (top) top.dispose(); }
     };

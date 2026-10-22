@@ -1,5 +1,4 @@
-/* Escena trocoidal (§4.3, Evidencia 2): ranura en 1.2344 templado vista en sección por su plano medio, bucles en G3 con
-   avance compensado y arco de contacto medido. GL sobre Z-map con tapa de sección; respaldo en planta 2D. */
+/* Escena trocoidal (§4.3): ranura en sección por su plano medio, bucles G3 con avance compensado y φ medido */
 (function (G) {
   'use strict';
   const C = G.CamSim;
@@ -18,10 +17,8 @@
   const NC = { dialect: 'iso-mill', O: 1003, title: 'RANURA TROCOIDAL - 1.2344 50 HRC' };
   /* HUDW: columna izquierda del HUD; la escena se encaja a su derecha para que la herramienta no pase por debajo */
   const AZ = -72, EL = 24, BOX = [-14, 0, -24, 60, 32, 6], HUDW = 72;
-  /* Contacto medido a R − EPS (umbral radial): ZMap.engagement mide a R + 0.6·celda y cuenta la lúnula rasante del bucle
-     anterior, que infla φ 8–12° (nota de A2). Geometría exacta de lo barrido: material = bruto menos los discos de radio R
-     de los puntos anteriores a la cota; bastan los del último bucle (WIN, con margen), los anteriores quedan dentro de su
-     envolvente, y del bruto solo se alcanza la cara x = 0. φ en grados; a0 → a1 antihorario (rad). */
+  /* φ a R − EPS sobre lo barrido (bruto menos los discos del último bucle): ZMap.engagement mide a R + 0.6·celda y
+     cuenta la lúnula rasante del bucle anterior, que infla φ 8–12° */
   const EPS = 0.02, WIN = 100;
   function contactAt(P, R, k, out, win) {
     const p = P.pts, r = R - EPS, x = p[4 * k], y = p[4 * k + 1];
@@ -62,16 +59,17 @@
     return (out.deg = best * 180 / PI);
   }
 
-  /* Medida perezosa (la geometría no cambia entre ciclos). El HUD lee el máximo del último semicírculo de corte. */
+  /* ret: F de un retorno entero entre dos refrescos del HUD (~35 ms a ×5), para enseñarlo una vez */
   function Meter(P, R) {
     const n = P.n, phi = new Float32Array(n).fill(-1), A0 = new Float32Array(n), A1 = new Float32Array(n), o = { deg: 0, a0: 0, a1: 0 };
-    const m = { phi, A0, A1, k: 0, cur: 0, last: 0, max: 0 };
+    const m = { phi, A0, A1, k: 0, cur: 0, last: 0, max: 0, ret: 0 };
     m.at = k => { if (phi[k] < 0) { phi[k] = contactAt(P, R, k, o); A0[k] = o.a0; A1[k] = o.a1; } return phi[k]; };
-    m.reset = () => { m.k = 0; m.cur = m.last = 0; };
+    m.reset = () => { m.k = 0; m.cur = m.last = m.ret = 0; };
     m.to = kTo => {
       for (kTo = Math.min(kTo, n - 1); m.k <= kTo; m.k++) {
         const v = m.at(m.k), b = P.blocks[P.blockOf[m.k]];
         if (b && b.half === 'cut') m.cur = Math.max(m.cur, v); else if (m.cur) { m.last = m.cur; m.cur = 0; }
+        if (b && b.half === 'return') m.ret = P.F[m.k];
         if (v > m.max) m.max = v;
       }
     };
@@ -87,11 +85,20 @@
     const path = pb.build();
     const prog = new C.Program({ zmap: zm, ops: [{ tool: T, toolId: 1, path, S: T.cut.S, label: 'trocoidal' }], machine: MACHINE, sim: SIM, nc: NC });
     const meter = Meter(path, T.R);
-    /* final(): la herramienta en el punto de mayor φ del último bucle, con la pared final ya en x = 38 */
     let kPeak = path.n - 1;
     while (kPeak > 0 && !(path.blocks[path.blockOf[kPeak]] || {}).half) kPeak--;
     for (let k = kPeak, b0 = path.blockOf[kPeak]; k > 0 && path.blockOf[k] === b0; k--) if (meter.at(k) > meter.at(kPeak)) kPeak = k;
-    return { zm, T, path, prog, tro: tro.stats, meter, kPeak };
+    /* backplot: solo el bucle en curso y el anterior; el retorno en tipo 2 */
+    const bp = Object.assign({}, path, { pts: new Float32Array(path.pts) }), from = new Float32Array(path.n);
+    let s0 = 0, s1 = 0, endD = 0;
+    for (let k = 1; k < path.n; k++) {
+      const b = path.blocks[path.blockOf[k]];
+      if (b && b.half === 'cut' && path.blocks[path.blockOf[k - 1]] !== b) { s0 = s1; s1 = path.dist[k - 1]; }
+      if (b && b.half === 'return') bp.pts[4 * k + 3] = 2;
+      if (bp.pts[4 * k + 3]) endD = path.dist[k];
+      from[k] = s0;
+    }
+    return { zm, T, path, prog, tro: tro.stats, meter, kPeak, bp, from, endD };
   }
 
   C.define('trocoidal', async function (env) {
@@ -99,48 +106,64 @@
     await env.idle();
     const B = build(g[0], g[1]), prog = B.prog, zm = B.zm, T = B.T, path = B.path, me = B.meter;
     const VD = prog.visualDuration, D = VD + HOLD, tPeak = (prog.pointTime(0, B.kPeak - 1) + prog.pointTime(0, B.kPeak)) / 2;
-    let ter = null, tm = null;
+    let ter = null, tm = null, ln = null;
     if (gl) {
       await env.idle();
-      ter = gl.terrain(zm, { material: 'h13', raw: 'ground', tints: { 1: PAL.tint.rough }, section: { axis: 'y', at: SLOT.y, keep: '+' } });
-      tm = gl.tool(T);
+      /* sin marcas horizontales: leen como escalones de profundidad en una pasada única a ap 15 */
+      ter = gl.terrain(zm, { material: 'h13', raw: 'ground', tints: { 1: PAL.tint.rough }, section: { axis: 'y', at: SLOT.y, keep: '+' }, marks: 0 });
+      tm = gl.tool(T); ln = gl.lines(B.bp);
     }
-    const items = [{ h: ter }, { h: tm, pos: null, spin: 1 }], shadow = { h: tm, pos: null };
+    /* sombra solo del filo: la del porta manchaba la tapa de sección */
+    const caps = [null, [0, 0, 0], [0, 0, 0]], cut = { get caps() { caps[0] = tm.caps[0]; return caps; } };
+    const items = [{ h: ter }, { h: ln, from: 0, upTo: 0 }, { h: tm, pos: null, spin: 1 }], shadow = { h: tm && cut, pos: null };
     const cam = { type: 'ortho', az: AZ, el: EL, fit: { bbox: BOX, safe: { top: 22, right: 0, bottom: env.safe.bottom, left: HUDW } } };
     const ARC = 24, RA = T.R + 0.5, q = [0, 0], P3 = [0, 0, Z], cx = Math.cos(AZ * PI / 180), cy = Math.sin(AZ * PI / 180);
     let t = 0, held = false, hudT = -1;
-    const HUD = [{ text: '', color: PAL.hud.text }, { text: 'paso ' + B.tro.step.toFixed(1), color: PAL.hud.text }, { text: 'ap ' + -Z, color: PAL.hud.text }, { text: '', color: PAL.hud.value }, { text: 'SIM ×' + SIM, color: PAL.hud.sim }];
+    const SF = [{ text: '', color: PAL.hud.text }, { text: '', color: PAL.hud.text }];
+    const HUD = [{ parts: SF }, { text: 'paso ' + B.tro.step.toFixed(1), color: PAL.hud.text }, { text: 'ap ' + -Z, color: PAL.hud.text }, { text: '', color: PAL.hud.value }, { text: 'SIM ×' + SIM, color: PAL.hud.sim }];
 
-    const go = tm => { const st = prog.advanceTo(tm); me.to(st.k); return st; };
+    const go = tm => { const st = prog.advanceTo(tm); me.to(st.k); if (gl) rim(); return st; };
+    /* el borde de bruto de una pared toma el id del corte: el terreno mezcla el material de los vértices y la pared
+       salía en dos tonos, que se leen como dos profundidades */
+    const A = zm.at, Hh = zm.h, nx = zm.nx, ny = zm.ny;
+    function rim() {
+      if (!zm.isDirty()) return;
+      const i0 = Math.max(0, zm.x0 - 1), i1 = Math.min(nx - 1, zm.x1 + 1), j0 = Math.max(0, zm.y0 - 1), j1 = Math.min(ny - 1, zm.y1 + 1);
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+        const c = j * nx + i;
+        if (A[4 * c]) continue;
+        for (const n of [i > 0 ? c - 1 : -1, i < nx - 1 ? c + 1 : -1, j > 0 ? c - nx : -1, j < ny - 1 ? c + nx : -1])
+          if (n >= 0 && A[4 * n] && Hh[c] - Hh[n] > 1) { A[4 * c] = A[4 * n]; break; }
+      }
+      zm.x0 = i0; zm.x1 = i1; zm.y0 = j0; zm.y1 = j1;
+    }
     const reset = () => { prog.reset(); me.reset(); };
     const arcOf = () => { const st = prog.state(), k = Math.min(st.k, path.n - 1); return st.phase === 'cut' && me.at(k) > 0 ? k : -1; };
     function texts(force) {
       if (!force && Math.abs(t - hudT) < 0.066) return;
       hudT = t;
-      const st = prog.state();
-      HUD[0].text = 'S' + Math.round(st.S) + ' F' + Math.round(st.feed);
-      HUD[3].text = 'φ ' + (me.last > 0 ? Math.round(me.last) + '°' : '–');
+      const st = prog.state(), ph = st.phase, b = path.blocks[path.blockOf[Math.min(st.k, path.n - 1)]];
+      let f = Math.round(st.feed);
+      if (b && b.half === 'return') me.ret = 0; else if (me.ret && ph === 'cut') { f = me.ret; me.ret = 0; }
+      SF[0].text = 'S' + Math.round(st.S);
+      SF[1].text = ph === 'rapid' ? ' G0' : ph === 'tc' || ph === 'end' ? '' : ' F' + f;
+      SF[1].color = ph === 'rapid' ? PAL.hud.g0 : PAL.hud.text;
+      HUD[3].text = 'φ ' + (ph === 'cut' && me.last > 0 ? Math.round(me.last) + '°' : '–');
     }
     const hudDraw = c => V.draw.hudText(c, 10, 8, HUD, { lh: 13.5 });
 
-    /* arco en el suelo de la ranura, al pie del filo; la parte que tapa el cuerpo de la fresa va discontinua */
     function arc3d(c, st, k) {
       const x = st.pos[0], y = st.pos[1], a = me.A0[k], b = me.A1[k];
-      c.save(); c.strokeStyle = PAL.gold; c.lineCap = 'butt';
-      for (let pass = 0; pass < 2; pass++) {
-        c.lineWidth = pass ? 3 : 2; c.globalAlpha = pass ? 1 : 0.6; c.setLineDash(pass ? [] : [2, 2]);
-        c.beginPath();
-        let pen = false;
-        for (let i = 0; i <= ARC; i++) {
-          const u = a + (b - a) * i / ARC, front = Math.cos(u) * cx + Math.sin(u) * cy > 0;
-          if (front !== !!pass) { pen = false; continue; }
-          P3[0] = x + RA * Math.cos(u); P3[1] = y + RA * Math.sin(u);
-          gl.project(P3, q);
-          if (pen) c.lineTo(q[0], q[1]); else { c.moveTo(q[0], q[1]); pen = true; }
-        }
-        c.stroke();
+      c.save(); c.strokeStyle = PAL.gold; c.lineWidth = 3; c.beginPath();
+      let pen = false;
+      for (let i = 0; i <= ARC; i++) {
+        const u = a + (b - a) * i / ARC;
+        if (Math.cos(u) * cx + Math.sin(u) * cy <= 0) { pen = false; continue; }
+        P3[0] = x + RA * Math.cos(u); P3[1] = y + RA * Math.sin(u);
+        gl.project(P3, q);
+        if (pen) c.lineTo(q[0], q[1]); else { c.moveTo(q[0], q[1]); pen = true; }
       }
-      c.restore();
+      c.stroke(); c.restore();
     }
 
     const scene = {
@@ -159,7 +182,9 @@
         if (!gl) return;
         const st = prog.state(), k = arcOf();
         gl.camera(cam);
-        items[1].pos = st.pos; items[1].spin = st.S > 0 ? 1 : 0; shadow.pos = st.pos;
+        const kk = Math.min(st.k, path.n - 1);
+        items[1].from = B.from[kk]; items[1].upTo = Math.min(st.dist, B.endD);
+        items[2].pos = st.pos; items[2].spin = st.S > 0 ? 1 : 0; shadow.pos = st.pos;
         gl.frame(items, { toolShadow: shadow });
         if (k >= 0) arc3d(env.ctx2d, st, k);
         hudDraw(env.ctx2d);
@@ -181,11 +206,10 @@
       dispose() { if (gl) gl.dispose(); }
     };
 
-    /* Respaldo: planta sobre el mismo Z-map y el mismo Program, con el círculo de la herramienta y el arco */
     function plan(e2) {
       let v = null;
       const c = e2.ctx2d, arc = { a0: 0, a1: 0 };
-      const rect = () => { const F = e2.frame; return { x: HUDW, y: 8, w: F.w - HUDW - 10, h: F.h - e2.safe.bottom - 16 }; };
+      const rect = () => { const F = e2.frame; return { x: HUDW, y: 22, w: F.w - HUDW - 12, h: F.h - e2.safe.bottom - 30 }; };
       return {
         update(tt) { return scene.update(tt); },
         render() {
