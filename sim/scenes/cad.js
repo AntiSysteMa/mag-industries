@@ -18,6 +18,7 @@
   const BOX = [-N.plate.x1, -N.plate.y1, 0, N.plate.x1, N.plate.y1, 32];
   /* márgenes del encaje (arriba, derecha, abajo sobre el rótulo, izquierda), px del marco */
   const SAFE = [20, 8, 4, 8];
+  const ZROT = -90;
 
   /* media anchura de la huella R6 a una abscisa (y viceversa) */
   const halfY = x => abs(x) <= CX ? HH : CY + sqrt(max(0, RC * RC - (abs(x) - CX) ** 2));
@@ -255,17 +256,17 @@
     await env.idle();
     const M = shape(env.tier, g0);
     tm.shape = now() - tm.t0;
-    await env.idle();
-    tm.idle = now() - tm.t0;
     const mat = c => ({ color: c, metal: 0.25, gloss: 0.5 });
     const surf = gl.mesh({ kind: 'custom', pos: M.pos, nrm: M.nrm, idx: M.idx, edges: M.edges.iso, material: mat(CAD), zebra: 9 });
     const walls = gl.mesh({ kind: 'custom', pos: M.walls.pos, nrm: M.walls.nrm, idx: M.walls.idx, edges: M.edges.part, material: mat(CAD) });
     const plate = gl.mesh({ kind: 'box', size: [BOX[3] * 2, BOX[4] * 2, ZP], at: [0, 0, ZP / 2], material: mat(CAD) });
     /* portador de la costura: triángulo degenerado; solo aporta sus aristas con estilo propio */
     const s0 = M.edges.seam, seam = gl.mesh({ kind: 'custom', pos: s0.slice(0, 9), idx: new Uint16Array([0, 0, 0]), edges: s0, material: mat(CAD) });
-    /* la pieza se pinta girada 90° en Z (X de pieza = Y del mundo GL): los tubos de la cebra, paralelos a Y del mundo,
-       quedan a lo largo de la cresta y las franjas cruzan la costura. La cámara gira lo mismo: en pantalla no cambia nada */
-    const ROT = new Float32Array([0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]), rot = p => [-p[1], p[0], p[2]];
+    /* la pieza se pinta girada −90° en Z (X de pieza = −Y del mundo GL): los tubos de la cebra, paralelos a Y del mundo,
+       quedan a lo largo de la cresta y las franjas cruzan la costura. La cámara gira lo mismo: en pantalla no cambia nada.
+       Con −90° y no +90° el reflejo nunca apunta a −X horizontal, donde el atan de la cebra salta y dibuja una línea de
+       puntos (requests/J-B-cebra-corte.md) */
+    const ROT = new Float32Array([0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]), rot = p => [p[1], -p[0], p[2]];
     const it = (h, o) => Object.assign({ h, M: ROT }, o);
     const solid = { mode: 'shaded', edges: true, edgeColor: EDGE };
     const L = {
@@ -285,7 +286,7 @@
     const cam = { type: 'ortho', az: AZ, el: EL, zoom: 1, fit: { bbox: BOX, safe: null } };
     const LBL = MODES.map(md => [{ text: md[2], color: PAL.hud.value }]);
     LBL[3][0] = { parts: [{ text: MODES[3][2], color: PAL.hud.value }, { text: ' · plano ', color: PAL.hud.text }].concat(RAMP.map(c => ({ text: '■', color: c })), [{ text: ' curvo', color: PAL.hud.text }]) };
-    const tri = [[0, 0], [0, 0], [0, 0], [0, 0]], tv = { x: [0, 0], y: [0, 0], z: [0, 0] }, TP = [[0, 0, 0], [0, 1, 0], [-1, 0, 0], [0, 0, 1]];
+    const tri = [[0, 0], [0, 0], [0, 0], [0, 0]], tv = { x: [0, 0], y: [0, 0], z: [0, 0] }, TP = [[0, 0, 0], [0, -1, 0], [1, 0, 0], [0, 0, 1]];
     let t = 0, fin = false, fk = '', fr = null, sf = null;
     tm.meshes = now() - tm.t0;
     await gl.whenReady();
@@ -298,7 +299,7 @@
       sf = { top: max(s.top, SAFE[0]), right: max(s.right, SAFE[1]), bottom: max(s.bottom, 18) + SAFE[2], left: max(s.left, SAFE[3]) };
       fr = framing(M.sil, F.w - sf.left - sf.right, F.h - sf.top - sf.bottom);
       const b = fr.bbox;
-      cam.target = rot(fr.pv); cam.fit.bbox = [-b[4], b[0], b[2], -b[1], b[3], b[5]]; cam.fit.safe = sf;
+      cam.target = rot(fr.pv); cam.fit.bbox = [b[1], -b[3], b[2], b[4], -b[0], b[5]]; cam.fit.safe = sf;
     }
     function at(tt) {
       let i = MODES.length - 1;
@@ -324,7 +325,7 @@
         if (!tm.first) tm.first = -1;
         fit();
         const az = fin ? AZ : AZ + SWING * Math.sin(2 * PI * t / D), md = fin ? [1, -1, 1] : at(t), c = env.ctx2d;
-        cam.az = az + 90; cam.zoom = fr.s / boxScale(az, env.frame.w - sf.left - sf.right, env.frame.h - sf.top - sf.bottom);
+        cam.az = az + ZROT; cam.zoom = fr.s / boxScale(az, env.frame.w - sf.left - sf.right, env.frame.h - sf.top - sf.bottom);
         gl.camera(cam);
         c.save();
         if (md[0] === 3 || md[1] === 3) bands();
@@ -334,9 +335,10 @@
           c.globalCompositeOperation = 'lighter'; c.globalAlpha = md[2]; gl.frame(L[MODES[md[1]][0]]);
           c.globalCompositeOperation = 'source-over';
         }
-        c.globalAlpha = md[1] < 0 ? 1 : 1 - md[2];
-        V.draw.hudText(c, 10, 8, LBL[md[0]], { size: 9.5 });
-        if (md[1] >= 0) { c.globalAlpha = md[2]; V.draw.hudText(c, 10, 8, LBL[md[1]], { size: 9.5 }); }
+        /* el rótulo sale y luego entra: dos textos fundidos a la vez en el mismo sitio no se leen */
+        const lb = md[1] < 0 || md[2] < 0.5 ? md[0] : md[1];
+        c.globalAlpha = md[1] < 0 ? 1 : abs(1 - 2 * md[2]);
+        V.draw.hudText(c, 10, 8, LBL[lb], { size: 9.5 });
         c.globalAlpha = 1;
         triad(c);
         c.restore();
@@ -346,7 +348,7 @@
       resize() { fk = ''; },
       stats() {
         const m = gl.ms, md = at(t);
-        return { mode: fin ? 'shaded' : MODES[md[1] < 0 ? md[0] : md[1]][0], az: +(cam.az - 90).toFixed(2), tess: M.nu + 'x' + M.nv, tris: M.idx.length / 3,
+        return { mode: fin ? 'shaded' : MODES[md[1] < 0 ? md[0] : md[1]][0], az: +(cam.az - ZROT).toFixed(2), tess: M.nu + 'x' + M.nv, tris: M.idx.length / 3,
           bandTris: K ? K.bands.reduce((a, b) => a + b.idx.length / 3, 0) : 0, edgeSegs: (M.edges.part.length + M.edges.iso.length + M.edges.seam.length) / 6,
           rMin: K ? +K.rMin.toFixed(2) : null, initParts: tm, glSync: m ? +m.sync.toFixed(3) : null, glDraw: m ? +m.draw.toFixed(3) : null, glCopy: m ? +m.copy.toFixed(3) : null };
       },
@@ -355,5 +357,5 @@
     return scene;
   }, { kind: 'gl', drive: 'time', loop: true, frame: { w: 384, h: 176 }, frameM: { w: 350, h: 176 } });
 
-  C.spec('cad', { tools: [], cuts: [], duration: D, modes: MODES, tess: TESS, iso: ISO, bands: BANDS, box: BOX, build, shape, curv, grid, kOf, isoParams, halfX, halfY, axes, boxScale, framing });
+  C.spec('cad', { tools: [], cuts: [], duration: D, zrot: ZROT, modes: MODES, tess: TESS, iso: ISO, bands: BANDS, box: BOX, build, shape, curv, grid, kOf, isoParams, halfX, halfY, axes, boxScale, framing });
 })(globalThis);
