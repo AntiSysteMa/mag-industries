@@ -1,6 +1,6 @@
 # PROJECT_STATE — MAG INDUSTRIES
 
-**Última sesión:** 20 octubre 2026 (Sesión 13 · capa de movimiento v2, en rama sin publicar)
+**Última sesión:** 27 octubre 2026 (Sesión 14 · simulaciones CAM realistas, en producción)
 **Estado:** En producción y **sin bloqueadores técnicos de captación**. Agenda de la auditoría completa (calendario de Google incrustado), correo autenticado y verificado con envío real, sitio a cero menciones de software CAD/CAM, quiz que captura leads, calculadora de coste.
 
 🔴 **CONTEXTO COMERCIAL — leer antes que nada (dicho por el usuario, 3-ago-2026):**
@@ -491,7 +491,11 @@ Petición explícita del usuario, guardada también en memoria persistente: **pr
 ### Sesión 13 (20 octubre 2026)
 **Objetivo:** Instalar skills de diseño y modernizar la experiencia visual y las animaciones **sin cambiar el contenido**.
 
-**Rama:** `claude/amazing-lovelace-98ninv`, con PR abierta contra `main`. No está en producción hasta que se fusione.
+**En producción** desde el 20-oct-2026: PR #1 fusionada en `main` (`50bffb8`), despliegue de Vercel `READY`. Verificado contra `www.magindustries.es` con el fetch autenticado de Vercel, porque el contenedor no tiene salida directa:
+- la home sirve `app.js?v=14`, `tailwind.css?v=13`, el `#boot` y la placa `.spec-row`;
+- `tailwind.css` lleva las reglas nuevas;
+- `app.js` responde 200;
+- la CSP y las 6 cabeceras siguen iguales.
 
 **1. Skills en el repo** (`.claude/skills/`, no se despliegan)
 - Pack de Emil Kowalski.
@@ -528,7 +532,7 @@ Petición explícita del usuario, guardada también en memoria persistente: **pr
 - Movimiento reducido.
 - CDN abortado, con el contenido visible.
 - Las 9 páginas sin errores de consola y sin `.reveal` ocultos en vista.
-- **Pendiente:** verificar en el preview real de Vercel, con la CSP de verdad.
+- **Pendiente:** comprobar en un navegador real que la consola no muestra violaciones de CSP (`curl` no las ve). Las cabeceras están verificadas; la ejecución en el navegador, no.
 
 **5. Retirada de las tres «huellas de web hecha con IA»** (el usuario aceptó la recomendación)
 - **Etiquetas sobre titulares:** 24 rótulos que solo decoraban, borrados. Los que llevaban datos siguen con el texto exacto, pero como línea bajo el titular: «Programación CNC externa · CAD/CAM · Oficina técnica de apoyo» en la home, «Auditoría técnica · 45 minutos · sin coste» en la landing y los «Ahorro aproximado del X %» de los planes. En el blog, «Último artículo» y «Anteriores» pasan a ser `<h2>`.
@@ -547,6 +551,30 @@ Petición explícita del usuario, guardada también en memoria persistente: **pr
 - **Sin cambios:** la entrada «Cycle Start» sigue en 1,8 s, que fue la opción que eligió el usuario. Acortarla a 0,9 s era una sugerencia condicionada a que pareciera larga en el móvil.
 
 Cache-busting: `app.js?v=14` y `tailwind.css?v=13`.
+
+### Sesión 14 (21–27 octubre 2026)
+**Objetivo:** sustituir las animaciones de máquina esquemáticas por simulaciones CAM realistas en toda la web, sin cambiar el contenido.
+
+**Hecho**
+- Investigación (lenguaje visual de simuladores CAM, datos reales de mecanizado, render web) y especificación técnica revisada por un crítico CNC y uno web.
+- Motor propio sin dependencias en `sim/`: núcleo con pruebas (419 asserts), estrategias (adaptativo con φ mediana 38°/máx 70°, siempre en concordancia), render WebGL2 con un solo contexto por página y runtime con caída a 2D, pausa y movimiento reducido.
+- 12 escenas integradas:
+  - index: hero (cajera en D2 con islas), HSM, trocoidal y 5 ejes;
+  - capacidades: planeado (con el scroll), CAD, multieje, torneado, hilo, penetración y láser;
+  - blog: figura trocoidal animada.
+- Todas pasaron una revisión de oficio. Correcciones aplicadas en hero, HSM, integración y, en parte, trocoidal, 5 ejes y planeado.
+
+**Verificación (27-oct, Playwright + Chromium sin GPU)**
+- 9 páginas × 1440/390 × modo normal y `?simgl=force`: 0 errores de consola, 0 404, sin desbordamiento.
+- Las 12 escenas pintan, en 3D forzado o en su versión 2D.
+
+**No hecho / pendiente**
+- Correcciones de la revisión de oficio sin aplicar en CAD, multieje, torneado, hilo, penetración, láser y blog: los límites de uso cortaron esa ronda. Informes en el scratchpad de la sesión, no en el repo.
+- Imágenes de respaldo: descartadas por el usuario. Consecuencia: sin WebGL2, CAD y multieje quedan en blanco con su rejilla.
+- Sin medir en GPU real; en el contenedor (software), el hero va a unos 88 ms/fotograma en el nivel más bajo.
+- Peso: core.js 23 KB gz y gl.js 21 KB gz, por encima de lo presupuestado.
+
+**Decisiones por defecto aplicadas (reversibles):** textos y pies literales; rótulo `~40°` del blog; botón `pausa` en cada pantalla (WCAG 2.2.2); `aria-label` del hero y del planeado actualizados a lo que ahora se ve.
 
 ---
 
@@ -648,7 +676,7 @@ reales.
 | Toggle tema | ✅ | localStorage `mag-theme` |
 | Quiz "preguntas rápidas" | ✅ | Integrado en sección "problemas" |
 | Formulario contacto | ✅ | FormSubmit + Supabase (con try/catch) |
-| Raster animation | ✅ | GSAP ScrollTrigger + MotionPathPlugin |
+| Raster animation | ❌→✅ | Estuvo muerta en producción desde el 29-jul (sin `#raster-svg` válido); sustituida en la sesión 14 por la escena `planeado` guiada por scroll |
 | Simulación hero panel | ✅ | Canvas 2D, 60 fps, islas + virutas |
 | Scroll-snap | ⚠️ | Causa tirones; pendiente: desactivar o reducir |
 | Parallax scrub | ⚠️ | Fuerza reflow; pendiente: quitar o reducir |

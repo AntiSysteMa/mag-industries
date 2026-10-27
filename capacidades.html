@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="tailwind.css?v=13">
+<link rel="stylesheet" href="tailwind.css?v=14">
 <script>
   (function(){ try{ var t=localStorage.getItem('mag-theme')||'dark'; document.documentElement.setAttribute('data-theme', t==='light'?'light':'dark'); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
   /* La animacion de entrada es una MEJORA, no un requisito para ver la web.
@@ -101,141 +101,74 @@
         <span class="tag text-[11px] text-steel-500 uppercase">CAM // planeado_pasadas_paralelas.nc — la herramienta avanza con tu scroll</span>
         <span class="flex items-center gap-2 tag text-[10px] uppercase text-cyber"><span class="w-1.5 h-1.5 rounded-full bg-cyber status-dot"></span> scrub</span>
       </div>
-      <div class="screen relative">
+      <div class="screen sim-screen relative aspect-[16/9] sm:aspect-[800/230] overflow-hidden">
         <div class="absolute inset-0 bg-grid opacity-50"></div>
-        <svg id="raster-svg" viewBox="0 0 800 230" class="relative w-full h-auto block" aria-label="Simulación de planeado con pasadas paralelas: una fresa recorre la trayectoria en serpentina a medida que se hace scroll">
-          <rect x="52" y="26" width="696" height="178" fill="rgba(133,146,163,0.05)" stroke="#233145" stroke-width="1"/>
-          <rect x="52" y="26" width="696" height="178" fill="none" stroke="#12F7A0" stroke-width="0.7" opacity="0.25" stroke-dasharray="4 6"/>
-          <path id="raster-ghost" d="M90,60 H710 a17.5,17.5 0 0 1 0,35 H90 a17.5,17.5 0 0 0 0,35 H710 a17.5,17.5 0 0 1 0,35 H90" fill="none" stroke="#33465e" stroke-width="1.2" stroke-dasharray="3 5"/>
-          <path id="raster-run" d="M90,60 H710 a17.5,17.5 0 0 1 0,35 H90 a17.5,17.5 0 0 0 0,35 H710 a17.5,17.5 0 0 1 0,35 H90" fill="none" stroke="#12F7A0" stroke-width="2.4" stroke-linecap="round"/>
-          <g id="raster-tool">
-            <circle r="13" fill="rgba(18,247,160,0.10)" stroke="#12F7A0" stroke-width="1.2"/>
-            <circle r="5" fill="#E4ECF4"/>
-            <line x1="-13" y1="0" x2="13" y2="0" stroke="#12F7A0" stroke-width="0.7" opacity="0.7"/>
-            <line x1="0" y1="-13" x2="0" y2="13" stroke="#12F7A0" stroke-width="0.7" opacity="0.7"/>
-            <circle cx="-9" cy="-7" r="2" fill="#FFC400" class="spark"/>
-            <circle cx="9" cy="-6" r="1.6" fill="#12F7A0" class="spark" style="animation-delay:.4s"/>
-          </g>
-          <g class="tag" font-size="10" fill="#8592A3">
-            <text x="60" y="222">planeado · Ø12 · ae 8.4 · ap 0.4</text>
-            <text x="620" y="222" fill="#12F7A0">F 4800 · S 12000</text>
-          </g>
-        </svg>
+        <canvas class="sim-canvas absolute inset-0 w-full h-full" data-sim="planeado" data-safe="0 0 22 0" role="img" aria-label="Simulación de planeado con pasadas paralelas: una fresa recorre la placa en pasadas de un solo sentido a medida que se hace scroll"></canvas>
+        <span class="sim-cap absolute bottom-2 left-4 tag text-[10px] leading-none text-steel-500 pointer-events-none">planeado · Ø12 · ae 8.4 · ap 0.4</span>
+        <span class="sim-cap absolute bottom-2 right-4 tag text-[10px] leading-none text-cyber pointer-events-none">F 4800 · S 12000</span>
       </div>
     </div>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
       <article class="card-hover bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="screen relative h-44 overflow-hidden flex items-center justify-center scene3d">
+        <div class="screen sim-screen relative h-44 overflow-hidden">
           <div class="absolute inset-0 bg-grid opacity-50"></div>
-          <div class="cube float-y"><div class="face f-front"></div><div class="face f-back"></div><div class="face f-right"></div><div class="face f-left"></div><div class="face f-top"></div><div class="face f-bottom"></div></div>
-          <span class="absolute bottom-3 left-4 tag text-[10px] text-steel-500 uppercase">render · wireframe</span>
+          <canvas class="sim-canvas absolute inset-0 w-full h-full" data-sim="cad" data-safe="0 0 18 0" aria-hidden="true"></canvas>
+          <span class="sim-cap absolute bottom-2 left-4 tag text-[10px] leading-none text-steel-500 uppercase pointer-events-none">render · wireframe</span>
+          <button type="button" class="sim-toggle absolute top-2 right-2 tag text-[9px] leading-none text-steel-400 border border-[#1F4257] bg-[#041A25]/85 px-2" aria-pressed="false" hidden>pausa</button>
         </div>
         <div class="p-6"><h3 class="font-bold text-lg mb-2 flex items-start gap-2"><i aria-hidden="true" class="fa-solid fa-vector-square text-cyber mt-1"></i> <span>Ingeniería de producto y modelado paramétrico avanzado</span></h3><p class="text-steel-400 text-sm leading-relaxed">Desarrollo de ingeniería de detalle, superficies de alta complejidad estética y funcional, y modelado sólido paramétrico de alto rendimiento. Se ejecutan análisis de validación geométrica, continuidad superficial y viabilidad de fabricación para asegurar la integridad del diseño antes de iniciar cualquier fase de producción.</p></div>
       </article>
 
       <article class="card-hover bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="screen relative h-44 overflow-hidden">
+        <div class="screen sim-screen relative h-44 overflow-hidden">
           <div class="absolute inset-0 bg-grid opacity-50"></div>
-          <svg viewBox="0 0 400 176" class="absolute inset-0 w-full h-full">
-            <path id="cnc-path" d="M40 140 Q 100 40 160 90 T 280 70 Q 340 60 360 120" fill="none" stroke="#556475" stroke-width="1" stroke-dasharray="2 4"/>
-            <path d="M40 140 Q 100 40 160 90 T 280 70 Q 340 60 360 120" fill="none" stroke="#12F7A0" stroke-width="2" class="path-trace"/>
-            <circle r="4" fill="#FFC400"><animateMotion dur="4s" repeatCount="indefinite"><mpath href="#cnc-path"/></animateMotion></circle>
-          </svg>
-          <span class="absolute bottom-3 left-4 tag text-[10px] text-steel-500 uppercase">G-code · HSM</span>
+          <canvas class="sim-canvas absolute inset-0 w-full h-full" data-sim="multieje" data-safe="0 0 18 0" aria-hidden="true"></canvas>
+          <span class="sim-cap absolute bottom-2 left-4 tag text-[10px] leading-none text-steel-500 uppercase pointer-events-none">G-code · HSM</span>
+          <button type="button" class="sim-toggle absolute top-2 right-2 tag text-[9px] leading-none text-steel-400 border border-[#1F4257] bg-[#041A25]/85 px-2" aria-pressed="false" hidden>pausa</button>
         </div>
         <div class="p-6"><h3 class="font-bold text-lg mb-2 flex items-start gap-2"><i aria-hidden="true" class="fa-solid fa-code text-cyber mt-1"></i> <span>Programación CNC y mecanizado multieje</span></h3><p class="text-steel-400 text-sm leading-relaxed">Generación de trayectorias complejas para fresado y torneado multieje. Implementación de estrategias de alta velocidad y técnicas de corte avanzado que optimizan el comportamiento cinemático de la máquina, maximizan la vida útil de la herramienta y garantizan un rendimiento superior en geometrías exigentes.</p></div>
       </article>
 
       <article class="card-hover bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="screen relative h-44 overflow-hidden flex items-center justify-center">
+        <div class="screen sim-screen relative h-44 overflow-hidden">
           <div class="absolute inset-0 bg-grid opacity-50"></div>
-          <svg viewBox="0 0 400 176" class="absolute inset-0 w-full h-full" aria-label="Torneado CNC: plato de garras girando, barra en rotación y herramienta de corte generando viruta">
-            <defs>
-              <linearGradient id="gBar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A3644"/><stop offset="0.5" stop-color="#93A3B5"/><stop offset="1" stop-color="#1E2937"/></linearGradient>
-              <linearGradient id="gBarCut" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A4A5C"/><stop offset="0.5" stop-color="#CDD8E4"/><stop offset="1" stop-color="#28354A"/></linearGradient>
-            </defs>
-            <!-- plato de garras -->
-            <g class="chuck-spin">
-              <circle cx="74" cy="88" r="36" fill="#1B2634" stroke="#33465e" stroke-width="2"/>
-              <circle cx="74" cy="88" r="10" fill="#0C121B" stroke="#33465e"/>
-              <rect x="70" y="52" width="8" height="16" fill="#556475"/>
-              <rect x="70" y="108" width="8" height="16" fill="#556475"/>
-              <rect x="38" y="84" width="16" height="8" fill="#556475"/>
-              <rect x="94" y="84" width="16" height="8" fill="#556475"/>
-            </g>
-            <!-- barra en bruto -->
-            <rect x="104" y="72" width="150" height="32" fill="url(#gBar)" stroke="#33465e" stroke-width="0.8"/>
-            <!-- sección ya torneada (diámetro reducido) -->
-            <rect x="254" y="78" width="92" height="20" fill="url(#gBarCut)" stroke="#4A5B6E" stroke-width="0.8"/>
-            <!-- textura de giro -->
-            <g clip-path="url(#none)">
-              <line x1="112" y1="88" x2="248" y2="88" stroke="#EAF0F6" stroke-width="1" opacity="0.35" class="bar-tex"/>
-              <line x1="260" y1="88" x2="340" y2="88" stroke="#FFFFFF" stroke-width="0.8" opacity="0.4" class="bar-tex" style="animation-delay:.25s"/>
-            </g>
-            <!-- herramienta de torneado -->
-            <g>
-              <polygon points="254,98 262,112 246,112" fill="#E4ECF4"/>
-              <rect x="248" y="112" width="12" height="34" fill="#556475" stroke="#33465e" stroke-width="0.6"/>
-              <animateTransform attributeName="transform" type="translate" values="66,0;0,0;66,0" dur="8s" repeatCount="indefinite"/>
-            </g>
-            <!-- viruta -->
-            <g transform="translate(254,96)">
-              <path d="M0,0 q-8,-6 -6,-14" fill="none" stroke="#B4C1D0" stroke-width="1.2" class="chip"/>
-              <path d="M2,0 q6,-8 3,-15" fill="none" stroke="#8592A3" stroke-width="1" class="chip d2"/>
-              <circle cx="-2" cy="-3" r="2" fill="#FFC400" class="spark"/>
-            </g>
-            <!-- contrapunto -->
-            <polygon points="346,80 362,88 346,96" fill="#33465e"/>
-            <rect x="362" y="76" width="14" height="24" fill="#1B2634" stroke="#33465e"/>
-            <g class="tag" font-size="9" fill="#8592A3">
-              <text x="112" y="150">G71 · 2200 rpm · ap 1.5</text>
-            </g>
-          </svg>
-          <span class="absolute bottom-3 left-4 tag text-[10px] text-steel-500 uppercase">torneado · cilindrado</span>
+          <canvas class="sim-canvas absolute inset-0 w-full h-full" data-sim="torneado" data-safe="18 0 18 0" role="img" aria-label="Torneado CNC: plato de garras girando, barra en rotación y herramienta de corte generando viruta"></canvas>
+          <span class="sim-cap absolute top-2 left-4 tag text-[9px] leading-none text-steel-400 pointer-events-none">G71 · 2200 rpm · ap 1.5</span>
+          <span class="sim-cap absolute bottom-2 left-4 tag text-[10px] leading-none text-steel-500 uppercase pointer-events-none">torneado · cilindrado</span>
+          <button type="button" class="sim-toggle absolute top-2 right-2 tag text-[9px] leading-none text-steel-400 border border-[#1F4257] bg-[#041A25]/85 px-2" aria-pressed="false" hidden>pausa</button>
         </div>
         <div class="p-6"><h3 class="font-bold text-lg mb-2 flex items-start gap-2"><i aria-hidden="true" class="fa-solid fa-circle-notch text-cyber mt-1"></i> <span>Torneado CNC de alta precisión</span></h3><p class="text-steel-400 text-sm leading-relaxed">Ejecución integral de operaciones de cilindrado, refrentado, roscado y ranurado mediante ciclos optimizados. El proceso incluye un control estricto de la evacuación de viruta, adaptándose con la misma eficiencia tanto a la producción de series continuas como a la fabricación de componentes unitarios.</p></div>
       </article>
 
       <article class="card-hover bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="screen relative h-44 overflow-hidden flex items-center justify-center">
+        <div class="screen sim-screen relative h-44 overflow-hidden">
           <div class="absolute inset-0 bg-grid opacity-50"></div>
-          <svg viewBox="0 0 400 176" class="absolute inset-0 w-full h-full">
-            <rect x="120" y="30" width="160" height="116" fill="rgba(133,146,163,0.08)" stroke="#233145"/>
-            <path d="M170 40 L 170 90 Q 170 110 200 110 Q 230 110 230 88 L 230 40" fill="none" stroke="#12F7A0" stroke-width="1.5" stroke-dasharray="3 3"/>
-            <g class="wire"><line x1="200" y1="10" x2="200" y2="166" stroke="#FFC400" stroke-width="1.5"/></g>
-            <circle cx="200" cy="10" r="4" fill="#8592A3"/><circle cx="200" cy="166" r="4" fill="#8592A3"/>
-            <circle cx="200" cy="70" r="3" fill="#12F7A0" class="spark"/><circle cx="200" cy="100" r="2.4" fill="#FFC400" class="spark" style="animation-delay:.4s"/>
-          </svg>
-          <span class="absolute bottom-3 left-4 tag text-[10px] text-steel-500 uppercase">wire EDM · ±0.005</span>
+          <canvas class="sim-canvas absolute inset-0 w-full h-full" data-sim="hilo" data-safe="0 0 18 0" aria-hidden="true"></canvas>
+          <span class="sim-cap absolute bottom-2 left-4 tag text-[10px] leading-none text-steel-500 uppercase pointer-events-none">wire EDM · ±0.005</span>
+          <button type="button" class="sim-toggle absolute top-2 right-2 tag text-[9px] leading-none text-steel-400 border border-[#1F4257] bg-[#041A25]/85 px-2" aria-pressed="false" hidden>pausa</button>
         </div>
         <div class="p-6"><h3 class="font-bold text-lg mb-2 flex items-start gap-2"><i aria-hidden="true" class="fa-solid fa-grip-lines-vertical text-cyber mt-1"></i> <span>Electroerosión por hilo</span></h3><p class="text-steel-400 text-sm leading-relaxed">Solución de corte por descarga eléctrica para el mecanizado de perfiles de alta complejidad, cavidades internas cerradas, esquinas vivas y geometrías inaccesibles para herramientas rotativas convencionales, manteniendo tolerancias dimensionales sumamente estrechas.</p></div>
       </article>
 
       <article class="card-hover bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="screen relative h-44 overflow-hidden flex items-center justify-center">
+        <div class="screen sim-screen relative h-44 overflow-hidden">
           <div class="absolute inset-0 bg-grid opacity-50"></div>
-          <svg viewBox="0 0 400 176" class="absolute inset-0 w-full h-full">
-            <rect x="175" y="20" width="50" height="55" fill="rgba(255,196,0,0.12)" stroke="#FFC400"/>
-            <rect x="110" y="95" width="180" height="60" fill="rgba(133,146,163,0.08)" stroke="#233145"/>
-            <rect x="175" y="95" width="50" height="35" fill="rgba(18,247,160,0.06)" stroke="#12F7A0" stroke-dasharray="3 3"/>
-            <circle cx="185" cy="88" r="2.6" fill="#12F7A0" class="spark"/><circle cx="200" cy="88" r="3" fill="#FFC400" class="spark" style="animation-delay:.3s"/><circle cx="215" cy="88" r="2.2" fill="#12F7A0" class="spark" style="animation-delay:.6s"/>
-          </svg>
-          <span class="absolute bottom-3 left-4 tag text-[10px] text-steel-500 uppercase">EDM · penetración</span>
+          <canvas class="sim-canvas absolute inset-0 w-full h-full" data-sim="penetracion" data-safe="0 0 18 0" aria-hidden="true"></canvas>
+          <span class="sim-cap absolute bottom-2 left-4 tag text-[10px] leading-none text-steel-500 uppercase pointer-events-none">EDM · penetración</span>
+          <button type="button" class="sim-toggle absolute top-2 right-2 tag text-[9px] leading-none text-steel-400 border border-[#1F4257] bg-[#041A25]/85 px-2" aria-pressed="false" hidden>pausa</button>
         </div>
         <div class="p-6"><h3 class="font-bold text-lg mb-2 flex items-start gap-2"><i aria-hidden="true" class="fa-solid fa-bolt text-cyber mt-1"></i> <span>Electroerosión por penetración (EDM)</span></h3><p class="text-steel-400 text-sm leading-relaxed">Fabricación mediante descarga eléctrica y diseño especializado de electrodos para la obtención de cavidades profundas, nervios estrechos y detalles de geometría compleja, especialmente indicados para componentes tratados térmicamente o de difícil acceso mecánico.</p></div>
       </article>
 
       <article class="card-hover bg-night-card border border-night-line clip-corner overflow-hidden reveal">
-        <div class="screen relative h-44 overflow-hidden flex items-center justify-center">
+        <div class="screen sim-screen relative h-44 overflow-hidden">
           <div class="absolute inset-0 bg-grid opacity-50"></div>
-          <svg viewBox="0 0 400 176" class="absolute inset-0 w-full h-full">
-            <rect x="90" y="70" width="220" height="70" rx="4" fill="rgba(133,146,163,0.08)" stroke="#233145"/>
-            <text x="200" y="115" text-anchor="middle" class="tag" font-size="20" fill="#12F7A0" opacity="0.85">MAG · SN-0427</text>
-          </svg>
-          <div class="laser-beam absolute top-0 bottom-0 w-[2px] bg-alert shadow-[0_0_14px_3px_rgba(255,90,60,0.7)]"></div>
-          <span class="absolute bottom-3 left-4 tag text-[10px] text-steel-500 uppercase">láser · marcado</span>
+          <canvas class="sim-canvas absolute inset-0 w-full h-full" data-sim="laser" data-safe="0 0 18 0" aria-hidden="true"></canvas>
+          <span class="sr-only">MAG · SN-0427</span>
+          <span class="sim-cap absolute bottom-2 left-4 tag text-[10px] leading-none text-steel-500 uppercase pointer-events-none">láser · marcado</span>
+          <button type="button" class="sim-toggle absolute top-2 right-2 tag text-[9px] leading-none text-steel-400 border border-[#1F4257] bg-[#041A25]/85 px-2" aria-pressed="false" hidden>pausa</button>
         </div>
         <div class="p-6"><h3 class="font-bold text-lg mb-2 flex items-start gap-2"><i aria-hidden="true" class="fa-solid fa-barcode text-cyber mt-1"></i> <span>Marcado y grabado láser industrial</span></h3><p class="text-steel-400 text-sm leading-relaxed">Preparación y ejecución de sistemas de marcado láser para la identificación inequívoca de componentes. Se garantiza una trazabilidad completa mediante la aplicación de números de serie, códigos de datos bidimensionales (Data Matrix) y logotipos corporativos directamente sobre la pieza acabada.</p></div>
       </article>
@@ -244,14 +177,14 @@
         <div class="grid lg:grid-cols-2">
           <div class="screen relative h-52 lg:h-auto lg:min-h-[15rem] overflow-hidden">
             <div class="absolute inset-0 bg-grid opacity-50"></div>
-            <svg viewBox="0 0 400 176" class="absolute inset-0 w-full h-full" aria-label="Diagrama de un flujo digitalizado: los datos de proceso entran, se procesan con un agente de inteligencia artificial, se almacenan y salen como documentación y aplicación">
+            <svg viewBox="0 0 400 176" class="absolute inset-0 w-full h-full" data-smil-t="2" aria-label="Diagrama de un flujo digitalizado: los datos de proceso entran, se procesan con un agente de inteligencia artificial, se almacenan y salen como documentación y aplicación">
               <!-- conexiones -->
               <g fill="none" stroke="#33465e" stroke-width="1.2" stroke-dasharray="3 5">
                 <path id="td-l1" d="M92 88 H160"/>
                 <path id="td-l2" d="M200 66 V52 H272"/>
                 <path id="td-l3" d="M200 110 V124 H272"/>
               </g>
-              <g fill="none" stroke="#12F7A0" stroke-width="1.6" opacity="0.55">
+              <g fill="none" stroke="#2EE6A8" stroke-width="1.6" opacity="0.55">
                 <path d="M92 88 H160" class="path-trace"/>
                 <path d="M200 66 V52 H272" class="path-trace"/>
                 <path d="M200 110 V124 H272" class="path-trace"/>
@@ -264,9 +197,9 @@
               </g>
 
               <!-- núcleo: agente -->
-              <polygon points="180,58 200,48 220,58 220,84 200,94 180,84" fill="rgba(18,247,160,0.10)" stroke="#12F7A0" stroke-width="1.4"/>
-              <circle cx="200" cy="71" r="4" fill="#12F7A0" class="spark"/>
-              <g stroke="#12F7A0" stroke-width="0.9" opacity="0.75">
+              <polygon points="180,58 200,48 220,58 220,84 200,94 180,84" fill="rgba(46,230,168,0.10)" stroke="#2EE6A8" stroke-width="1.4"/>
+              <circle cx="200" cy="71" r="4" fill="#2EE6A8" class="spark"/>
+              <g stroke="#2EE6A8" stroke-width="0.9" opacity="0.75">
                 <line x1="200" y1="94" x2="200" y2="104"/>
               </g>
               <!-- almacenamiento -->
@@ -277,18 +210,18 @@
               </g>
 
               <!-- salidas -->
-              <rect x="272" y="30" width="62" height="44" rx="3" fill="rgba(255,196,0,0.10)" stroke="#FFC400" opacity="0.9"/>
-              <g stroke="#FFC400" stroke-width="1.2" opacity="0.8">
+              <rect x="272" y="30" width="62" height="44" rx="3" fill="rgba(212,175,55,0.10)" stroke="#D4AF37" opacity="0.9"/>
+              <g stroke="#D4AF37" stroke-width="1.2" opacity="0.8">
                 <line x1="284" y1="44" x2="322" y2="44"/><line x1="284" y1="52" x2="314" y2="52"/><line x1="284" y1="60" x2="318" y2="60"/>
               </g>
-              <rect x="286" y="102" width="34" height="46" rx="4" fill="rgba(18,247,160,0.08)" stroke="#12F7A0"/>
-              <line x1="294" y1="140" x2="312" y2="140" stroke="#12F7A0" stroke-width="1.4"/>
-              <rect x="292" y="110" width="22" height="20" fill="rgba(18,247,160,0.14)"/>
+              <rect x="286" y="102" width="34" height="46" rx="4" fill="rgba(46,230,168,0.08)" stroke="#2EE6A8"/>
+              <line x1="294" y1="140" x2="312" y2="140" stroke="#2EE6A8" stroke-width="1.4"/>
+              <rect x="292" y="110" width="22" height="20" fill="rgba(46,230,168,0.14)"/>
 
               <!-- pulsos de datos -->
-              <circle r="3" fill="#FFC400"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#td-l1"/></animateMotion></circle>
-              <circle r="2.6" fill="#12F7A0"><animateMotion dur="3s" begin="0.6s" repeatCount="indefinite"><mpath href="#td-l2"/></animateMotion></circle>
-              <circle r="2.6" fill="#12F7A0"><animateMotion dur="3s" begin="1.2s" repeatCount="indefinite"><mpath href="#td-l3"/></animateMotion></circle>
+              <circle r="3" fill="#D4AF37"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#td-l1"/></animateMotion></circle>
+              <circle r="2.6" fill="#2EE6A8"><animateMotion dur="3s" begin="0.6s" repeatCount="indefinite"><mpath href="#td-l2"/></animateMotion></circle>
+              <circle r="2.6" fill="#2EE6A8"><animateMotion dur="3s" begin="1.2s" repeatCount="indefinite"><mpath href="#td-l3"/></animateMotion></circle>
 
               <g class="tag" font-size="9" fill="#8592A3">
                 <text x="26" y="128">datos de proceso</text>
@@ -349,6 +282,7 @@
 </a>
 
 <script defer src="/_vercel/insights/script.js"></script>
-<script src="app.js?v=14" defer></script>
+<script src="app.js?v=15" defer></script>
+<script defer src="sim/capacidades.js?v=1"></script>
 </body>
 </html>

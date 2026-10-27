@@ -19,6 +19,7 @@ oficio, no de la categoría «web de consultoría»:
 | Tarjetas que se apoyan | Una pieza que se deja sobre la mesa | revelado con `rotateX` |
 | Placa de características | La placa remachada de una máquina: cifra y significado | `.plate` + `.spec-row` (Compromisos) |
 | Albarán de entrega | Lo que va siempre dentro de la caja | `.manifest` (servicios, auditoría) |
+| Pantallas de simulación | El visor del CAM o de la máquina: el material se arranca de verdad, con herramienta y porta a escala, backplot y HUD sacado del programa NC | `canvas[data-sim]` dentro de `.screen`; motor en `sim/` |
 
 Si se añade movimiento nuevo, debe poder rellenar esta tabla. Si no tiene
 equivalente en el taller, probablemente sobra.
@@ -88,6 +89,23 @@ Tres hábitos de «web hecha con IA» que se retiraron y no deben volver:
 3. **Sin filas de tarjetas iguales con icono encima.** Una lista va en un solo
    panel, con filas separadas por un escalón de tono (`.plate`, `.manifest`),
    no por líneas.
+
+## Simulaciones CAM (sesión 14)
+
+Motor propio sin dependencias en `sim/`: `core.js` (Z-map, herramientas, NC,
+cinemática), `paths.js` (adaptativo, trocoidal…), `gl.js` (un único contexto
+WebGL2 por página, con pérdida y recuperación), `runtime.js` (ciclo de vida,
+pausa fuera de vista, movimiento reducido, botón `pausa`) y `view2d.js`. Cada
+escena vive en `sim/scenes/<nombre>.js`. `scripts/copy-static.js` concatena un
+paquete por página en `public/sim/` (`index.js`, `capacidades.js`,
+`blog-trocoidal.js`).
+
+Reglas propias:
+- Todo en mm reales, en concordancia, con `SIM ×N` declarado en el HUD.
+- Sin GPU (o con WebGL por software) las escenas caen a su versión 2D; CAD y
+  multieje solo existen en 3D y en ese caso dejan la pantalla con su rejilla.
+- `?simgl=force` fuerza WebGL por software para probar en el contenedor.
+- Sin imágenes de respaldo: decisión del usuario, sesión 14.
 
 ## Cómo comprobarlo
 
