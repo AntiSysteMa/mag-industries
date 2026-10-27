@@ -1,11 +1,10 @@
-/* Escena planeado (§4.5, banner de capacidades): placa de 7075 planeada en 10 pasadas de un solo sentido, en
-   concordancia, al ritmo del scroll. GL sobre Z-map; respaldo en planta 2D. seek(p) no re-simula: cada celda guarda
-   cuándo la tocan sus (como mucho) dos pasadas y qué deja cada una, así que hacia atrás cuesta lo mismo. */
+/* Planeado guiado por scroll. seek(p) no re-simula: cada celda guarda cuándo la tocan sus dos pasadas como mucho y qué
+   deja cada una, así que hacia atrás cuesta lo mismo. */
 (function (G) {
   'use strict';
   const C = G.CamSim;
   if (!C || !C.define) return;
-  const PI = Math.PI, sqrt = Math.sqrt, min = Math.min, max = Math.max;
+  const PI = Math.PI, sqrt = Math.sqrt, min = Math.min, max = Math.max, now = () => G.performance ? G.performance.now() : Date.now();
 
   const PLATE = { x0: 0, y0: 0, x1: 240, y1: 84, top: 0, bottom: -30 };
   const AP = 0.4, AE = 8.4, Y0 = 79.8, PASSES = 10, XA = -8, XB = 248, ZR = 1, ZOUT = 5, FPLUNGE = 1000;
@@ -13,14 +12,15 @@
   const TOOL = { id: 'T1', num: 1, kind: 'flat', D: 12, z: 3, lc: 26, oal: 73, helix: 40, shank: 12, stick: 35, coat: '#34363B',
     holder: { type: 'er32', A: 70, nose: 50, bore: 40, flange: 63, iface: 'SK40' },
     cut: { vc: 452, S: 12000, fz: 0.1333, F: 4800, ae: AE, ap: AP, Fentry: FPLUNGE } };
-  const MACHINE = { rapid: 36000, accel: 4.9, tcTime: 5, spindleRamp: 1.5, zChange: 200, start: 'p0' };
+  const MACHINE = { rapid: 48000, accel: 4.9, tcTime: 5, spindleRamp: 1.5, zChange: 200, start: 'p0' };
   const NC = { dialect: 'iso-mill', O: 1005, title: 'PLANEADO PASADAS PARALELAS - 7075' };
-  /* En el banner (800/230) la placa entera solo cabe a ~3.4 px/mm casi de frente (con az −60, a 2.3). Además, con
-     az −60 el reflejo del estudio deja lo planeado casi igual que el laminado; a −70/−80 brilla. */
-  const CAM = { w: { az: -80, el: 30 }, m: { az: -70, el: 34 } };
-  /* laminado mate más oscuro que el #8E959C de la paleta: con el sombreado metálico del corte, si no, no se distinguen */
-  const RAW = '#7E858C';
-  const BOX = [XA - 6, PLATE.y0, PLATE.bottom, XB + 6, PLATE.y1, ZR];
+  /* placa y tuerca solo caben a ~3 px/mm casi de frente; con az −60, a 2.3 y con lo planeado igual que el laminado */
+  const CAM = { w: { az: -85, el: 25 }, m: { az: -80, el: 28 } };
+  /* Laminado más oscuro que el de la paleta: con su reflejo anisótropo quedaba a un 13 % de lo planeado. Marcas a media
+     intensidad y la franja recta (r > 0.85R) a un cuarto: entre pasadas el filtrado de la dirección sacaba una costura. */
+  const RAW = '#6A7178', MK = 0.5, SEAM = 0.25;
+  /* techo: casi media tuerca (z 35–57) a la vista con la fresa en Z5 sobre la pasada trasera */
+  const BOX = [XA - 6, PLATE.y0, PLATE.bottom, XB + 6, PLATE.y1, 45];
   /* RGBA de ZMap.at en el orden de bytes de la máquina: se copia por una vista Uint32 */
   const P8 = new Uint8Array(4), P32 = new Uint32Array(P8.buffer);
   const pack = (r, g, b, a) => { P8[0] = r; P8[1] = g; P8[2] = b; P8[3] = a; return P32[0]; };
@@ -74,7 +74,7 @@
   /* Por celda, la primera pasada que la toca (A) y la siguiente si la vuelve a cortar a su cota o más abajo (B, cuyas
      marcas mandan), con el instante en que el filo delantero llega al centro de la celda. Altura y marca, como
      ZMap.sweep: chaflán de 0.2 y tangente del arco del borde delantero (con avance +X, (−s, √(1−s²)), s = dy/R). */
-  function cellTable(B, PT) {
+  function* tableGen(B, PT) {
     const zm = B.zm, T = B.T, nx = zm.nx, ny = zm.ny, N = nx * ny, R = T.R, a1 = R - T.ch, rFl = 0.85 * R;
     const tA = new Float32Array(N).fill(Infinity), tB = new Float32Array(N).fill(Infinity), hA = new Float32Array(N), hB = new Float32Array(N);
     const atA = new Uint32Array(N), atB = new Uint32Array(N), tr = new Float64Array(nx);
@@ -85,9 +85,9 @@
         const dy = zm.yc(j) - p.y, r = Math.abs(dy);
         if (r > R) continue;
         const zt = -AP + (r <= a1 ? 0 : r - a1), lead = sqrt(R * R - dy * dy);
-        let tx = 1, ty = 0, fl = 1 | 4 | 2;
-        if (r < rFl) { const s = dy / R; tx = -s; ty = sqrt(max(0, 1 - s * s)); fl = 1 | 4; }
-        const g = Math.round((tx * tx - ty * ty + 1) * 127.5), b = Math.round((2 * tx * ty + 1) * 127.5);
+        let tx = 1, ty = 0, fl = 1 | 4 | 2, w = SEAM;
+        if (r < rFl) { const s = dy / R; tx = -s; ty = sqrt(max(0, 1 - s * s)); fl = 1 | 4; w = MK; }
+        const g = Math.round((w * (tx * tx - ty * ty) + 1) * 127.5), b = Math.round((w * 2 * tx * ty + 1) * 127.5);
         rowTimes(p.xs, p.ts, zm.ox + 0.5 * zm.cx - lead, zm.cx, nx, tr);
         const pk = pack(1, g, b, fl);
         let lo = rowMin[j], hi = rowMax[j];
@@ -101,17 +101,20 @@
         }
         rowMin[j] = lo; rowMax[j] = hi;
       }
+      yield;
     }
     return { tA, tB, hA, hB, atA, atB, rowMin, rowMax };
   }
+  const cellTable = (B, PT) => { const g = tableGen(B, PT); let r; while (!(r = g.next()).done); return r.value; };
 
-  function Cells(B, PT) {
+  function Cells(B, PT, tb) {
     const zm = B.zm, nx = zm.nx, ny = zm.ny, h = zm.h, at = new Uint32Array(zm.at.buffer, zm.at.byteOffset, nx * ny), ca = zm.cx * zm.cy;
-    const tb = cellTable(B, PT), tA = tb.tA, tB = tb.tB, hA = tb.hA, hB = tb.hB, atA = tb.atA, atB = tb.atB, rowMin = tb.rowMin, rowMax = tb.rowMax;
+    tb = tb || cellTable(B, PT);
+    const tA = tb.tA, tB = tb.tB, hA = tb.hA, hB = tb.hB, atA = tb.atA, atB = tb.atB, rowMin = tb.rowMin, rowMax = tb.rowMax;
     const c = { tb, cur: -Infinity, ms: 0, msMax: 0, cells: 0 };
     c.reset = () => { zm.reset(); c.cur = -Infinity; };
     c.apply = t => {
-      const t0 = G.performance ? G.performance.now() : Date.now();
+      const t0 = now();
       const lo = min(c.cur, t), hi = max(c.cur, t);
       let i0 = nx, i1 = -1, j0 = ny, j1 = -1, vol = 0, n = 0;
       for (let j = 0; j < ny; j++) {
@@ -129,7 +132,7 @@
         zm.removed += vol * ca;
       }
       c.cur = t; c.cells = n;
-      c.ms = (G.performance ? G.performance.now() : Date.now()) - t0;
+      c.ms = now() - t0;
       if (c.ms > c.msMax) c.msMax = c.ms;
       return n;
     };
@@ -142,7 +145,10 @@
     const B = build(g[0], g[1]), prog = B.prog, zm = B.zm, T = B.T, path = B.path, TM = prog.duration;
     const PT = passTimes(B);
     await env.idle();
-    const cells = Cells(B, PT);
+    const tg = tableGen(B, PT);
+    let tr;
+    while (!(tr = tg.next()).done) await env.idle();
+    const cells = Cells(B, PT, tr.value);
     let ter = null, tm = null, ln = null;
     if (gl) {
       await env.idle();
@@ -151,24 +157,37 @@
       ln = gl.lines(path);
     }
     const items = [{ h: ter }, { h: ln, upTo: 0 }, { h: tm, pos: null, spin: 1 }], shadow = { h: tm, pos: null };
-    const cam = { type: 'ortho', az: CAM.w.az, el: CAM.w.el, fit: { bbox: BOX, safe: { top: 6, right: 0, bottom: env.safe.bottom, left: 0 } } };
-    const HUDM = [{ parts: [{ text: '', color: PAL.hud.value }, { text: '', color: PAL.hud.text }] }];
+    const cam = { type: 'ortho', az: CAM.w.az, el: CAM.w.el, fit: { bbox: BOX, safe: { top: 0, right: 0, bottom: env.safe.bottom, left: 0 } } };
     const tri = { x: [0, 0], y: [0, 0], z: [0, 0] }, TV = [tri.x, tri.y, tri.z], q0 = [0, 0], AX = [[0, 0, 0], [10, 0, 0], [0, 10, 0], [0, 0, 10]];
     const HUD = [{ text: '', color: PAL.hud.value }, { text: '', color: PAL.hud.text }], tot = ' / ' + C.fmt.mmss(TM);
-    let p = 0, k = 1, hudT = NaN;
+    const HUD1 = [{ parts: [HUD[0], { text: '   ', color: PAL.hud.text }, HUD[1]] }];
+    let p = 0, k = 1, hudT = NaN, hudB = -1, hudAt = 0, hudW = -1, one = false;
 
     /* px CSS por px de marco: el marco móvil se ve a la mitad */
     const sizes = () => { k = Math.min(2.4, Math.max(1, env.dpr / (env.scale || 1))); };
     const mobile = () => env.frame.w < env.frame.h * 2;
-    function texts() {
-      const st = prog.state(), tm = p * TM;
-      if (tm === hudT) return;
-      hudT = tm;
-      HUDM[0].parts[0].text = HUD[0].text = prog.line(st.block);
+    /* 15 Hz como mucho mientras el scroll corre; los pasos cortos (la convergencia) se escriben siempre */
+    function texts(force) {
+      const st = prog.state(), tm = p * TM, w = now();
+      if (!force && st.block === hudB && (Math.round(tm * 10) === Math.round(hudT * 10) || (w - hudAt < 66 && Math.abs(tm - hudT) > 0.1))) return;
+      hudT = tm; hudB = st.block; hudAt = w; hudW = -1;
+      HUD[0].text = prog.line(st.block);
       HUD[1].text = 't ' + C.fmt.mmss(tm) + tot;
-      HUDM[0].parts[1].text = '   ' + HUD[1].text;
     }
-    const hudDraw = c => V.draw.hudText(c, 10 * k, 8 * k, mobile() ? HUDM : HUD, { size: 10.5 * k, lh: 14 * k });
+    function hudDraw(c) {
+      const fs = 10.5 * k, lh = 14 * k, x = 10 * k, y = 8 * k;
+      if (hudW < 0) {
+        c.save(); c.font = fs + 'px ui-monospace,Menlo,Consolas,monospace';
+        const a = c.measureText(HUD[0].text).width, b = c.measureText(HUD[1].text).width, sp = c.measureText('   ').width;
+        c.restore();
+        /* en una línea solo si cabe sin llegar al botón de pausa */
+        one = mobile() && a + sp + b <= env.frame.w - x - 64 * k;
+        hudW = one ? a + sp + b : max(a, b);
+      }
+      c.fillStyle = 'rgba(4,26,37,.6)';
+      c.fillRect(x - 4 * k, y - 3 * k, hudW + 8 * k, (one ? 1 : 2) * lh + 2 * k);
+      V.draw.hudText(c, x, y, one ? HUD1 : HUD, { size: fs, lh });
+    }
     function triad(c) {
       gl.project(AX[0], q0);
       let m = 0;
@@ -183,13 +202,13 @@
     const scene = {
       duration: TM,
       grid: zm.nx + 'x' + zm.ny,
-      start() { cells.reset(); prog.reset(); hudT = NaN; go(p); },
+      start() { cells.reset(); prog.reset(); go(p); texts(1); },
       update() { return false; },
       seek(pp) { go(Math.max(0, Math.min(1, +pp || 0))); },
       render() {
         if (!gl) return;
         const st = prog.state(), m = mobile(), v = m ? CAM.m : CAM.w;
-        cam.az = v.az; cam.el = v.el; cam.fit.safe.top = m ? 26 * k : 6;
+        cam.az = v.az; cam.el = v.el; cam.fit.safe.top = m ? 36 * k : 0;
         gl.camera(cam);
         items[1].upTo = st.dist;
         items[2].pos = st.pos; items[2].spin = st.S > 0 ? 1 : 0; shadow.pos = st.pos;
@@ -199,7 +218,7 @@
       },
       final() { go(1); },
       hud() { return null; },
-      resize() { sizes(); hudT = NaN; texts(); },
+      resize() { sizes(); texts(1); },
       fallback(e2) { return plan(e2); },
       stats() {
         return { machineS: +TM.toFixed(2), p: +p.toFixed(4), seekMs: +cells.ms.toFixed(3), seekMsMax: +cells.msMax.toFixed(3), seekCells: cells.cells,
@@ -281,7 +300,7 @@
   C.spec('planeado', {
     tools: [TOOL],
     cuts: [{ D: 12, z: 3, vc: 452, S: 12000, fz: 0.1333, F: 4800, ae: AE }],
-    plate: PLATE, ap: AP, ae: AE, y0: Y0, passes: PASSES, xa: XA, xb: XB, grids: GRIDS, cam: CAM,
+    plate: PLATE, machine: MACHINE, ap: AP, ae: AE, y0: Y0, passes: PASSES, xa: XA, xb: XB, grids: GRIDS, cam: CAM,
     build, passTimes, cellTable, Cells
   });
 })(globalThis);

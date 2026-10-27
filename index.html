@@ -168,7 +168,6 @@
         </div>
         <div class="screen sim-screen relative h-[360px] sm:h-[420px] overflow-hidden">
           <div class="absolute inset-0 bg-grid opacity-60"></div>
-          <picture class="sim-poster absolute inset-0 w-full h-full"><source media="(max-width: 639px)" srcset="assets/sim/hero-m.webp" width="700" height="720"><img src="assets/sim/hero.webp" width="1144" height="840" alt="" loading="eager" fetchpriority="high" decoding="async" class="w-full h-full object-contain"></picture>
           <div class="absolute inset-0 overflow-hidden pointer-events-none"><div class="scanline absolute left-0 right-0 h-32 bg-gradient-to-b from-cyber/0 via-cyber/6 to-cyber/0"></div></div>
           <canvas id="sim-canvas" class="sim-canvas absolute inset-0 w-full h-full" data-sim="hero" data-safe="30 0 48 0" role="img" aria-label="Simulación isométrica de fresado CNC de una cavidad con islas interiores en acero D2: el bloque en bruto se vacía con entrada en hélice y desbaste dinámico, se cambia de herramienta, se acaban fondo y paredes y la pieza se compara con el modelo, sin colisiones"></canvas>
           <div class="absolute top-0 inset-x-0 h-[30px] px-3 sm:px-5 flex items-center justify-between gap-3 pointer-events-none">
@@ -269,7 +268,6 @@
              Especificación en docs/clips-spec.md (clip 01 · HSM). -->
         <div class="screen sim-screen relative h-48 overflow-hidden border-b border-night-line">
           <div class="absolute inset-0 bg-grid opacity-40"></div>
-          <img class="sim-poster absolute inset-0 w-full h-full object-contain" src="assets/sim/hsm.webp" alt="" width="768" height="384" loading="lazy" decoding="async">
           <canvas class="sim-canvas absolute inset-0 w-full h-full" data-sim="hsm" data-safe="0 0 18 0" aria-hidden="true"></canvas>
           <span class="sim-cap absolute bottom-2 left-4 tag text-[9px] leading-none text-steel-500 pointer-events-none">ángulo de compromiso constante</span>
           <button type="button" class="sim-toggle absolute top-2 right-2 tag text-[9px] leading-none text-steel-400 border border-[#1F4257] bg-[#041A25]/85 px-2" aria-pressed="false" hidden>pausa</button>
@@ -286,7 +284,6 @@
         <!-- Sustituir por el clip real: docs/clips-spec.md (clip 02 · trocoidal). -->
         <div class="screen sim-screen relative h-48 overflow-hidden border-b border-night-line">
           <div class="absolute inset-0 bg-grid opacity-40"></div>
-          <img class="sim-poster absolute inset-0 w-full h-full object-contain" src="assets/sim/trocoidal.webp" alt="" width="768" height="384" loading="lazy" decoding="async">
           <canvas class="sim-canvas absolute inset-0 w-full h-full" data-sim="trocoidal" data-safe="0 0 18 0" aria-hidden="true"></canvas>
           <span class="sim-cap absolute bottom-2 left-4 tag text-[9px] leading-none text-steel-500 pointer-events-none">poca inmersión radial · mucha profundidad axial</span>
           <button type="button" class="sim-toggle absolute top-2 right-2 tag text-[9px] leading-none text-steel-400 border border-[#1F4257] bg-[#041A25]/85 px-2" aria-pressed="false" hidden>pausa</button>
@@ -303,7 +300,6 @@
         <!-- Sustituir por el clip real: docs/clips-spec.md (clip 03 · 5 ejes). -->
         <div class="screen sim-screen relative h-48 overflow-hidden border-b border-night-line">
           <div class="absolute inset-0 bg-grid opacity-40"></div>
-          <img class="sim-poster absolute inset-0 w-full h-full object-contain" src="assets/sim/cinco-ejes.webp" alt="" width="768" height="384" loading="lazy" decoding="async">
           <canvas class="sim-canvas absolute inset-0 w-full h-full" data-sim="cinco-ejes" data-safe="0 0 18 0" aria-hidden="true"></canvas>
           <span class="sim-cap absolute bottom-2 left-4 tag text-[9px] leading-none text-steel-500 pointer-events-none">vector de herramienta normal a la superficie</span>
           <button type="button" class="sim-toggle absolute top-2 right-2 tag text-[9px] leading-none text-steel-400 border border-[#1F4257] bg-[#041A25]/85 px-2" aria-pressed="false" hidden>pausa</button>

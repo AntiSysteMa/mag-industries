@@ -1,6 +1,6 @@
 # MAG INDUSTRIES — Contexto de Proyecto
 
-**Última actualización:** 20 octubre 2026 | **Sesiones:** 13
+**Última actualización:** 27 octubre 2026 | **Sesiones:** 14
 
 > Este archivo describe **cómo es el proyecto**. El estado sesión-a-sesión vive
 > en `PROJECT_STATE.md`. Lee los dos antes de tocar nada.
@@ -221,11 +221,12 @@ mag-industries/
 ├── blog-plantilla-o-externalizar.html
 ├── input.css                       ← @tailwind + CSS propio
 ├── tailwind.config.js
-├── app.js                          ← JS vanilla + Canvas 2D
+├── app.js                          ← JS vanilla (UI, quiz, formularios, GSAP)
+├── sim/                            ← motor de simulación CAM y escenas (ver DESIGN.md)
 ├── vercel.json                     ← build + cabeceras de seguridad
 ├── supabase/functions/submit-lead/
 │   └── index.ts                    ← Edge Function de recepción de leads
-├── scripts/copy-static.js          ← copia html + app.js + assets a public/
+├── scripts/copy-static.js          ← copia html, app.js, assets (recursivo) y empaqueta sim/ por página
 ├── public/                         ← salida de build (gitignored)
 └── assets/                         ← logos (en git)
 ```
@@ -253,7 +254,8 @@ curl -sI https://www.magindustries.es/ | grep -i content-security-policy
 
 **Cache busting:** `app.js?v=N` en las 8 páginas que lo cargan. Incrementa N en
 todas a la vez tras un cambio importante de `app.js`. Va por **v=14**
-(y `tailwind.css?v=13`).
+(y `tailwind.css?v=13`). Los paquetes `sim/*.js` llevan su propio `?v=`:
+súbelo en la página que cargue una escena modificada.
 
 ---
 
@@ -287,7 +289,8 @@ todas a la vez tras un cambio importante de `app.js`. Va por **v=14**
     el CDN fallan. Hover y retícula, solo con puntero fino. Antes de tocar
     movimiento, lee `DESIGN.md` (incluye el «estilo de la casa»: sin etiquetas
     sobre titulares, sin numeración decorativa, sin filas de tarjetas con
-    icono); las skills `taste`, `impeccable` y
+    icono). Las simulaciones CAM viven en `sim/` y siguen la sección
+    «Simulaciones CAM» de `DESIGN.md`; las skills `taste`, `impeccable` y
     `review-animations` están en `.claude/skills/`.
 
 ---

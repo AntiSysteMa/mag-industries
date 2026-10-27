@@ -81,7 +81,8 @@
     const tro = C.Strat.trochoid({ p0: [SLOT.x0, SLOT.y], p1: [SLOT.x1, SLOT.y], slotW: SLOT.w, D: T.D, loops: LOOPS, z: Z, Fedge: T.cut.F, Freturn: FRET });
     const pb = new C.PathBuilder({ ds: 0.25, safeZ: SAFE });
     pb.rapid(SLOT.x0, SLOT.y, SAFE).rapid(SLOT.x0, SLOT.y, Z).append(tro, { link: 'direct', type: 2, F: tro.stats.Fcenter });
-    pb.rapid(pb.x, pb.y, SAFE).rapid(SLOT.x0, SLOT.y, SAFE);
+    /* el G28 va sin punto: la vuelta a referencia sacaría la herramienta del encuadre */
+    pb.rapid(pb.x, pb.y, SAFE).rapid(SLOT.x0, SLOT.y, SAFE).cycle('G91 G28 Z0.');
     const path = pb.build();
     const prog = new C.Program({ zmap: zm, ops: [{ tool: T, toolId: 1, path, S: T.cut.S, label: 'trocoidal' }], machine: MACHINE, sim: SIM, nc: NC });
     const meter = Meter(path, T.R);
@@ -113,9 +114,8 @@
       ter = gl.terrain(zm, { material: 'h13', raw: 'ground', tints: { 1: PAL.tint.rough }, section: { axis: 'y', at: SLOT.y, keep: '+' }, marks: 0 });
       tm = gl.tool(T); ln = gl.lines(B.bp);
     }
-    /* sombra solo del filo: la del porta manchaba la tapa de sección */
-    const caps = [null, [0, 0, 0], [0, 0, 0]], cut = { get caps() { caps[0] = tm.caps[0]; return caps; } };
-    const items = [{ h: ter }, { h: ln, from: 0, upTo: 0 }, { h: tm, pos: null, spin: 1 }], shadow = { h: tm && cut, pos: null };
+    /* sin sombra de herramienta: la fresa corta el plano de sección y la sombra (80 % fija) caía como mancha sobre la tapa */
+    const items = [{ h: ter }, { h: ln, from: 0, upTo: 0 }, { h: tm, pos: null, spin: 1 }];
     const cam = { type: 'ortho', az: AZ, el: EL, fit: { bbox: BOX, safe: { top: 22, right: 0, bottom: env.safe.bottom, left: HUDW } } };
     const ARC = 24, RA = T.R + 0.5, q = [0, 0], P3 = [0, 0, Z], cx = Math.cos(AZ * PI / 180), cy = Math.sin(AZ * PI / 180);
     let t = 0, held = false, hudT = -1;
@@ -123,8 +123,8 @@
     const HUD = [{ parts: SF }, { text: 'paso ' + B.tro.step.toFixed(1), color: PAL.hud.text }, { text: 'ap ' + -Z, color: PAL.hud.text }, { text: '', color: PAL.hud.value }, { text: 'SIM ×' + SIM, color: PAL.hud.sim }];
 
     const go = tm => { const st = prog.advanceTo(tm); me.to(st.k); if (gl) rim(); return st; };
-    /* el borde de bruto de una pared toma el id del corte: el terreno mezcla el material de los vértices y la pared
-       salía en dos tonos, que se leen como dos profundidades */
+    /* el borde de bruto de una pared (8 vecinos, por el extremo curvo) toma el id del corte: el terreno mezcla el
+       material de los vértices y la pared salía en dos tonos, que se leen como dos profundidades */
     const A = zm.at, Hh = zm.h, nx = zm.nx, ny = zm.ny;
     function rim() {
       if (!zm.isDirty()) return;
@@ -132,8 +132,11 @@
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
         const c = j * nx + i;
         if (A[4 * c]) continue;
-        for (const n of [i > 0 ? c - 1 : -1, i < nx - 1 ? c + 1 : -1, j > 0 ? c - nx : -1, j < ny - 1 ? c + nx : -1])
-          if (n >= 0 && A[4 * n] && Hh[c] - Hh[n] > 1) { A[4 * c] = A[4 * n]; break; }
+        for (let dj = -1; dj <= 1 && !A[4 * c]; dj++) for (let di = -1; di <= 1; di++) {
+          const ii = i + di, jj = j + dj, n = jj * nx + ii;
+          if (ii < 0 || jj < 0 || ii >= nx || jj >= ny || !A[4 * n] || Hh[c] - Hh[n] <= 1) continue;
+          A[4 * c] = A[4 * n]; break;
+        }
       }
       zm.x0 = i0; zm.x1 = i1; zm.y0 = j0; zm.y1 = j1;
     }
@@ -184,8 +187,8 @@
         gl.camera(cam);
         const kk = Math.min(st.k, path.n - 1);
         items[1].from = B.from[kk]; items[1].upTo = Math.min(st.dist, B.endD);
-        items[2].pos = st.pos; items[2].spin = st.S > 0 ? 1 : 0; shadow.pos = st.pos;
-        gl.frame(items, { toolShadow: shadow });
+        items[2].pos = st.pos; items[2].spin = st.S > 0 ? 1 : 0;
+        gl.frame(items);
         if (k >= 0) arc3d(env.ctx2d, st, k);
         hudDraw(env.ctx2d);
       },
